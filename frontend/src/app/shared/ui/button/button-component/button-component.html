@@ -1,0 +1,25 @@
+
+<button
+  [type]="type()"
+  [disabled]="isDisabled()"
+  [ngClass]="buttonClasses()"
+  (click)="onClick($event)"
+>
+  <!-- Loading Spinner (Lucide) -->
+  @if (loading()) {
+    <lucide-icon [img]="LoaderCircle" class="animate-spin" [size]="20"></lucide-icon>
+  }
+
+  <!-- Icona Sinistra -->
+  @if (!loading() && iconLeft()) {
+    <lucide-icon [img]="iconLeft()!" [size]="20"></lucide-icon>
+  }
+
+  <!-- Content (testo) -->
+  <ng-content></ng-content>
+
+  <!-- Icona Destra -->
+  @if (!loading() && iconRight()) {
+    <lucide-icon [img]="iconRight()!" [size]="20"></lucide-icon>
+  }
+</button>

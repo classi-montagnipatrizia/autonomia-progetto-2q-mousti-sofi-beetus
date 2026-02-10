@@ -1,0 +1,44 @@
+<div class="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden">
+
+      <!-- Desktop: Layout a 2 colonne -->
+      <div class="hidden lg:flex w-full h-full overflow-hidden">
+        <!-- Sidebar conversazioni -->
+        <aside class="w-80 xl:w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 h-full overflow-hidden">
+          <app-conversations-component />
+        </aside>
+
+        <!-- Area chat -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+          @if (hasChatOpen()) {
+            <router-outlet />
+          } @else {
+            <!-- Placeholder quando nessuna chat è selezionata -->
+            <div class="flex-1 flex items-center justify-center bg-white dark:bg-gray-900">
+              <div class="text-center p-8">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <span class="text-5xl">💬</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  I tuoi messaggi
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400 max-w-xs">
+                  Seleziona una conversazione dalla lista per iniziare a chattare.
+                </p>
+              </div>
+            </div>
+          }
+        </main>
+      </div>
+
+      <!-- Mobile: Mostra lista O chat -->
+      <div class="lg:hidden w-full h-full overflow-hidden">
+        @if (hasChatOpen()) {
+          <!-- Chat a schermo intero su mobile -->
+          <router-outlet />
+        } @else {
+          <!-- Lista conversazioni -->
+          <app-conversations-component />
+        }
+      </div>
+
+    </div>

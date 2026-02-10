@@ -1,0 +1,63 @@
+:host {
+  display: contents;
+}
+
+// Stile del dialog nativo
+.dialog-element {
+  // Reset stili default del browser
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 28rem;
+  width: calc(100% - 2rem);
+
+  // Centratura
+  margin: auto;
+
+  // Backdrop (overlay scuro)
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: backdropFadeIn 150ms ease-out;
+  }
+
+  // Animazione apertura dialog
+  &[open] {
+    animation: dialogFadeIn 150ms ease-out;
+  }
+
+  // Animazione contenuto
+  &[open] .dialog-content {
+    animation: dialogScaleIn 150ms ease-out;
+  }
+}
+
+// Keyframes semplici
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

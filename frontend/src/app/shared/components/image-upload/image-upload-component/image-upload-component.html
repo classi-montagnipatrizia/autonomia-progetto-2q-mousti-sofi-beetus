@@ -1,0 +1,107 @@
+<!-- Input file nascosto -->
+<input
+  #fileInputRef
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  class="hidden"
+  (change)="onFileSelected($event)"
+/>
+
+<!-- Container principale -->
+<div
+  [ngClass]="dropzoneClasses()"
+  [style.width]="width()"
+  [style.height]="hasImage() && showPreview() ? 'auto' : height()"
+  [style.min-height]="height()"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  @if (hasImage() && showPreview()) {
+    <!-- Preview immagine -->
+    <div class="relative w-full">
+      <img
+        [src]="displayUrl()"
+        alt="Preview immagine"
+        class="w-full h-auto max-h-96 object-contain rounded-lg"
+      />
+
+      <!-- Pulsante rimuovi -->
+      <button
+        type="button"
+        class="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        (click)="removeImage()"
+        aria-label="Rimuovi immagine"
+      >
+        <lucide-icon [img]="XIcon" class="w-4 h-4" />
+      </button>
+
+      <!-- Overlay progresso durante upload -->
+      @if (uploadState() === 'uploading') {
+        <div class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center rounded-lg">
+          <app-spinner size="lg" color="white" />
+          <p class="text-white text-sm mt-2">{{ uploadProgress() }}%</p>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Stato idle o uploading senza preview -->
+    <div
+      class="flex flex-col items-center justify-center p-6 cursor-pointer w-full h-full"
+      (click)="openFilePicker()"
+    >
+      @if (uploadState() === 'uploading') {
+        <!-- Stato caricamento -->
+        <app-spinner size="lg" />
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+          Caricamento... {{ uploadProgress() }}%
+        </p>
+
+        <!-- Progress bar -->
+        <div class="w-full max-w-xs mt-3 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-primary-500 transition-all duration-300"
+            [style.width.%]="uploadProgress()"
+          ></div>
+        </div>
+      } @else if (uploadState() === 'error') {
+        <!-- Stato errore -->
+        <lucide-icon [img]="AlertCircleIcon" class="w-10 h-10 text-error-500" />
+        <p class="text-sm text-error-600 dark:text-error-400 mt-2 text-center">
+          {{ errorMessage() }}
+        </p>
+        <app-button
+          variant="ghost"
+          size="sm"
+          (clicked)="openFilePicker()"
+          class="mt-3"
+        >
+          Riprova
+        </app-button>
+      } @else {
+        <!-- Stato idle -->
+        <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-3">
+          <lucide-icon [img]="ImageIcon" class="w-8 h-8 text-primary-500" />
+        </div>
+
+        <p class="text-sm font-medium text-text-light dark:text-text-dark">
+          {{ placeholder() }}
+        </p>
+
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          @if (enableDragDrop()) {
+            Trascina qui o
+            <span class="text-primary-600 dark:text-primary-400">sfoglia</span>
+          } @else {
+            Clicca per selezionare
+          }
+        </p>
+
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+          JPG, PNG o WEBP · Max {{ maxSizeMB() }}MB
+        </p>
+      }
+    </div>
+  }
+</div>

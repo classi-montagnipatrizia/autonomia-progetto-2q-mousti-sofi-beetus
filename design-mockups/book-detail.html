@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeetUS - Dettaglio Libro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center h-16">
+        <button class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 class="ml-2 text-lg font-semibold text-gray-900">Dettaglio libro</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenuto -->
+  <main class="pt-20 pb-24 px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto">
+
+    <!-- Card principale -->
+    <article class="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+      <!-- ============================================
+           IMMAGINI AFFIANCATE
+           ============================================ -->
+      <div class="grid grid-cols-2 gap-1 bg-gray-100">
+        <!-- Fronte -->
+        <div class="relative aspect-[3/4]">
+          <img
+            src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400"
+            alt="Fronte libro"
+            class="w-full h-full object-cover"
+          />
+          <span class="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
+            Fronte
+          </span>
+        </div>
+        <!-- Retro -->
+        <div class="relative aspect-[3/4]">
+          <img
+            src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400"
+            alt="Retro libro"
+            class="w-full h-full object-cover"
+          />
+          <span class="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
+            Retro
+          </span>
+        </div>
+      </div>
+
+      <!-- Info libro -->
+      <div class="p-5">
+
+        <!-- Badge condizione + Prezzo -->
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+            Come nuovo
+          </span>
+          <span class="text-2xl font-bold text-blue-600">€15</span>
+        </div>
+
+        <!-- Titolo -->
+        <h1 class="text-xl font-bold text-gray-900 mb-1">
+          Matematica Blu 2.0 - Volume 3
+        </h1>
+        <p class="text-gray-500 mb-4">Bergamini, Barozzi, Trifone</p>
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+            3° Anno
+          </span>
+          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+            Matematica
+          </span>
+          <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+            ISBN: 9788808537010
+          </span>
+        </div>
+
+        <!-- Descrizione -->
+        <p class="text-gray-600 text-sm leading-relaxed mb-5">
+          Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra. Include anche il quaderno degli esercizi.
+        </p>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-100 my-4"></div>
+
+        <!-- Venditore -->
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+              MR
+            </div>
+            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900">Mario Rossi</p>
+            <p class="text-sm text-gray-500">@mario_rossi • 5IA</p>
+          </div>
+          <span class="text-xs text-gray-400">
+            15 gen 2026
+          </span>
+        </div>
+
+      </div>
+    </article>
+
+  </main>
+
+  <!-- ============================================
+       FOOTER FISSO - Contatta venditore
+       ============================================ -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-30">
+    <div class="max-w-2xl mx-auto">
+      <button class="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        Contatta il venditore
+      </button>
+    </div>
+  </div>
+
+</body>
+</html>

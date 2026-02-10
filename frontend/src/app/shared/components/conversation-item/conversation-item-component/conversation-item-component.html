@@ -1,0 +1,54 @@
+<div
+  [ngClass]="containerClasses()"
+  (click)="onSelect()"
+  (keyup.enter)="onSelect()"
+  tabindex="0"
+  role="button"
+  [attr.aria-selected]="isSelected()"
+>
+  <!-- Avatar con status online -->
+  <app-avatar
+    [src]="profilePictureUrl()"
+    [name]="nomeCompleto()"
+    size="md"
+    [status]="avatarStatus()"
+  />
+
+  <!-- Info conversazione -->
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center justify-between gap-2">
+      <!-- Nome utente -->
+      <p [ngClass]="nameClasses()">
+        {{ nomeCompleto() }}
+      </p>
+
+      <!-- Timestamp ultima attività -->
+      <app-time-ago class="text-xs text-gray-400 flex-shrink-0" [date]="lastActivityAt()" />
+    </div>
+
+    <div class="flex items-center justify-between gap-2 mt-0.5">
+      <!-- Typing indicator o anteprima ultimo messaggio -->
+      @if (isTyping()) {
+        <p class="text-sm text-primary-400 italic flex items-center gap-1">
+          <span>Sta scrivendo</span>
+          <span class="flex gap-0.5">
+            <span class="w-1 h-1 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="w-1 h-1 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 100ms"></span>
+            <span class="w-1 h-1 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 200ms"></span>
+          </span>
+        </p>
+      } @else {
+        <p [ngClass]="messageClasses()">
+          {{ truncatedMessage() }}
+        </p>
+      }
+
+      <!-- Badge messaggi non letti -->
+      @if (unreadCount() > 0) {
+        <app-badge-component variant="primary" size="sm" [pill]="true">
+          {{ unreadBadgeText() }}
+        </app-badge-component>
+      }
+    </div>
+  </div>
+</div>

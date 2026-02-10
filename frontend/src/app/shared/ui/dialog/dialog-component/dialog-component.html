@@ -1,0 +1,47 @@
+<dialog 
+  #dialogElement
+  class="dialog-element"
+  aria-labelledby="dialog-title"
+  aria-describedby="dialog-message"
+  (cancel)="$event.preventDefault()"
+>
+  <!-- Dialog Container -->
+  <div class="dialog-content bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden">
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+      <h2 
+        id="dialog-title" 
+        class="text-lg font-semibold text-gray-900 dark:text-white"
+      >
+        {{ title() }}
+      </h2>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-5">
+      <p 
+        id="dialog-message" 
+        class="text-gray-600 dark:text-gray-300"
+      >
+        {{ message() }}
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+      <app-button
+        variant="ghost"
+        (clicked)="cancel()"
+      >
+        {{ cancelText() }}
+      </app-button>
+
+      <app-button
+        [variant]="confirmButtonVariant()"
+        (clicked)="confirm()"
+      >
+        {{ confirmText() }}
+      </app-button>
+    </div>
+  </div>
+</dialog>

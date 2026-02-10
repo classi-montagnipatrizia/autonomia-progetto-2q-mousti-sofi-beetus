@@ -1,0 +1,149 @@
+<div class="relative" appClickOutside (clickOutside)="closeDropdown()">
+  <!-- Input di ricerca -->
+  <form (submit)="onSubmit($event)">
+    <div class="relative">
+      <!-- Icona ricerca -->
+      <lucide-icon
+        [img]="SearchIcon"
+        class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+      />
+
+      <!-- Input -->
+      <input
+        #searchInputRef
+        type="text"
+        [value]="searchTerm()"
+        [placeholder]="placeholder()"
+        (input)="onSearchInput($event)"
+        (focus)="onFocus()"
+        class="w-full pl-14 pr-10 py-2.5 bg-gray-100 dark:bg-gray-800 border-0 rounded-full text-sm text-text-light dark:text-text-dark placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-700 transition-colors"
+      />
+
+      <!-- Pulsante pulisci -->
+      @if (searchTerm()) {
+        <button
+          type="button"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          (click)="clearSearch()"
+          aria-label="Pulisci ricerca"
+        >
+          <lucide-icon [img]="XIcon" class="w-4 h-4 text-gray-500" />
+        </button>
+      }
+    </div>
+  </form>
+
+  <!-- Dropdown risultati -->
+  @if (isOpen()) {
+    <div
+      class="absolute top-full left-0 right-0 mt-2 bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden z-50 max-h-96 overflow-y-auto"
+    >
+      @if (isLoading()) {
+        <!-- Stato caricamento -->
+        <div class="flex items-center justify-center py-8">
+          <app-spinner size="md" />
+        </div>
+      } @else if (!hasResults()) {
+        <!-- Nessun risultato -->
+        <div class="py-8 text-center">
+          <lucide-icon [img]="SearchIcon" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto" />
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Nessun risultato per "{{ searchTerm() }}"
+          </p>
+        </div>
+      } @else {
+        <!-- Sezione Utenti -->
+        @if (hasUsers()) {
+          <div class="p-2">
+            <p class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Utenti
+            </p>
+
+            @for (user of displayedUsers(); track user.id) {
+              <button
+                type="button"
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                (click)="selectUser(user)"
+              >
+                <app-avatar
+                  [src]="user.profilePictureUrl"
+                  [name]="user.nomeCompleto"
+                  size="sm"
+                  [status]="user.isOnline ? 'online' : 'none'"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-text-light dark:text-text-dark truncate">
+                    {{ user.nomeCompleto }}
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    @{{ user.username }}
+                  </p>
+                </div>
+              </button>
+            }
+
+            @if (showViewAllUsers()) {
+              <div class="px-1 py-1">
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  [fullWidth]="true"
+                  (clicked)="viewAll('users')"
+                >
+                  Vedi tutti i risultati
+                </app-button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Separatore -->
+        @if (hasUsers() && hasPosts()) {
+          <div class="border-t border-border-light dark:border-border-dark"></div>
+        }
+
+        <!-- Sezione Post -->
+        @if (hasPosts()) {
+          <div class="p-2">
+            <p class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Post
+            </p>
+
+            @for (post of displayedPosts(); track post.id) {
+              <button
+                type="button"
+                class="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                (click)="selectPost(post)"
+              >
+                <div class="flex-shrink-0 mt-0.5">
+                  <lucide-icon [img]="FileTextIcon" class="w-5 h-5 text-gray-400" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-text-light dark:text-text-dark line-clamp-2">
+                    {{ truncateContent(post.contenuto) }}
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    da @{{ post.autore.username }}
+                  </p>
+                </div>
+              </button>
+            }
+
+            @if (showViewAllPosts()) {
+              <div class="px-1 py-1">
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  [fullWidth]="true"
+                  (clicked)="viewAll('posts')"
+                >
+                  Vedi tutti i risultati
+                </app-button>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

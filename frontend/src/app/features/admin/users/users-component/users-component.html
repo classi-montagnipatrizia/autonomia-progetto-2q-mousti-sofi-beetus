@@ -1,0 +1,258 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center gap-3 h-14">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          aria-label="Torna indietro"
+        >
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="UsersIcon" [size]="24" class="text-primary-500" />
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Gestione utenti</h1>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Search bar -->
+    <div class="mb-6">
+      <div class="relative">
+        <lucide-icon
+          [img]="SearchIcon"
+          [size]="20"
+          class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+          placeholder="Cerca utenti per username o nome..."
+          class="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+      </div>
+    </div>
+
+    <!-- Stats -->
+    @if (totalElements() > 0) {
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        {{ totalElements() }} utenti trovati
+      </p>
+    }
+
+    <!-- Loading state -->
+    @if (isLoading() && !hasUsers()) {
+      <div class="space-y-4">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2"></div>
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (hasError()) {
+      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <lucide-icon [img]="AlertCircleIcon" [size]="48" class="text-red-500 mx-auto mb-4" />
+        <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+          Errore nel caricamento
+        </h3>
+        <p class="text-red-700 dark:text-red-400 mb-4">
+          Non è stato possibile caricare la lista degli utenti.
+        </p>
+        <app-button variant="primary" (clicked)="loadUsers()">
+          Riprova
+        </app-button>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading() && !hasError() && !hasUsers()) {
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
+        <lucide-icon [img]="UsersIcon" [size]="48" class="text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Nessun utente trovato
+        </h3>
+        <p class="text-gray-500 dark:text-gray-400">
+          @if (searchQuery()) {
+            Prova a modificare i termini di ricerca.
+          } @else {
+            Non ci sono utenti registrati.
+          }
+        </p>
+      </div>
+    }
+
+    <!-- Users list -->
+    @if (hasUsers() && !hasError()) {
+      <div class="space-y-3">
+        @for (user of users(); track user.id) {
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
+            [class.opacity-60]="user.isActive === false"
+          >
+            <div class="flex items-center justify-between">
+              <!-- User info -->
+              <div class="flex items-center gap-4">
+                <a [routerLink]="['/profile', user.id]" class="hover:opacity-80 transition-opacity">
+                  <app-avatar
+                    [src]="user.profilePictureUrl"
+                    [name]="user.nomeCompleto"
+                    size="md"
+                  />
+                </a>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <a
+                      [routerLink]="['/profile', user.id]"
+                      class="font-medium text-gray-900 dark:text-white hover:underline"
+                    >
+                      {{ user.username }}
+                    </a>
+                    <!-- Badge admin -->
+                    @if (user.isAdmin) {
+                      <span class="px-2 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full">
+                        Admin
+                      </span>
+                    }
+                    <!-- Badge inattivo -->
+                    @if (user.isActive === false) {
+                      <span class="px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
+                        Disattivato
+                      </span>
+                    }
+                  </div>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ user.nomeCompleto }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Actions dropdown -->
+              <div class="relative">
+                @if (processingUser() === user.id) {
+                  <div class="p-2">
+                    <lucide-icon [img]="LoaderIcon" [size]="20" class="text-gray-400 animate-spin" />
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="toggleDropdown(user.id); $event.stopPropagation()"
+                    class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                    aria-label="Azioni utente"
+                  >
+                    <lucide-icon [img]="MoreVerticalIcon" [size]="20" />
+                  </button>
+
+                  <!-- Dropdown menu -->
+                  @if (activeDropdown() === user.id) {
+                    <div
+                      class="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-20"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <!-- Enable/Disable (shown first) -->
+                      @if (user.isActive === false) {
+                        <button
+                          type="button"
+                          (click)="$event.stopPropagation(); enableUser(user)"
+                          class="w-full px-4 py-2 text-left text-sm text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+                        >
+                          <lucide-icon [img]="UserCheckIcon" [size]="18" />
+                          Riattiva account
+                        </button>
+                      } @else if (!user.isAdmin) {
+                        <button
+                          type="button"
+                          (click)="$event.stopPropagation(); disableUser(user)"
+                          class="w-full px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+                        >
+                          <lucide-icon [img]="UserXIcon" [size]="18" />
+                          Disattiva account
+                        </button>
+                      }
+
+                      <!-- Promote/Demote (only for non-admins or demote) -->
+                      @if (user.isAdmin) {
+                        <button
+                          type="button"
+                          (click)="$event.stopPropagation(); demoteUser(user)"
+                          class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+                        >
+                          <lucide-icon [img]="ShieldOffIcon" [size]="18" />
+                          Rimuovi admin
+                        </button>
+                      } @else if (user.isActive !== false) {
+                        <button
+                          type="button"
+                          (click)="$event.stopPropagation(); promoteUser(user)"
+                          class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+                        >
+                          <lucide-icon [img]="ShieldIcon" [size]="18" />
+                          Promuovi ad admin
+                        </button>
+                      }
+
+                      <hr class="my-1 border-gray-200 dark:border-gray-700" />
+
+                      <!-- Delete -->
+                      <button
+                        type="button"
+                        (click)="$event.stopPropagation(); deleteUser(user)"
+                        class="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3"
+                      >
+                        <lucide-icon [img]="Trash2Icon" [size]="18" />
+                        Elimina definitivamente
+                      </button>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="flex items-center justify-between mt-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Pagina {{ currentPage() + 1 }} di {{ totalPages() }}
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="previousPage()"
+              [disabled]="isFirstPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label="Pagina precedente"
+            >
+              <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
+            </button>
+            <button
+              type="button"
+              (click)="nextPage()"
+              [disabled]="isLastPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label="Pagina successiva"
+            >
+              <lucide-icon [img]="ChevronRightIcon" [size]="20" />
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </main>
+</div>

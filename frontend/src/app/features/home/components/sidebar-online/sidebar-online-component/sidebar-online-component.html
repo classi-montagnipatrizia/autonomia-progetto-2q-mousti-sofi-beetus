@@ -1,0 +1,99 @@
+<aside class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm p-4 space-y-4">
+  <!-- Pulsante Messaggi Privati -->
+  <a
+    routerLink="/messages"
+    class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition-colors"
+  >
+    <lucide-icon [img]="MessageSquareIcon" class="w-5 h-5" />
+    <span>Messaggi Privati</span>
+  </a>
+
+  <!-- Lista utenti -->
+  <div class="space-y-4">
+    <!-- Sezione ONLINE -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
+        Online
+      </h3>
+
+      @if (loadingOffline()) {
+        <!-- Skeleton loading -->
+        <div class="space-y-2">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-center gap-3 p-2">
+              <app-skeleton shape="circle" width="40px" height="40px" />
+              <div class="flex-1 space-y-1">
+                <app-skeleton width="70%" height="14px" />
+                <app-skeleton width="50%" height="12px" />
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (hasOnlineUsers()) {
+        <ul class="space-y-1">
+          @for (user of onlineUsers(); track user.id) {
+            <li>
+              <app-user-list-item-component
+                [userId]="user.id"
+                [username]="user.username"
+                [nomeCompleto]="user.nomeCompleto"
+                [profilePictureUrl]="user.profilePictureUrl"
+                [isOnline]="true"
+                [preventNavigation]="true"
+                variant="compact"
+                (userClick)="onUserClick($event)"
+              />
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-sm text-gray-400 dark:text-gray-500 px-2 py-2">
+          Nessun utente online
+        </p>
+      }
+    </div>
+
+    <!-- Sezione OFFLINE -->
+    <div>
+      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
+        Offline
+      </h3>
+
+      @if (loadingOffline()) {
+        <!-- Skeleton loading -->
+        <div class="space-y-2">
+          @for (i of [1, 2]; track i) {
+            <div class="flex items-center gap-3 p-2">
+              <app-skeleton shape="circle" width="40px" height="40px" />
+              <div class="flex-1 space-y-1">
+                <app-skeleton width="70%" height="14px" />
+                <app-skeleton width="50%" height="12px" />
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (hasOfflineUsers()) {
+        <ul class="space-y-1">
+          @for (user of offlineUsers(); track user.id) {
+            <li>
+              <app-user-list-item-component
+                [userId]="user.id"
+                [username]="user.username"
+                [nomeCompleto]="user.nomeCompleto"
+                [profilePictureUrl]="user.profilePictureUrl"
+                [isOnline]="false"
+                [preventNavigation]="true"
+                variant="compact"
+                (userClick)="onUserClick($event)"
+              />
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-sm text-gray-400 dark:text-gray-500 px-2 py-2">
+          Nessun altro utente
+        </p>
+      }
+    </div>
+  </div>
+</aside>

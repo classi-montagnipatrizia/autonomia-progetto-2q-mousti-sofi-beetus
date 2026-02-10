@@ -1,0 +1,56 @@
+@if (show()) {
+  <div 
+    class="mention-dropdown absolute z-50 w-64 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+    [style.top.px]="position().top"
+    [style.left.px]="position().left"
+  >
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="p-3 text-center text-gray-500 dark:text-gray-400">
+        <div class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+        <span class="ml-2 text-sm">Ricerca...</span>
+      </div>
+    }
+
+    <!-- Suggerimenti -->
+    @if (!isLoading() && hasSuggestions()) {
+      <ul class="py-1">
+        @for (user of suggestions(); track user.id; let i = $index) {
+          <li>
+            <button
+              type="button"
+              class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              [class.bg-blue-50]="selectedIndex() === i"
+              [class.dark:bg-blue-900/30]="selectedIndex() === i"
+              (click)="selectUser(user)"
+              (mouseenter)="selectedIndex.set(i)"
+            >
+              <app-avatar
+                [src]="user.profilePictureUrl"
+                [alt]="user.nomeCompleto"
+                [name]="user.nomeCompleto"
+                size="sm"
+                [status]="user.isOnline ? 'online' : 'none'"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {{ user.nomeCompleto }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  &#64;{{ user.username }}
+                </p>
+              </div>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- Nessun risultato -->
+    @if (!isLoading() && !hasSuggestions() && searchTerm().length > 0) {
+      <div class="p-3 text-center text-gray-500 dark:text-gray-400 text-sm">
+        Nessun utente trovato
+      </div>
+    }
+  </div>
+}

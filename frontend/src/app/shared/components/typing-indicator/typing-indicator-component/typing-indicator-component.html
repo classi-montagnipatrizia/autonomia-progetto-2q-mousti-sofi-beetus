@@ -1,0 +1,15 @@
+<div class="flex items-center gap-2">
+  <!-- Pallini animati -->
+  <div class="flex items-center" [ngClass]="containerGapClass()">
+    <span [ngClass]="dotClasses()" class="typing-dot"></span>
+    <span [ngClass]="dotClasses()" class="typing-dot animation-delay-200"></span>
+    <span [ngClass]="dotClasses()" class="typing-dot animation-delay-400"></span>
+  </div>
+
+  <!-- Testo opzionale -->
+  @if (showText()) {
+    <span [ngClass]="textClasses()">
+      {{ displayText() }}...
+    </span>
+  }
+</div>

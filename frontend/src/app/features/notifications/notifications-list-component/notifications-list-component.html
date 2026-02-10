@@ -1,0 +1,187 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-3xl mx-auto px-4">
+      <div class="flex items-center justify-between h-14">
+        <!-- Back + Title -->
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            aria-label="Torna indietro"
+          >
+            <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+          </button>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Notifiche</h1>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2">
+          <!-- Filtro -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleFilterDropdown()"
+              class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <lucide-icon [img]="FilterIcon" [size]="16" />
+              <span class="hidden sm:inline">{{ getActiveFilterLabel() }}</span>
+            </button>
+
+            @if (isFilterDropdownOpen()) {
+              <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-20 max-w-[calc(100vw-2rem)]">
+                @for (option of filterOptions; track option.value) {
+                  <button
+                    type="button"
+                    (click)="setFilter(option.value)"
+                    class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    [class.bg-primary-50]="activeFilter() === option.value"
+                    [class.dark:bg-primary-900/20]="activeFilter() === option.value"
+                    [class.text-primary-600]="activeFilter() === option.value"
+                    [class.dark:text-primary-400]="activeFilter() === option.value"
+                    [class.text-gray-700]="activeFilter() !== option.value"
+                    [class.dark:text-gray-200]="activeFilter() !== option.value"
+                  >
+                    {{ option.label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Segna tutte come lette -->
+          @if (unreadCount() > 0) {
+            <button
+              type="button"
+              (click)="markAllAsRead()"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              title="Segna tutte come lette"
+            >
+              <lucide-icon [img]="CheckCheckIcon" [size]="20" />
+            </button>
+          }
+
+          <!-- Elimina tutte le notifiche -->
+          <button
+            type="button"
+            (click)="deleteAllNotifications()"
+            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            title="Elimina tutte le notifiche"
+          >
+            <lucide-icon [img]="Trash2Icon" [size]="20" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-3xl mx-auto">
+    <!-- Loading skeleton -->
+    @if (isLoading()) {
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="px-4 py-4 flex items-start gap-3">
+            <app-skeleton shape="circle" width="48px" height="48px" />
+            <div class="flex-1 space-y-2">
+              <app-skeleton width="80%" height="16px" />
+              <app-skeleton width="40%" height="14px" />
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (isEmpty()) {
+      <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div class="w-20 h-20 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <lucide-icon [img]="BellIcon" [size]="40" class="text-gray-400 dark:text-gray-500" />
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          Nessuna notifica
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+          Le tue notifiche appariranno qui quando qualcuno interagirà con i tuoi contenuti.
+        </p>
+      </div>
+    }
+
+    <!-- Notifications list -->
+    @if (!isLoading() && notifications().length > 0) {
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        @for (notification of notifications(); track notification.id) {
+          <button
+            type="button"
+            (click)="onNotificationClick(notification)"
+            class="w-full px-4 py-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left group"
+            [class.bg-primary-50]="!notification.isRead"
+            [class.dark:bg-primary-900/10]="!notification.isRead"
+          >
+            <!-- Avatar o icona tipo -->
+            <div class="relative flex-shrink-0">
+              @if (notification.utenteCheLHaGenerata) {
+                <app-avatar
+                  [src]="notification.utenteCheLHaGenerata.profilePictureUrl"
+                  [name]="notification.utenteCheLHaGenerata.nomeCompleto || notification.utenteCheLHaGenerata.username"
+                  size="md"
+                />
+                <!-- Badge tipo notifica -->
+                <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-sm shadow-sm border border-gray-200 dark:border-gray-700">
+                  {{ getNotificationIcon(notification.tipo) }}
+                </span>
+              } @else {
+                <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl">
+                  {{ getNotificationIcon(notification.tipo) }}
+                </div>
+              }
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900 dark:text-white leading-snug">
+                {{ notification.contenuto }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {{ notification.createdAt | date:'dd MMM yyyy, HH:mm' }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <!-- Indicatore non letta -->
+              @if (!notification.isRead) {
+                <span class="w-2.5 h-2.5 bg-primary-500 rounded-full"></span>
+              }
+              
+              <!-- Delete button -->
+              <button
+                type="button"
+                (click)="deleteNotification($event, notification)"
+                class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500 transition-colors"
+                title="Elimina notifica"
+              >
+                <lucide-icon [img]="Trash2Icon" [size]="16" />
+              </button>
+            </div>
+          </button>
+        }
+      </div>
+
+      <!-- Load more -->
+      @if (hasMore()) {
+        <div class="p-4">
+          <app-button
+            variant="outline"
+            [fullWidth]="true"
+            [loading]="isLoadingMore()"
+            (clicked)="loadMore()"
+          >
+            Carica altre notifiche
+          </app-button>
+        </div>
+      }
+    }
+  </main>
+</div>

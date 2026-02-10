@@ -1,0 +1,85 @@
+<!-- Label -->
+@if (label()) {
+  <label 
+    [for]="inputId()" 
+    class="text-sm font-medium text-gray-700 dark:text-gray-300"
+  >
+    {{ label() }}
+    @if (required()) {
+      <span class="text-error-500 ml-0.5">*</span>
+    }
+  </label>
+}
+
+<!-- Input Wrapper -->
+<div [ngClass]="wrapperClasses()">
+  <!-- Icona Sinistra -->
+  @if (iconLeft()) {
+    <span 
+      [ngClass]="iconClasses()" 
+      class="left-3"
+    >
+      <lucide-icon [img]="iconLeft()!" [size]="iconSize()"></lucide-icon>
+    </span>
+  }
+
+  <!-- Input Field -->
+  <input
+    [id]="inputId()"
+    [type]="effectiveType()"
+    [value]="value()"
+    [placeholder]="placeholder()"
+    [disabled]="isDisabled()"
+    [readonly]="readonly()"
+    [autocomplete]="autocomplete()"
+    [ngClass]="inputClasses()"
+    [attr.aria-invalid]="hasError()"
+    [attr.aria-describedby]="hasError() ? inputId() + '-error' : hint() ? inputId() + '-hint' : null"
+    (input)="onInputChange($event)"
+    (focus)="onFocus($event)"
+    (blur)="onBlur($event)"
+  />
+
+  <!-- Icona Destra o Toggle Password -->
+  @if (showPasswordToggle()) {
+    <button
+      type="button"
+      class="absolute right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors focus:outline-none"
+      [attr.aria-label]="showPassword() ? 'Nascondi password' : 'Mostra password'"
+      (click)="togglePasswordVisibility()"
+    >
+      @if (showPassword()) {
+        <lucide-icon [img]="EyeOff" [size]="iconSize()"></lucide-icon>
+      } @else {
+        <lucide-icon [img]="Eye" [size]="iconSize()"></lucide-icon>
+      }
+    </button>
+  } @else if (iconRight()) {
+    <span 
+      [ngClass]="iconClasses()" 
+      class="right-3"
+    >
+      <lucide-icon [img]="iconRight()!" [size]="iconSize()"></lucide-icon>
+    </span>
+  }
+</div>
+
+<!-- Messaggio di errore -->
+@if (hasError()) {
+  <p 
+    [id]="inputId() + '-error'" 
+    class="text-sm text-error-500 flex items-center gap-1"
+  >
+    {{ error() }}
+  </p>
+}
+
+<!-- Hint text -->
+@if (hint() && !hasError()) {
+  <p 
+    [id]="inputId() + '-hint'" 
+    class="text-sm text-gray-500 dark:text-gray-400"
+  >
+    {{ hint() }}
+  </p>
+}

@@ -1,0 +1,303 @@
+<!-- Chat View -->
+<div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+
+  <!-- Header - altezza fissa -->
+  <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <!-- Freccia indietro (sempre visibile su mobile, nascosta su desktop se c'è la sidebar) -->
+    <button
+      type="button"
+      (click)="goBack()"
+      class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors lg:hidden"
+      aria-label="Torna alle conversazioni"
+    >
+      <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+    </button>
+
+    <!-- User info -->
+    @if (otherUser(); as user) {
+      <app-avatar
+        [src]="user.profilePictureUrl"
+        [name]="user.nomeCompleto"
+        size="md"
+        [status]="isOtherUserOnline() ? 'online' : 'offline'"
+      />
+      <div class="flex-1 min-w-0">
+        <h2 class="font-semibold text-gray-900 dark:text-white truncate">
+          {{ user.nomeCompleto }}
+        </h2>
+        <p class="text-sm" [class]="isOtherUserTyping() ? 'text-primary-400' : (isOtherUserOnline() ? 'text-green-500' : 'text-gray-500 dark:text-gray-400')">
+          {{ onlineStatusText() }}
+        </p>
+      </div>
+    } @else if (isLoading()) {
+      <app-skeleton shape="circle" width="40px" height="40px" />
+      <div class="flex-1 space-y-1">
+        <app-skeleton width="120px" height="16px" />
+        <app-skeleton width="60px" height="14px" />
+      </div>
+    }
+  </header>
+
+  <!-- Messages area - SOLO questa sezione scrolla -->
+  <div
+    #messagesContainer
+    class="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900"
+  >
+    <!-- Loading skeleton -->
+    @if (isLoading()) {
+      <div class="space-y-4">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div [class]="i % 2 === 0 ? 'flex justify-end' : 'flex justify-start'">
+            <app-skeleton 
+              [width]="i % 2 === 0 ? '200px' : '250px'" 
+              height="60px" 
+              borderRadius="16px"
+            />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="flex flex-col items-center justify-center h-full text-center">
+        <p class="text-gray-500 dark:text-gray-400">{{ error() }}</p>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading() && !error() && messages().length === 0) {
+      <div class="flex flex-col items-center justify-center h-full text-center">
+        <p class="text-gray-500 dark:text-gray-400">
+          Nessun messaggio. Inizia la conversazione!
+        </p>
+      </div>
+    }
+
+    <!-- Messages list -->
+    @if (!isLoading() && messages().length > 0) {
+      @for (message of messages(); track trackByMessageId($index, message)) {
+        <!-- Wrapper con id per scroll al messaggio -->
+        <div [id]="'message-' + message.id">
+        <!-- Messaggio eliminato dal mittente -->
+        @if (isMessageDeleted(message)) {
+          <div [class]="message.mittente.id === currentUserId() ? 'flex justify-end' : 'flex justify-start'">
+            <div class="px-4 py-3 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm">
+              {{ message.mittente.id === currentUserId() ? 'Hai cancellato questo messaggio' : 'Messaggio cancellato' }}
+            </div>
+          </div>
+        } @else if (isMessageHidden(message)) {
+          <!-- Messaggio nascosto dall'utente corrente -->
+          <div class="flex justify-start">
+            <div class="px-4 py-3 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm">
+              Hai nascosto questo messaggio
+            </div>
+          </div>
+        } @else {
+          <!-- Messaggio normale - cliccabile per aprire dropdown -->
+          <div class="flex w-full" [class.justify-end]="message.mittente.id === currentUserId()" [class.justify-start]="message.mittente.id !== currentUserId()">
+            <div class="flex flex-col" [class.items-end]="message.mittente.id === currentUserId()" [class.items-start]="message.mittente.id !== currentUserId()">
+              <app-dropdown
+                [placement]="message.mittente.id === currentUserId() ? 'bottom-end' : 'bottom-start'"
+                [minWidth]="8"
+              >
+                <!-- Il messaggio stesso è il trigger del dropdown -->
+                <div
+                  trigger
+                  class="max-w-xs sm:max-w-sm md:max-w-md cursor-pointer active:opacity-80 transition-opacity"
+                >
+                  <div
+                    class="rounded-2xl overflow-hidden"
+                    [class.bg-primary-500]="message.mittente.id === currentUserId()"
+                    [class.text-white]="message.mittente.id === currentUserId()"
+                    [class.rounded-br-sm]="message.mittente.id === currentUserId()"
+                    [class.bg-gray-200]="message.mittente.id !== currentUserId()"
+                    [class.dark:bg-gray-700]="message.mittente.id !== currentUserId()"
+                    [class.text-text-light]="message.mittente.id !== currentUserId()"
+                    [class.dark:text-text-dark]="message.mittente.id !== currentUserId()"
+                    [class.rounded-bl-sm]="message.mittente.id !== currentUserId()"
+                  >
+                    <!-- Immagine allegata -->
+                    @if (message.imageUrl) {
+                      <div [class.mb-3]="message.contenuto">
+                        <img
+                          [src]="message.imageUrl"
+                          alt="Immagine allegato"
+                          class="w-full h-auto"
+                          loading="lazy"
+                        />
+                      </div>
+                    }
+
+                    <!-- Contenuto testuale  -->
+                    @if (message.contenuto) {
+                      <p class="text-sm whitespace-pre-wrap break-words px-4" [class.py-2]="!message.imageUrl" [class.pb-2]="message.imageUrl" [innerHTML]="getHighlightedContent(message)"></p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Menu dropdown -->
+                <div menu class="py-1 min-w-[120px]">
+                  @if (message.imageUrl) {
+                    <!-- Visualizza immagine -->
+                    <button
+                      type="button"
+                      (click)="openImageViewer(message.imageUrl!)"
+                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <lucide-icon [img]="EyeIcon" [size]="16" />
+                      <span>Visualizza</span>
+                    </button>
+                  }
+                  @if (message.mittente.id === currentUserId()) {
+                    <!-- Elimina (messaggio proprio) -->
+                    <button
+                      type="button"
+                      (click)="deleteMessage(message.id)"
+                      [disabled]="isDeleting(message.id)"
+                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                    >
+                      <lucide-icon [img]="TrashIcon" [size]="16" />
+                      <span>Elimina</span>
+                    </button>
+                  } @else {
+                    <!-- Nascondi (messaggio altrui) -->
+                    <button
+                      type="button"
+                      (click)="deleteMessage(message.id)"
+                      [disabled]="isDeleting(message.id)"
+                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                    >
+                      <lucide-icon [img]="EyeOffIcon" [size]="16" />
+                      <span>Nascondi</span>
+                    </button>
+                  }
+                </div>
+              </app-dropdown>
+
+              <!-- Footer: timestamp e stato lettura -->
+              <div class="text-xs mt-1 flex items-center gap-1">
+                <app-time-ago [date]="message.createdAt" class="text-gray-500 dark:text-gray-400" />
+                @if (message.mittente.id === currentUserId()) {
+                  <span class="mx-1 text-gray-500 dark:text-gray-400">·</span>
+                  <span [class.text-primary-500]="message.isRead" class="text-gray-500 dark:text-gray-400">
+                    {{ message.isRead ? 'Letto' : 'Inviato' }}
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+        </div>
+      }
+
+      <!-- Typing indicator -->
+      @if (isOtherUserTyping()) {
+        <div class="flex justify-start">
+          <div class="bg-gray-200 dark:bg-gray-800 rounded-2xl rounded-bl-sm px-4 py-3">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+              <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+              <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Input area - altezza fissa, sempre in basso -->
+  <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+    <!-- Preview immagine -->
+    @if (imagePreviewUrl()) {
+      <div class="relative inline-block mb-3">
+        <img
+          [src]="imagePreviewUrl()"
+          alt="Preview immagine"
+          class="h-20 w-auto rounded-lg object-cover"
+        />
+        @if (isUploadingImage()) {
+          <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+            <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }
+        <button
+          type="button"
+          (click)="clearImagePreview()"
+          class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors"
+          aria-label="Rimuovi immagine"
+        >
+          <lucide-icon [img]="XIcon" [size]="14" />
+        </button>
+      </div>
+    }
+
+    <div class="flex items-end gap-3">
+      <!-- Image picker (hidden input) -->
+      <input
+        #imageInputRef
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        (change)="onImageSelected($event)"
+        class="hidden"
+      />
+
+      <!-- Image button -->
+      <button
+        type="button"
+        (click)="openImagePicker()"
+        [disabled]="isSending() || isUploadingImage()"
+        class="flex-shrink-0 w-10 h-10 rounded-full text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+        aria-label="Allega immagine"
+      >
+        <lucide-icon [img]="ImageIcon" [size]="20" />
+      </button>
+
+      <!-- Text input -->
+      <div class="flex-1 relative">
+        <input
+          type="text"
+          [value]="messageText()"
+          (input)="onMessageInput($any($event.target).value)"
+          (keydown)="onKeyDown($event)"
+          placeholder="Scrivi un messaggio..."
+          class="w-full px-4 py-3 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors"
+          [disabled]="isSending()"
+        />
+      </div>
+
+      <!-- Send button -->
+      <button
+        type="button"
+        (click)="sendMessage()"
+        [disabled]="!canSend()"
+        class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
+        aria-label="Invia messaggio"
+      >
+        <lucide-icon [img]="SendIcon" [size]="20" />
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer Overlay -->
+@if (imageViewerUrl()) {
+  <div
+    class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+    (click)="closeImageViewer()"
+  >
+    <button
+      type="button"
+      class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+      aria-label="Chiudi"
+    >
+      <lucide-icon [img]="XIcon" [size]="24" />
+    </button>
+    <img
+      [src]="imageViewerUrl()"
+      alt="Immagine ingrandita"
+      class="max-w-full max-h-full object-contain"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}

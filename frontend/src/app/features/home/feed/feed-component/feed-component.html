@@ -1,0 +1,112 @@
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+    <!-- Colonna principale: Create Post + Feed -->
+    <div class="lg:col-span-8 space-y-6">
+      <!-- Form creazione post -->
+      <app-create-post-component (postCreated)="onPostCreated($event)" />
+
+      <!-- Stato di caricamento iniziale -->
+      @if (isLoading()) {
+        <div class="space-y-6">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm space-y-4">
+              <!-- Header skeleton -->
+              <div class="flex items-start gap-3">
+                <app-skeleton shape="circle" width="48px" height="48px" />
+                <div class="flex-1 space-y-2">
+                  <app-skeleton width="40%" height="16px" />
+                  <app-skeleton width="25%" height="12px" />
+                </div>
+              </div>
+              <!-- Content skeleton -->
+              <div class="space-y-2">
+                <app-skeleton width="100%" height="14px" />
+                <app-skeleton width="90%" height="14px" />
+                <app-skeleton width="70%" height="14px" />
+              </div>
+              <!-- Actions skeleton -->
+              <div class="flex gap-4 pt-2">
+                <app-skeleton width="60px" height="32px" />
+                <app-skeleton width="60px" height="32px" />
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Messaggio di errore -->
+      @if (error()) {
+        <div class="rounded-xl bg-error-50 dark:bg-error-900/30 p-6 text-center">
+          <p class="text-error-700 dark:text-error-300 mb-4">{{ error() }}</p>
+          <button
+            type="button"
+            class="text-sm font-medium text-primary-500 hover:text-primary-600 hover:underline"
+            (click)="refreshFeed()"
+          >
+            Riprova
+          </button>
+        </div>
+      }
+
+      <!-- Stato vuoto -->
+      @if (showEmptyState()) {
+        <div class="rounded-xl bg-surface-light dark:bg-surface-dark p-8 text-center shadow-sm">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <span class="text-3xl">📝</span>
+          </div>
+          <h3 class="text-lg font-semibold text-text-light dark:text-text-dark mb-2">
+            Nessun post ancora
+          </h3>
+          <p class="text-gray-500 dark:text-gray-400">
+            Sii il primo a pubblicare qualcosa!
+          </p>
+        </div>
+      }
+
+      <!-- Lista post -->
+      @if (!isLoading() && hasPosts()) {
+        <div
+          class="space-y-6"
+          appInfiniteScroll
+          [useWindow]="true"
+          [threshold]="400"
+          [disabled]="isLoadingMore() || !hasMore()"
+          (scrolled)="loadMorePosts()"
+        >
+          @for (post of posts(); track trackByPostId($index, post)) {
+            <app-post-card-component
+              [post]="post"
+              (deleted)="onPostDeleted($event)"
+              (edited)="onPostEdited($event)"
+              (hidden)="onPostHidden($event)"
+            />
+          }
+
+          <!-- Loader per caricamento altri post -->
+          @if (isLoadingMore()) {
+            <div class="flex justify-center py-4">
+              <app-spinner size="md" />
+            </div>
+          }
+
+          <!-- Messaggio fine post -->
+          @if (!hasMore() && hasPosts()) {
+            <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
+              Hai visto tutti i post 🎉
+            </p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Sidebar: Utenti online (nascosta su mobile) -->
+    <aside class="hidden lg:block lg:col-span-4">
+      <div class="lg:sticky lg:top-24">
+        <app-sidebar-online-component />
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Drawer utenti online per mobile -->
+<app-online-users-drawer />

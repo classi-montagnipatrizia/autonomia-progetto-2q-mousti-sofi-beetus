@@ -1,0 +1,240 @@
+<!-- Header Desktop/Tablet -->
+<header class="fixed top-0 left-0 right-0 z-40 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center shrink-0">
+        <img 
+          src="images/beetUs_logo.svg" 
+          alt="beetUs" 
+          class="h-10 w-auto"
+        />
+      </a>
+
+      <!-- Barra di ricerca (nascosta su mobile) -->
+      <div class="hidden md:flex flex-1 max-w-xl mx-8">
+        <app-search-dropdown-component 
+          class="w-full"
+          placeholder="Cerca utenti o post..."
+        />
+      </div>
+
+      <!-- Azioni a destra -->
+      <div class="flex items-center gap-2">
+        
+        <!-- Icona ricerca mobile -->
+        <button
+          type="button"
+          class="md:hidden p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          (click)="toggleMobileSearch()"
+          aria-label="Cerca"
+        >
+          <lucide-icon [img]="SearchIcon" [size]="22"></lucide-icon>
+        </button>
+
+        <!-- Notifiche -->
+        <div class="relative">
+          <button
+            type="button"
+            class="relative p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            (click)="toggleNotifications($event)"
+            aria-label="Notifiche"
+            [attr.aria-expanded]="isNotificationsOpen()"
+          >
+            <lucide-icon [img]="BellIcon" [size]="22"></lucide-icon>
+            
+            <!-- Badge notifiche non lette -->
+            @if (hasUnread()) {
+              <span 
+                class="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-red-500 rounded-full"
+              >
+                {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+              </span>
+            }
+          </button>
+
+          <!-- Dropdown notifiche -->
+          @if (isNotificationsOpen()) {
+            <div 
+              class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+            >
+              <!-- Header dropdown -->
+              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notifiche</h3>
+                @if (hasUnread()) {
+                  <button
+                    type="button"
+                    class="text-xs text-primary-500 hover:text-primary-600 font-medium"
+                    (click)="markAllAsRead()"
+                  >
+                    Segna tutte come lette
+                  </button>
+                }
+              </div>
+
+              <!-- Lista notifiche -->
+              <div class="max-h-96 overflow-y-auto">
+                @if (recentNotifications().length === 0) {
+                  <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <lucide-icon [img]="BellIcon" [size]="32" class="text-gray-300 dark:text-gray-600 mb-2"></lucide-icon>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Nessuna notifica</p>
+                  </div>
+                } @else {
+                  @for (notification of recentNotifications(); track notification.id) {
+                    <button
+                      type="button"
+                      class="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
+                      [class.bg-primary-50]="!notification.isRead"
+                      [class.dark:bg-primary-900/20]="!notification.isRead"
+                      (click)="onNotificationClick(notification)"
+                    >
+                      <!-- Avatar utente che ha triggerato -->
+                      @if (notification.utenteCheLHaGenerata) {
+                        <app-avatar
+                          [src]="notification.utenteCheLHaGenerata.profilePictureUrl"
+                          [name]="notification.utenteCheLHaGenerata.nomeCompleto || notification.utenteCheLHaGenerata.username"
+                          size="sm"
+                        />
+                      }
+                      
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-900 dark:text-white line-clamp-2">
+                          {{ notification.contenuto }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {{ notification.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                      </div>
+
+                      <!-- Indicatore non letta -->
+                      @if (!notification.isRead) {
+                        <span class="w-2 h-2 bg-primary-500 rounded-full shrink-0 mt-2"></span>
+                      }
+                    </button>
+                  }
+                }
+              </div>
+
+              <!-- Footer dropdown -->
+              <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  class="w-full text-center text-sm text-primary-500 hover:text-primary-600 font-medium"
+                  (click)="goToNotifications()"
+                >
+                  Vedi tutte le notifiche
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Avatar e menu utente -->
+        <div class="relative">
+          <button
+            type="button"
+            class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            (click)="toggleUserMenu($event)"
+            aria-label="Menu utente"
+            [attr.aria-expanded]="isUserMenuOpen()"
+          >
+            <app-avatar
+              [src]="avatarUrl()"
+              [name]="displayName()"
+              size="sm"
+              [status]="'online'"
+            />
+          </button>
+
+          <!-- Dropdown menu utente -->
+          @if (isUserMenuOpen()) {
+            <div 
+              class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+            >
+              <!-- Info utente -->
+              <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  {{ displayName() }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  @{{ currentUser()?.username }}
+                </p>
+              </div>
+
+              <!-- Voci menu -->
+              <div class="py-1">
+                <!-- Profilo -->
+                <button
+                  type="button"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  (click)="goToProfile()"
+                >
+                  <lucide-icon [img]="UserIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                  Profilo
+                </button>
+
+                <!-- Pannello Admin (solo admin) -->
+                @if (isAdmin()) {
+                  <button
+                    type="button"
+                    class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    (click)="goToAdmin()"
+                  >
+                    <lucide-icon [img]="ShieldIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                    Pannello Admin
+                  </button>
+                }
+
+                <!-- Impostazioni -->
+                <button
+                  type="button"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  (click)="goToSettings()"
+                >
+                  <lucide-icon [img]="SettingsIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                  Impostazioni
+                </button>
+              </div>
+
+              <!-- Separatore -->
+              <div class="border-t border-gray-200 dark:border-gray-700"></div>
+
+              <!-- Logout -->
+              <div class="py-1">
+                <button
+                  type="button"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  (click)="logout()"
+                >
+                  <lucide-icon [img]="LogOutIcon" [size]="18"></lucide-icon>
+                  Esci
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra di ricerca mobile (espandibile) -->
+  @if (isMobileSearchOpen()) {
+    <div class="md:hidden px-4 pb-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div class="flex items-center gap-2 pt-3">
+        <app-search-dropdown-component 
+          class="flex-1"
+          placeholder="Cerca utenti o post..."
+        />
+        <button
+          type="button"
+          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          (click)="toggleMobileSearch()"
+          aria-label="Chiudi ricerca"
+        >
+          <lucide-icon [img]="XIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  }
+</header>

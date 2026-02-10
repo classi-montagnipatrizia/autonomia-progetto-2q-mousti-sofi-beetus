@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Rimuove lo stile nativo di autofill dei browser
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+// Rimuove frecce per input number
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+// Rimuove X per input search
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}

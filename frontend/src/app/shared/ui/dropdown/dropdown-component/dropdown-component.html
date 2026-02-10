@@ -1,0 +1,23 @@
+<div class="relative inline-block">
+  <!-- Trigger Button -->
+  <div (click)="toggle()" class="cursor-pointer">
+    <ng-content select="[trigger]"></ng-content>
+  </div>
+
+  <!-- Dropdown Menu -->
+  @if (isOpen()) {
+  <div
+    class="absolute z-50 animate-slide-up"
+    [ngClass]="placementClasses()"
+    [style.min-width]="minWidthStyle()"
+  >
+    <!-- Menu Content -->
+    <div
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+    >
+      <ng-content select="[content]"></ng-content>
+      <ng-content select="[menu]"></ng-content>
+    </div>
+  </div>
+  }
+</div>

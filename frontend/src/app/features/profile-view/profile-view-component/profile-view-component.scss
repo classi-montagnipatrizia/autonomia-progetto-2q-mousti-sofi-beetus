@@ -1,0 +1,22 @@
+:host {
+  display: block;
+}
+
+// Ensure the media grid items maintain aspect ratio
+.aspect-square {
+  position: relative;
+
+  &::before {
+    content: '';
+    display: block;
+    padding-bottom: 100%;
+  }
+
+  img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}

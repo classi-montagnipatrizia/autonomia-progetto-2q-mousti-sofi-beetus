@@ -1,0 +1,210 @@
+<!-- Conversations List -->
+<div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+
+  <!-- Header - uguale per mobile e desktop, con pulsante back -->
+  <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+      aria-label="Torna alla home"
+    >
+      <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+    </button>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Messaggi</h1>
+  </header>
+
+  <!-- Search bar -->
+  <div class="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div class="relative">
+      <lucide-icon
+        [img]="SearchIcon"
+        [size]="18"
+        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+      />
+      <input
+        type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Cerca messaggi..."
+        class="w-full pl-14 pr-10 py-2.5 bg-gray-100 dark:bg-gray-800 border-0 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 transition-colors"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-300 transition-colors"
+          aria-label="Cancella ricerca"
+        >
+          <lucide-icon [img]="XIcon" [size]="16" />
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Lista conversazioni / Risultati ricerca - SOLO questa sezione scrolla -->
+  <div class="flex-1 min-h-0 overflow-y-auto">
+    
+    <!-- Loading skeleton -->
+    @if (isLoading()) {
+      <div class="divide-y divide-gray-200 dark:divide-gray-800">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="flex items-center gap-3 p-4">
+            <app-skeleton shape="circle" width="48px" height="48px" />
+            <div class="flex-1 space-y-2">
+              <app-skeleton width="60%" height="16px" />
+              <app-skeleton width="80%" height="14px" />
+            </div>
+            <app-skeleton width="40px" height="12px" />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div class="w-16 h-16 mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <span class="text-3xl">😕</span>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">{{ error() }}</p>
+        <button
+          type="button"
+          (click)="refresh()"
+          class="px-4 py-2 text-sm font-medium text-primary-500 hover:text-primary-600 hover:underline"
+        >
+          Riprova
+        </button>
+      </div>
+    }
+
+    <!-- Empty state - nessuna conversazione -->
+    @if (isEmpty()) {
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div class="w-20 h-20 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <lucide-icon [img]="MessageSquareIcon" [size]="40" class="text-gray-400" />
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Nessuna conversazione
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400 max-w-xs">
+          Inizia una nuova conversazione cliccando su un utente dalla lista degli utenti online.
+        </p>
+      </div>
+    }
+
+    <!-- No search results -->
+    @if (noSearchResults()) {
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div class="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <lucide-icon [img]="SearchIcon" [size]="32" class="text-gray-400" />
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+          Nessun risultato
+        </h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Nessun messaggio contiene "{{ searchQuery() }}"
+        </p>
+      </div>
+    }
+
+    <!-- Searching indicator -->
+    @if (isSearching()) {
+      <div class="flex items-center justify-center py-8">
+        <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+          <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin"></div>
+          <span class="text-sm">Ricerca in corso...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Modalità ricerca: mostra risultati da tutti i messaggi -->
+    @if (isSearchMode() && !isSearching()) {
+      <!-- Risultati ricerca messaggi -->
+      @if (hasSearchResults()) {
+        <div class="px-4 py-2 bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Messaggi trovati ({{ searchResults().length }})
+          </p>
+        </div>
+        <div class="divide-y divide-gray-200 dark:divide-gray-800">
+          @for (message of searchResults(); track message.id) {
+            <button
+              type="button"
+              (click)="onSearchResultClick(message)"
+              class="w-full flex items-start gap-3 p-4 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors text-left"
+            >
+              <app-avatar
+                [src]="message.mittente.profilePictureUrl"
+                [name]="message.mittente.nomeCompleto"
+                size="md"
+                [status]="isUserOnline(message.mittente.id) ? 'online' : 'offline'"
+              />
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <span class="font-medium text-gray-900 dark:text-white truncate">
+                    {{ message.mittente.nomeCompleto }}
+                  </span>
+                  <span class="text-xs text-gray-500 whitespace-nowrap">
+                    {{ message.createdAt | timeAgo }}
+                  </span>
+                </div>
+                <p
+                  class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
+                  [innerHTML]="highlightText(message.contenuto, searchQuery())"
+                ></p>
+              </div>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Conversazioni corrispondenti durante la ricerca -->
+      @if (hasConversations()) {
+        <div class="px-4 py-2 bg-gray-100 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 mt-2">
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Conversazioni
+          </p>
+        </div>
+        <div class="divide-y divide-gray-200 dark:divide-gray-800">
+          @for (conversation of filteredConversations(); track conversation.altroUtente.id) {
+            <app-conversation-item-component
+              [userId]="conversation.altroUtente.id"
+              [username]="conversation.altroUtente.username"
+              [nomeCompleto]="conversation.altroUtente.nomeCompleto"
+              [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
+              [isOnline]="isUserOnline(conversation.altroUtente.id)"
+              [isTyping]="isUserTyping(conversation.altroUtente.id)"
+              [lastMessage]="getLastMessagePreview(conversation)"
+              [lastActivityAt]="conversation.ultimaAttivita"
+              [unreadCount]="conversation.messaggiNonLetti"
+              [isSelected]="selectedUserId() === conversation.altroUtente.id"
+              (conversationSelect)="onConversationSelect($event)"
+            />
+          }
+        </div>
+      }
+    }
+
+    <!-- Modalità normale: lista conversazioni -->
+    @if (!isSearchMode() && !isLoading() && hasConversations()) {
+      <div class="divide-y divide-gray-200 dark:divide-gray-800">
+        @for (conversation of filteredConversations(); track conversation.altroUtente.id) {
+          <app-conversation-item-component
+            [userId]="conversation.altroUtente.id"
+            [username]="conversation.altroUtente.username"
+            [nomeCompleto]="conversation.altroUtente.nomeCompleto"
+            [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
+            [isOnline]="isUserOnline(conversation.altroUtente.id)"
+            [isTyping]="isUserTyping(conversation.altroUtente.id)"
+            [lastMessage]="getLastMessagePreview(conversation)"
+            [lastActivityAt]="conversation.ultimaAttivita"
+            [unreadCount]="conversation.messaggiNonLetti"
+            [isSelected]="selectedUserId() === conversation.altroUtente.id"
+            (conversationSelect)="onConversationSelect($event)"
+          />
+        }
+      </div>
+    }
+  </div>
+</div>

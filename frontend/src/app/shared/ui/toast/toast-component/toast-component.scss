@@ -1,0 +1,129 @@
+/* TOAST ANIMATIONS - Angular 20 CSS Native */
+
+/* KEYFRAMES - Enter Animation */
+@keyframes toast-enter-animation {
+    from {
+        /* Inizia fuori dallo schermo a destra, leggermente ridotto e trasparente */
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+    }
+
+    to {
+        /* Arriva nella posizione finale, dimensione normale e completamente opaco */
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* KEYFRAMES - Leave Animation */
+@keyframes toast-leave-animation {
+    from {
+        /* Parte dalla posizione normale */
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+
+    to {
+        /* Esce verso destra, si riduce leggermente e diventa trasparente */
+        opacity: 0;
+        transform: translateX(120%) scale(0.95);
+    }
+}
+
+/* ANIMATION CLASSES */
+
+/* Classe applicata quando il toast entra */
+.toast-enter {
+    /* 
+   * Animation con cubic-bezier custom per effetto bounce naturale
+   * 0.68, -0.55 crea l'overshoot iniziale
+   * 0.265, 1.55 crea il bounce finale
+   */
+    animation: toast-enter-animation 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+
+    /* 
+   * will-change ottimizza le performance indicando al browser
+   * quali proprietà cambieranno, permettendo l'accelerazione GPU
+   */
+    will-change: transform, opacity;
+}
+
+/* Classe applicata quando il toast esce */
+.toast-leave {
+    /* Animation più veloce e più fluida per l'uscita */
+    animation: toast-leave-animation 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+    /* Ottimizzazione GPU per transform e opacity */
+    will-change: transform, opacity;
+}
+
+/* DARK MODE ENHANCEMENTS */
+
+/*
+ * Dark mode: shadow più morbide e visibili
+ * In dark mode le ombre standard sono poco visibili,
+ * quindi le rendiamo più pronunciate con blur maggiore
+ */
+:global(.dark) .toast-enter,
+:global(.dark) .toast-leave {
+    /* 
+   * Shadow potenziata per dark mode:
+   * - Offset maggiore (0 6px invece di 0 4px)
+   * - Blur più ampio (20px invece di 12px)
+   * - Opacità maggiore (0.3 invece di 0.15)
+   */
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5));
+}
+
+/*
+ * Backdrop blur più intenso in dark mode
+ * Migliora la separazione visiva tra toast e sfondo scuro
+ */
+:global(.dark) .toast-enter,
+:global(.dark) .toast-leave {
+    backdrop-filter: blur(12px) saturate(150%);
+}
+
+/*
+ * Glow effect sottile per toast in dark mode
+ * Aggiunge un bordo luminoso che migliora la visibilità
+ */
+:global(.dark) .toast-enter::after,
+:global(.dark) .toast-leave::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0.02) 100%);
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: -1;
+}
+
+/* ACCESSIBILITY - Reduced Motion Support */
+
+/*
+ * Rispetta le preferenze di accessibilità dell'utente
+ * Se l'utente ha abilitato "prefers-reduced-motion" nel sistema,
+ * le animazioni diventano quasi istantanee (0.01ms)
+ * 
+ * Questo è fondamentale per utenti con:
+ * - Disturbi vestibolari
+ * - Epilessia fotosensibile
+ * - Problemi di motion sickness
+ */
+@media (prefers-reduced-motion: reduce) {
+
+    .toast-enter,
+    .toast-leave {
+        /* Durata quasi istantanea per evitare movimento */
+        animation-duration: 0.01ms !important;
+
+        /* Rimuove will-change per evitare ottimizzazioni non necessarie */
+        will-change: auto;
+    }
+
+}

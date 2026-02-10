@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeetUS - Vendi un Libro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-900/50 min-h-screen flex items-center justify-center p-4">
+
+  <!-- ============================================
+       MODAL VENDI LIBRO
+       ============================================ -->
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+
+    <!-- Header Modal -->
+    <header class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+      <h2 class="text-xl font-bold text-gray-900">Vendi un libro</h2>
+      <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Contenuto Modal -->
+    <div class="p-6 space-y-6">
+
+      <!-- ============================================
+           STEP 1: Upload Foto (Fronte e Retro)
+           ============================================ -->
+      <section>
+        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+          Carica le foto del libro
+        </h3>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Upload Fronte -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Fronte (copertina) *</label>
+            <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <p class="text-sm text-gray-600 font-medium">Clicca per caricare</p>
+              <p class="text-xs text-gray-400 mt-1">PNG, JPG fino a 5MB</p>
+            </div>
+          </div>
+
+          <!-- Upload Retro -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Retro (opzionale)</label>
+            <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
+              <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <p class="text-sm text-gray-600 font-medium">Clicca per caricare</p>
+              <p class="text-xs text-gray-400 mt-1">PNG, JPG fino a 5MB</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview immagini caricate (esempio con immagini) -->
+        <div class="hidden grid grid-cols-2 gap-4 mt-4">
+          <!-- Preview Fronte -->
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300" class="w-full aspect-[3/4] object-cover rounded-xl" alt="Fronte"/>
+            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">Fronte</span>
+            <button class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Preview Retro -->
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=300" class="w-full aspect-[3/4] object-cover rounded-xl" alt="Retro"/>
+            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">Retro</span>
+            <button class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Divider con AI -->
+      <div class="relative py-4">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-200"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-medium flex items-center gap-2 shadow-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Genera con AI
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================
+           AI Loading State
+           ============================================ -->
+      <div class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div>
+            <p class="font-medium text-blue-900">L'AI sta analizzando le foto...</p>
+            <p class="text-sm text-blue-600">Generazione titolo, descrizione e prezzo in corso</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================
+           AI Success State
+           ============================================ -->
+      <div class="bg-green-50 border border-green-100 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-green-900">Dati generati con successo!</p>
+            <p class="text-sm text-green-700">Controlla e modifica i campi se necessario</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================
+           STEP 2: Dati libro
+           ============================================ -->
+      <section>
+        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+          Informazioni libro
+          <span class="ml-auto text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Generato da AI
+          </span>
+        </h3>
+
+        <div class="space-y-4">
+          <!-- Titolo -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Titolo *</label>
+            <input
+              type="text"
+              value="Matematica Blu 2.0 - Volume 3"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Es. Matematica Blu 2.0"
+            />
+          </div>
+
+          <!-- Autore -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Autore</label>
+            <input
+              type="text"
+              value="Bergamini, Barozzi, Trifone"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Es. Bergamini, Barozzi"
+            />
+          </div>
+
+          <!-- ISBN -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">ISBN (opzionale)</label>
+            <input
+              type="text"
+              value="9788808537010"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Es. 9788808537010"
+            />
+          </div>
+
+          <!-- Riga: Anno e Materia -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Anno di corso *</label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+                <option value="">Seleziona</option>
+                <option value="1">1° Anno</option>
+                <option value="2">2° Anno</option>
+                <option value="3" selected>3° Anno</option>
+                <option value="4">4° Anno</option>
+                <option value="5">5° Anno</option>
+                <option value="all">Tutti gli anni</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Materia *</label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+                <option value="">Seleziona</option>
+                <option value="matematica" selected>Matematica</option>
+                <option value="italiano">Italiano</option>
+                <option value="inglese">Inglese</option>
+                <option value="storia">Storia</option>
+                <option value="fisica">Fisica</option>
+                <option value="informatica">Informatica</option>
+                <option value="altro">Altro</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Riga: Prezzo e Condizione -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                Prezzo *
+                <span class="text-blue-600 text-xs ml-1">(AI suggerisce €15)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">€</span>
+                <input
+                  type="number"
+                  value="15"
+                  min="0"
+                  step="0.50"
+                  class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Condizione *</label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+                <option value="">Seleziona</option>
+                <option value="nuovo" selected>Come nuovo</option>
+                <option value="buono">Buone condizioni</option>
+                <option value="usato">Usato</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Descrizione -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              Descrizione
+              <span class="text-blue-600 text-xs ml-1">(generata da AI)</span>
+            </label>
+            <textarea
+              rows="4"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              placeholder="Descrivi le condizioni del libro..."
+            >Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra, senza pieghe o strappi. Ideale per studenti del terzo anno di informatica.</textarea>
+            <p class="text-xs text-gray-400 mt-1 text-right">234/500 caratteri</p>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Footer Modal -->
+    <footer class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3">
+      <button class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors">
+        Annulla
+      </button>
+      <button class="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Pubblica annuncio
+      </button>
+    </footer>
+
+  </div>
+
+</body>
+</html>

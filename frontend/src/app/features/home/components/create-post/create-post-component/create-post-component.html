@@ -1,0 +1,111 @@
+<div class="flex flex-col gap-3 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+  <!-- Header: Avatar + Textarea -->
+  <div class="flex items-start gap-3">
+    <!-- Avatar utente corrente -->
+    <button
+      type="button"
+      (click)="goToProfile()"
+      class="flex-shrink-0"
+      [attr.aria-label]="'Vai al tuo profilo'"
+    >
+      <app-avatar
+        [src]="currentUser()?.profilePictureUrl ?? null"
+        [name]="currentUser()?.nomeCompleto ?? 'Utente'"
+        size="md"
+        class="cursor-pointer"
+      />
+    </button>
+
+    <!-- Textarea per contenuto con supporto menzioni -->
+    <div class="flex-1 relative">
+      <textarea
+        #textareaEl
+        [value]="content()"
+        (input)="onTextareaInput($event)"
+        (keydown)="onTextareaKeydown($event)"
+        [placeholder]="placeholder()"
+        [attr.maxlength]="MAX_CONTENT_LENGTH"
+        rows="3"
+        class="w-full min-h-[80px] resize-none rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark p-3 text-base text-text-light dark:text-text-dark placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+      ></textarea>
+
+      <!-- Mention Autocomplete Dropdown -->
+      <app-mention-autocomplete-component
+        #mentionAutocomplete
+        [searchTerm]="mentionSearchTerm()"
+        [show]="showMentionDropdown()"
+        [position]="dropdownPosition()"
+        (userSelected)="onMentionSelected($event)"
+        (close)="closeMentionDropdown()"
+      />
+    </div>
+  </div>
+
+  <!-- Preview immagine caricata (se presente e upload nascosto) -->
+  @if (imageUrl() && !showImageUpload()) {
+    <div class="ml-13 relative">
+      <img
+        [src]="imageUrl()"
+        alt="Immagine allegata"
+        class="max-h-48 rounded-lg object-cover"
+      />
+      <button
+        type="button"
+        class="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        (click)="removeImage()"
+        aria-label="Rimuovi immagine"
+      >
+        <lucide-icon [img]="XIcon" class="w-4 h-4" />
+      </button>
+    </div>
+  }
+
+  <!-- Area upload immagine (quando visibile) -->
+  @if (showImageUpload()) {
+    <div class="ml-13">
+      <app-image-upload-component
+        imageType="post"
+        placeholder="Aggiungi un'immagine al post"
+        [existingImageUrl]="imageUrl()"
+        height="150px"
+        (uploadSuccess)="onImageUploaded($event)"
+        (uploadError)="onImageError($event)"
+        (imageRemoved)="onImageRemoved()"
+      />
+    </div>
+  }
+
+  <!-- Footer: Azioni -->
+  <div class="flex items-center justify-between ml-13">
+    <div class="flex items-center gap-2">
+      <!-- Pulsante aggiungi immagine -->
+      <button
+        type="button"
+        class="p-2 rounded-full transition-colors"
+        [class]="showImageUpload() || imageUrl() ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-500' : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-primary-500'"
+        (click)="toggleImageUpload()"
+        [attr.aria-label]="showImageUpload() ? 'Nascondi upload immagine' : 'Aggiungi immagine'"
+      >
+        <lucide-icon [img]="ImageIcon" class="w-5 h-5" />
+      </button>
+
+      <!-- Contatore caratteri (visibile quando si avvicina al limite) -->
+      @if (showCharCount()) {
+        <span [class]="charCountClasses()" class="text-xs">
+          {{ charCount() }}/{{ MAX_CONTENT_LENGTH }}
+        </span>
+      }
+    </div>
+
+    <!-- Pulsante pubblica -->
+    <app-button
+      variant="primary"
+      size="md"
+      [disabled]="!canSubmit()"
+      [loading]="isSubmitting()"
+      (clicked)="submitPost()"
+    >
+      Pubblica
+    </app-button>
+  </div>
+</div>

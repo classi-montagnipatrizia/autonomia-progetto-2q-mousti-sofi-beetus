@@ -1,0 +1,30 @@
+:host {
+  display: inline-block;
+}
+
+// Animazione pulsante per i pallini
+.typing-dot {
+  animation: typingPulse 1.4s infinite ease-in-out;
+}
+
+// Delay per creare effetto sequenziale
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingPulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
