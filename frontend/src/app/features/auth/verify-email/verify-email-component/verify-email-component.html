@@ -1,0 +1,137 @@
+<div class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Logo/Header -->
+    <div class="text-center">
+      <h1 class="text-4xl font-bold text-primary-600 dark:text-primary-400">beetUs</h1>
+      <h2 class="mt-6 text-3xl font-extrabold text-text-light dark:text-text-dark">
+        Verifica Email
+      </h2>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400"></div>
+        <p class="mt-4 text-text-light dark:text-text-dark">Verifica in corso...</p>
+      </div>
+    }
+
+    <!-- Pending Verification State (dopo registrazione) -->
+    @else if (isPendingVerification()) {
+      <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-6 text-center">
+        <svg class="mx-auto h-12 w-12 text-primary-500 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-primary-900 dark:text-primary-100">Controlla la tua email!</h3>
+        <p class="mt-2 text-sm text-primary-700 dark:text-primary-300">
+          Abbiamo inviato un'email di verifica a:
+        </p>
+        <p class="mt-1 font-medium text-primary-900 dark:text-primary-100">{{ userEmail() }}</p>
+        <p class="mt-3 text-sm text-primary-700 dark:text-primary-300">
+          Clicca sul link nell'email per attivare il tuo account.
+        </p>
+
+        <div class="mt-6 flex flex-col gap-4">
+          <app-button
+            variant="secondary"
+            [disabled]="isResending()"
+            [loading]="isResending()"
+            (click)="resendVerificationEmail()"
+            class="w-full">
+            Non hai ricevuto l'email? Reinvia
+          </app-button>
+          <app-button
+            variant="ghost"
+            [routerLink]="['/auth/login']"
+            class="w-full">
+            Torna al Login
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Success State -->
+    @else if (isSuccess()) {
+      <div class="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg p-6 text-center">
+        <svg class="mx-auto h-12 w-12 text-success-500 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-success-900 dark:text-success-100">Email verificata!</h3>
+        <p class="mt-2 text-sm text-success-700 dark:text-success-300">
+          Il tuo account è stato attivato con successo.<br>
+          Clicca sul pulsante per accedere.
+        </p>
+        <div class="mt-6">
+          <app-button
+            variant="primary"
+            (click)="navigateToLogin()"
+            class="w-full">
+            Vai al Login
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Error State -->
+    @else if (errorMessage()) {
+      <div class="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-6 text-center">
+        <svg class="mx-auto h-12 w-12 text-error-500 dark:text-error-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-error-900 dark:text-error-100">Verifica fallita</h3>
+        <p class="mt-2 text-sm text-error-700 dark:text-error-300">{{ errorMessage() }}</p>
+
+        <!-- Resend Form Toggle -->
+        @if (!showResendForm()) {
+          <div class="mt-6 flex flex-col gap-4">
+            <app-button
+              variant="secondary"
+              (click)="toggleResendForm()"
+              class="w-full">
+              Reinvia Email di Verifica
+            </app-button>
+            <app-button
+              variant="ghost"
+              [routerLink]="['/auth/login']"
+              class="w-full">
+              Torna al Login
+            </app-button>
+          </div>
+        }
+
+        <!-- Resend Form -->
+        @else {
+          <form [formGroup]="resendForm" (ngSubmit)="resendVerificationEmail()" class="mt-6 space-y-4">
+            <div class="text-left">
+              <app-input-component
+                formControlName="email"
+                type="email"
+                placeholder="Email @marconirovereto.it"
+                [error]="getFieldError('email')"
+                label="Email" />
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <app-button
+                type="button"
+                variant="secondary"
+                (click)="toggleResendForm()"
+                [disabled]="isResending()"
+                class="w-full sm:w-auto">
+                Annulla
+              </app-button>
+              <app-button
+                type="submit"
+                variant="primary"
+                [disabled]="isResending()"
+                [loading]="isResending()"
+                class="w-full sm:w-auto">
+                Invia
+              </app-button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  </div>
+</div>

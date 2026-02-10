@@ -1,0 +1,38 @@
+<div class="flex items-center gap-6">
+  <!-- Like button -->
+  @if (showLike()) {
+    <button
+      type="button"
+      class="flex items-center gap-2 text-sm transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 group"
+      [class]="effectiveHasLiked()
+        ? 'text-red-500 hover:text-red-600'
+        : 'text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'"
+      [disabled]="isLikeLoading()"
+      appDebounceClick="300"
+      (debounceClick)="toggleLike($event)"
+      [attr.aria-label]="effectiveHasLiked() ? 'Rimuovi like' : 'Metti like'"
+    >
+      <lucide-icon
+        [img]="HeartIcon"
+        [size]="20"
+        class="heart-icon transition-all duration-200"
+        [class.heart-filled]="effectiveHasLiked()"
+        [class.group-hover:scale-110]="!isLikeLoading()"
+      ></lucide-icon>
+      <span class="font-medium">{{ effectiveLikesCount() }}</span>
+    </button>
+  }
+
+  <!-- Comments button -->
+  @if (showComments()) {
+    <button
+      type="button"
+      class="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400 transition-colors cursor-pointer"
+      (click)="openComments($event)"
+      aria-label="Vedi commenti"
+    >
+      <lucide-icon [img]="MessageCircleIcon" [size]="20"></lucide-icon>
+      <span class="font-medium">{{ effectiveCommentsCount() }}</span>
+    </button>
+  }
+</div>

@@ -1,0 +1,22 @@
+// Stili personalizzati per il componente
+@reference "tailwindcss";
+.app-container {
+  @apply transition-all duration-300;
+}
+
+// Pulsante personalizzato
+.custom-btn {
+  @apply bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded;
+}
+
+// Dark mode toggle (aggiungi logica in app.component.ts se vuoi)
+.dark-toggle {
+  @apply bg-yellow-500 hover:bg-yellow-600;
+}
+
+// Media query di esempio
+@media (max-width: 640px) {
+  .app-container {
+    @apply p-4;
+  }
+}

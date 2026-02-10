@@ -1,0 +1,167 @@
+<div class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark p-4 py-8">
+  <div class="w-full max-w-md">
+    <!-- Logo e titolo -->
+    <div class="text-center mb-8">
+      <a routerLink="/" class="inline-flex items-center justify-center gap-3">
+        <img src="images/beetUs_logo.svg" alt="beetUs Logo" class="h-10 w-10" />
+        <span class="text-3xl font-bold text-text-light dark:text-text-dark">
+          beetUs
+        </span>
+      </a>
+      <h1 class="text-2xl sm:text-3xl font-bold text-text-light dark:text-text-dark mt-6">
+        Crea il tuo account
+      </h1>
+      <p class="text-base text-gray-600 dark:text-gray-400 mt-2">
+        Connettiti con la tua classe in modo semplice e sicuro.
+      </p>
+    </div>
+
+    <!-- Card registrazione -->
+    <div class="w-full rounded-xl bg-surface-light dark:bg-surface-dark p-6 sm:p-8 shadow-lg">
+      <!-- Messaggio errore globale -->
+      @if (errorMessage()) {
+        <div class="mb-6 p-4 rounded-lg bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800">
+          <p class="text-sm text-error-700 dark:text-error-300">
+            {{ errorMessage() }}
+          </p>
+        </div>
+      }
+
+      <!-- Form registrazione -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+        <!-- Nome completo -->
+        <app-input-component
+          formControlName="nomeCompleto"
+          label="Nome Completo"
+          placeholder="Mario Rossi"
+          [required]="true"
+          [error]="getFieldError('nomeCompleto')"
+          autocomplete="name"
+          size="lg"
+        />
+
+        <!-- Username -->
+        <div>
+          <app-input-component
+            formControlName="username"
+            label="Username"
+            placeholder="mario_rossi"
+            [required]="true"
+            [error]="getFieldError('username')"
+            autocomplete="username"
+            size="lg"
+          />
+          <!-- Indicatore verifica username -->
+          @if (checkingUsername()) {
+            <span class="block text-xs text-gray-500 mt-1 ml-1">
+              Verifica disponibilità...
+            </span>
+          } @else if (usernameAvailable() === true) {
+            <span class="block text-xs text-success-600 dark:text-success-400 mt-1 ml-1">
+              ✓ Username disponibile
+            </span>
+          }
+        </div>
+
+        <!-- Email -->
+        <div>
+          <app-input-component
+            formControlName="email"
+            type="email"
+            label="Email"
+            placeholder="nome.cognome@marconirovereto.it"
+            [required]="true"
+            [error]="getFieldError('email')"
+            autocomplete="email"
+            size="lg"
+          />
+          <!-- Indicatore verifica email -->
+          @if (checkingEmail()) {
+            <span class="block text-xs text-gray-500 mt-1 ml-1">
+              Verifica disponibilità...
+            </span>
+          } @else if (emailAvailable() === true) {
+            <span class="block text-xs text-success-600 dark:text-success-400 mt-1 ml-1">
+              ✓ Email disponibile
+            </span>
+          }
+        </div>
+
+        <!-- Classe -->
+        <div>
+          <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-1.5">
+            Classe <span class="text-error-500">*</span>
+          </label>
+          <select
+            formControlName="classroom"
+            class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark
+                   bg-surface-light dark:bg-surface-dark
+                   text-text-light dark:text-text-dark
+                   focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                   transition-colors duration-200"
+            [class.border-error-500]="getFieldError('classroom')"
+          >
+            <option value="" disabled>Seleziona la tua classe</option>
+            @for (classroom of availableClassrooms; track classroom) {
+              <option [value]="classroom">{{ classroom }}</option>
+            }
+          </select>
+          @if (getFieldError('classroom')) {
+            <span class="block text-xs text-error-500 mt-1 ml-1">
+              {{ getFieldError('classroom') }}
+            </span>
+          }
+        </div>
+
+        <!-- Password -->
+        <app-input-component
+          formControlName="password"
+          type="password"
+          label="Password"
+          placeholder="Min. 8 caratteri (maiuscola, minuscola, numero)"
+          hint="8-20 caratteri: deve contenere maiuscola, minuscola e numero"
+          [required]="true"
+          [error]="getFieldError('password')"
+          autocomplete="new-password"
+          size="lg"
+        />
+
+        <!-- Conferma Password -->
+        <app-input-component
+          formControlName="confirmPassword"
+          type="password"
+          label="Conferma Password"
+          placeholder="Reinserisci la password"
+          [required]="true"
+          [error]="getFieldError('confirmPassword')"
+          autocomplete="new-password"
+          size="lg"
+        />
+
+        <!-- Pulsante registrazione -->
+        <app-button
+          type="submit"
+          variant="primary"
+          size="lg"
+          [fullWidth]="true"
+          [loading]="isLoading()"
+          [disabled]="!isFormValid() && registerForm.touched"
+          class="mt-4"
+        >
+          Registrati
+        </app-button>
+      </form>
+    </div>
+
+    <!-- Link login -->
+    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
+      Hai già un account?
+      <a
+        routerLink="/auth/login"
+        class="font-semibold text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+      >
+        Accedi
+      </a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+// Header Component Styles
+
+:host {
+  display: block;
+}
+
+// Animazione per dropdown
+.dropdown-enter {
+  animation: dropdownEnter 0.15s ease-out;
+}
+
+@keyframes dropdownEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Badge notifiche pulsante
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.badge-pulse {
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+// Stile per notifiche non lette
+.notification-unread {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--color-primary-500);
+  }
+}
+
+// Scrollbar personalizzata per dropdown notifiche
+.notifications-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gray.300') transparent;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: theme('colors.gray.300');
+    border-radius: 3px;
+    
+    &:hover {
+      background-color: theme('colors.gray.400');
+    }
+  }
+}
+
+// Dark mode scrollbar
+.dark .notifications-scroll {
+  scrollbar-color: theme('colors.gray.600') transparent;
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: theme('colors.gray.600');
+    
+    &:hover {
+      background-color: theme('colors.gray.500');
+    }
+  }
+}

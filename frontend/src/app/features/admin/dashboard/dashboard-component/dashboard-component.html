@@ -1,0 +1,130 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center justify-between h-14">
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            aria-label="Torna indietro"
+          >
+            <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+          </button>
+          <div class="flex items-center gap-2">
+            <lucide-icon [img]="ShieldIcon" [size]="24" class="text-primary-500" />
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Dashboard Admin</h1>
+          </div>
+        </div>
+
+        <!-- Pulsante refresh -->
+        <button
+          type="button"
+          (click)="refresh()"
+          [disabled]="isLoading()"
+          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors disabled:opacity-50"
+          aria-label="Aggiorna statistiche"
+        >
+          <lucide-icon
+            [img]="RefreshIcon"
+            [size]="20"
+            [class.animate-spin]="isLoading()"
+          />
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Loading state -->
+    @if (isLoading() && !stats()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div class="flex-1">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
+                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (hasError()) {
+      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <lucide-icon [img]="AlertCircleIcon" [size]="48" class="text-red-500 mx-auto mb-4" />
+        <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+          Errore nel caricamento
+        </h3>
+        <p class="text-red-700 dark:text-red-400 mb-4">
+          Non è stato possibile caricare le statistiche di sistema.
+        </p>
+        <app-button variant="primary" (clicked)="refresh()">
+          Riprova
+        </app-button>
+      </div>
+    }
+
+    <!-- Stats Grid -->
+    @if (stats() && !hasError()) {
+      <!-- Ultima sincronizzazione -->
+      @if (lastUpdate()) {
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Ultimo aggiornamento: {{ lastUpdate() | date:'dd/MM/yyyy HH:mm' }}
+        </p>
+      }
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        @for (card of statCards(); track card.label) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center" [class]="getCardColorClasses(card.color)">
+                <lucide-icon [img]="card.icon" [size]="24" />
+              </div>
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ formatNumber(card.value) }}
+                </p>
+              </div>
+            </div>
+            @if (card.description) {
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                {{ card.description }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Quick Actions -->
+      <section>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Sezioni amministrazione
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (action of quickActions; track action.route) {
+            <a
+              [routerLink]="action.route"
+              class="flex flex-col gap-3 p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all group"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <lucide-icon [img]="action.icon" [size]="20" />
+                </div>
+                <span class="font-semibold text-gray-900 dark:text-white">{{ action.label }}</span>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ action.description }}</p>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  </main>
+</div>

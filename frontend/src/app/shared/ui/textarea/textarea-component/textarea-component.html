@@ -1,0 +1,67 @@
+<!-- Container -->
+<div class="flex flex-col gap-1.5 w-full">
+  <!-- Label -->
+  @if (label()) {
+    <label 
+      [for]="textareaId()" 
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {{ label() }}
+      @if (required()) {
+        <span class="text-error-500 ml-0.5">*</span>
+      }
+    </label>
+  }
+
+  <!-- Textarea Wrapper -->
+  <div [ngClass]="wrapperClasses()">
+    <textarea
+      [id]="textareaId()"
+      [value]="value()"
+      [placeholder]="placeholder()"
+      [rows]="rows()"
+      [disabled]="isDisabled()"
+      [readonly]="readonly()"
+      [ngClass]="textareaClasses()"
+      [attr.maxlength]="maxLength()"
+      [attr.aria-invalid]="hasError() || isOverLimit()"
+      [attr.aria-describedby]="hasError() ? textareaId() + '-error' : hint() ? textareaId() + '-hint' : null"
+      (input)="onInputChange($event)"
+      (focus)="onFocus($event)"
+      (blur)="onBlur($event)"
+    ></textarea>
+  </div>
+
+  <!-- Footer: Error/Hint + Counter -->
+  <div class="flex justify-between items-start gap-2">
+    <!-- Messaggio di errore o hint -->
+    <div class="flex-1">
+      @if (hasError()) {
+        <p 
+          [id]="textareaId() + '-error'" 
+          class="text-sm text-error-500"
+        >
+          {{ error() }}
+        </p>
+      } @else if (isOverLimit()) {
+        <p class="text-sm text-error-500">
+          Hai superato il limite di caratteri
+        </p>
+      } @else if (hint()) {
+        <p 
+          [id]="textareaId() + '-hint'" 
+          class="text-sm text-gray-500 dark:text-gray-400"
+        >
+          {{ hint() }}
+        </p>
+      }
+    </div>
+
+    <!-- Contatore caratteri -->
+    @if (showCounter()) {
+      <span [ngClass]="counterClasses()" class="text-sm whitespace-nowrap">
+        {{ counterText() }}
+      </span>
+    }
+  </div>
+</div>

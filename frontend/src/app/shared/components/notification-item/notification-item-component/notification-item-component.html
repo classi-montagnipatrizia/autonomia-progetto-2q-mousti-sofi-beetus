@@ -1,0 +1,48 @@
+<div
+  [ngClass]="containerClasses()"
+  appDebounceClick="300"
+  (debounceClick)="onClick()"
+  (keyup.enter)="onClick()"
+  tabindex="0"
+  role="button"
+>
+  <!-- Avatar utente -->
+  <div class="relative flex-shrink-0">
+    <app-avatar
+      [src]="triggerProfilePictureUrl()"
+      [name]="triggerNomeCompleto()"
+      size="md"
+      status="none"
+    />
+
+    <!-- Badge icona tipo notifica -->
+    <div
+      class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface-light dark:bg-surface-dark flex items-center justify-center shadow-sm"
+    >
+      <lucide-icon [img]="icon()" [ngClass]="iconColorClasses()" class="w-3 h-3" />
+    </div>
+  </div>
+
+  <!-- Contenuto notifica -->
+  <div class="flex-1 min-w-0">
+    <p class="text-sm text-text-light dark:text-text-dark">
+      <!-- Username in grassetto -->
+      <span class="font-semibold">{{ triggerNomeCompleto() }}</span>
+      <!-- Contenuto della notifica -->
+      {{ contenuto() }}
+    </p>
+
+    <!-- Timestamp -->
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+      <app-time-ago [date]="createdAt()" />
+    </p>
+  </div>
+
+  <!-- Indicatore non letta -->
+  @if (!isRead()) {
+    <div
+      class="w-2.5 h-2.5 rounded-full bg-primary-500 flex-shrink-0"
+      aria-label="Notifica non letta"
+    ></div>
+  }
+</div>

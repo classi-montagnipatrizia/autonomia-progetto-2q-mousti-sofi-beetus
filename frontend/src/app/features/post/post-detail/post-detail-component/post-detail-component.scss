@@ -1,0 +1,35 @@
+:host {
+  display: contents;
+}
+
+// Stili per il cuore filled quando liked (come X/Twitter)
+.heart-icon {
+  // Cuore pieno rosso quando liked
+  &.heart-filled {
+    ::ng-deep svg {
+      fill: currentColor;
+      stroke: currentColor;
+    }
+  }
+}
+
+// Smooth scrolling per la sezione commenti
+#comments-section {
+  scroll-margin-top: 60px;
+}
+
+// Animazione fade-in per il contenuto
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

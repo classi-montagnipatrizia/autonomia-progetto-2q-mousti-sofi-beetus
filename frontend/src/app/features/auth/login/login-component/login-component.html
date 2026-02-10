@@ -1,0 +1,138 @@
+<div class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark p-4">
+  <div class="w-full max-w-md flex flex-col items-center">
+    <!-- Logo e titolo -->
+    <div class="mb-8 text-center">
+      <a routerLink="/" class="inline-flex items-center justify-center gap-3">
+        <img src="images/beetUs_logo.svg" alt="beetUs Logo" class="h-10 w-10" />
+        <span class="text-3xl sm:text-4xl font-bold text-text-light dark:text-text-dark">
+          beetUs
+        </span>
+      </a>
+      <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
+        Connettiti con la tua classe
+      </p>
+    </div>
+
+    <!-- Card login -->
+    <div class="w-full rounded-xl bg-surface-light dark:bg-surface-dark p-6 sm:p-8 shadow-sm">
+      <div class="flex flex-col space-y-6">
+        <!-- Titolo card -->
+        <div class="text-center">
+          <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">
+            Bentornato!
+          </h1>
+        </div>
+
+        <!-- Messaggio info verifica email -->
+        @if (verificationInfoMessage()) {
+          <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+            <p class="text-sm text-blue-700 dark:text-blue-300">
+              {{ verificationInfoMessage() }}
+            </p>
+          </div>
+        }
+
+        <!-- Messaggio errore globale -->
+        @if (errorMessage()) {
+          <div class="p-4 rounded-lg bg-error-50 dark:bg-error-900/30 border border-error-200 dark:border-error-800">
+            <p class="text-sm text-error-700 dark:text-error-300">
+              {{ errorMessage() }}
+            </p>
+          </div>
+        }
+
+        <!-- Form login -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-4">
+          <!-- Campo username -->
+          <app-input-component
+            formControlName="username"
+            label="Username"
+            placeholder="Inserisci il tuo username"
+            [required]="true"
+            [error]="getFieldError('username')"
+            autocomplete="username"
+            size="lg"
+          />
+
+          <!-- Campo password -->
+          <app-input-component
+            formControlName="password"
+            type="password"
+            label="Password"
+            placeholder="Inserisci la tua password"
+            [required]="true"
+            [error]="getFieldError('password')"
+            autocomplete="current-password"
+            size="lg"
+          />
+
+          <!-- Pulsante login -->
+          <app-button
+            type="submit"
+            variant="primary"
+            size="lg"
+            [fullWidth]="true"
+            [loading]="isLoading()"
+            [disabled]="loginForm.invalid && loginForm.touched"
+          >
+            Accedi
+          </app-button>
+        </form>
+
+        <!-- Form reinvio verifica email -->
+        @if (showResendForm()) {
+          <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+            <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
+              Non hai ricevuto l'email di verifica?
+            </h3>
+            <form [formGroup]="resendForm" (ngSubmit)="resendVerificationEmail()" class="space-y-3">
+              <app-input-component
+                formControlName="email"
+                type="email"
+                placeholder="Email @marconirovereto.it"
+                [error]="getResendFieldError('email')"
+                size="sm"
+              />
+              <div class="flex gap-2">
+                <app-button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  (click)="toggleResendForm()"
+                  [disabled]="isResending()"
+                >
+                  Annulla
+                </app-button>
+                <app-button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  [loading]="isResending()"
+                  [disabled]="isResending()"
+                >
+                  Reinvia Email
+                </app-button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <!-- Link secondari -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 text-sm">
+          <a
+            routerLink="/auth/reset-password"
+            class="font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+          >
+            Password dimenticata?
+          </a>
+          <a
+            routerLink="/auth/register"
+            class="font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+          >
+            Non hai un account? Registrati
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+// Animazione ingresso messaggio
+:host {
+  animation: messageSlideIn 0.2s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

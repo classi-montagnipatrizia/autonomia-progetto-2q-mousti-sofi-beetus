@@ -1,0 +1,52 @@
+<!-- Container toast posizionato in alto a destra -->
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-[calc(100%-2rem)] max-w-xs sm:max-w-sm pointer-events-none">
+
+  <!-- Itera su tutti i toast attivi-->
+  @for (toast of toasts(); track toast.id) {
+    <div
+      animate.enter="toast-enter"
+      animate.leave="toast-leave"
+      [ngClass]="getToastClasses(toast.type)"
+      class="pointer-events-auto w-full"
+      role="alert"
+      [attr.aria-live]="toast.type === 'error' ? 'assertive' : 'polite'"
+    >
+      
+      <!-- Icona del toast -->
+      <div [ngClass]="getIconClasses(toast.type)">
+        <lucide-icon 
+          [img]="getIcon(toast.type)" 
+          [size]="20"
+        />
+      </div>
+
+      <!-- Contenuto messaggio -->
+      <div class="flex-1 text-sm font-medium break-words">
+        {{ toast.message }}
+      </div>
+
+      <!-- Pulsante chiudi (se dismissible) -->
+      @if (toast.dismissible) {
+        <button
+          type="button"
+          (click)="dismiss(toast.id)"
+          class="shrink-0 opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-current rounded"
+          aria-label="Chiudi notifica"
+        >
+          <lucide-icon 
+            [img]="X" 
+            [size]="16"
+          />
+        </button>
+      }
+
+    </div>
+  }
+
+</div>
+
+
+
+
+
+

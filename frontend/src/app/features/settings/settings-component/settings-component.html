@@ -1,0 +1,379 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="flex items-center gap-3 h-14">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          aria-label="Torna indietro"
+        >
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Impostazioni</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- Sidebar navigation -->
+      <nav class="lg:w-64 flex-shrink-0">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          @for (section of sections; track section.id) {
+            <button
+              type="button"
+              (click)="setSection(section.id)"
+              class="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors"
+              [class.bg-primary-50]="activeSection() === section.id"
+              [class.dark:bg-primary-900/20]="activeSection() === section.id"
+              [class.text-primary-600]="activeSection() === section.id"
+              [class.dark:text-primary-400]="activeSection() === section.id"
+              [class.text-gray-700]="activeSection() !== section.id"
+              [class.dark:text-gray-300]="activeSection() !== section.id"
+              [class.hover:bg-gray-50]="activeSection() !== section.id"
+              [class.dark:hover:bg-gray-700]="activeSection() !== section.id"
+            >
+              <lucide-icon [img]="section.icon" [size]="20" />
+              <span class="font-medium">{{ section.label }}</span>
+            </button>
+          }
+        </div>
+      </nav>
+
+      <!-- Content area -->
+      <div class="flex-1">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          
+          <!-- Profile Section -->
+          @if (activeSection() === 'profile') {
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                Modifica profilo
+              </h2>
+
+              <!-- Avatar -->
+              <div class="flex items-center gap-6 mb-8">
+                <div class="relative">
+                  <app-avatar
+                    [src]="profilePictureUrl()"
+                    [name]="nomeCompleto() || 'Utente'"
+                    size="xl"
+                  />
+                  <label
+                    class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary-500 hover:bg-primary-600 text-white flex items-center justify-center cursor-pointer transition-colors shadow-lg"
+                  >
+                    <lucide-icon [img]="CameraIcon" [size]="12" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      (change)="onImageUpload($event)"
+                      [disabled]="isUploadingImage()"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-900 dark:text-white font-medium">Foto profilo</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG o GIF. Max 5MB.</p>
+                  @if (profilePictureUrl()) {
+                    <button
+                      type="button"
+                      (click)="removeProfileImage()"
+                      class="text-xs text-red-500 hover:text-red-600 mt-2"
+                    >
+                      Rimuovi foto
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Form fields -->
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nome completo
+                  </label>
+                  <input
+                    type="text"
+                    [value]="nomeCompleto()"
+                    (input)="nomeCompleto.set($any($event.target).value)"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Il tuo nome completo"
+                    maxlength="100"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    [value]="bio()"
+                    (input)="bio.set($any($event.target).value)"
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    placeholder="Scrivi qualcosa su di te..."
+                    rows="4"
+                    maxlength="500"
+                  ></textarea>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+                    {{ bio().length }}/500
+                  </p>
+                </div>
+
+                <app-button
+                  variant="primary"
+                  [loading]="isSaving()"
+                  (clicked)="saveProfile()"
+                >
+                  <lucide-icon [img]="SaveIcon" [size]="18" class="mr-2" />
+                  Salva modifiche
+                </app-button>
+              </div>
+            </div>
+          }
+
+          <!-- Password Section -->
+          @if (activeSection() === 'password') {
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                Cambia password
+              </h2>
+
+              <div class="space-y-6">
+                <!-- Old password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Password attuale
+                  </label>
+                  <div class="relative">
+                    <input
+                      [type]="showOldPassword() ? 'text' : 'password'"
+                      [value]="vecchiaPassword()"
+                      (input)="vecchiaPassword.set($any($event.target).value)"
+                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Inserisci la password attuale"
+                    />
+                    <button
+                      type="button"
+                      (click)="togglePasswordVisibility('old')"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <lucide-icon [img]="showOldPassword() ? EyeOffIcon : EyeIcon" [size]="20" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- New password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nuova password
+                  </label>
+                  <div class="relative">
+                    <input
+                      [type]="showNewPassword() ? 'text' : 'password'"
+                      [value]="nuovaPassword()"
+                      (input)="nuovaPassword.set($any($event.target).value)"
+                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Almeno 8 caratteri"
+                    />
+                    <button
+                      type="button"
+                      (click)="togglePasswordVisibility('new')"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <lucide-icon [img]="showNewPassword() ? EyeOffIcon : EyeIcon" [size]="20" />
+                    </button>
+                  </div>
+                  @if (nuovaPassword().length > 0 && !isPasswordValid()) {
+                    <p class="text-xs text-red-500 mt-1">La password deve essere di almeno 8 caratteri</p>
+                  }
+                </div>
+
+                <!-- Confirm password -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Conferma nuova password
+                  </label>
+                  <div class="relative">
+                    <input
+                      [type]="showConfirmPassword() ? 'text' : 'password'"
+                      [value]="confermaPassword()"
+                      (input)="confermaPassword.set($any($event.target).value)"
+                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Ripeti la nuova password"
+                    />
+                    <button
+                      type="button"
+                      (click)="togglePasswordVisibility('confirm')"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <lucide-icon [img]="showConfirmPassword() ? EyeOffIcon : EyeIcon" [size]="20" />
+                    </button>
+                  </div>
+                  @if (confermaPassword().length > 0 && !passwordsMatch()) {
+                    <p class="text-xs text-red-500 mt-1">Le password non corrispondono</p>
+                  }
+                </div>
+
+                <app-button
+                  variant="primary"
+                  [disabled]="!canSavePassword()"
+                  [loading]="isSaving()"
+                  (clicked)="changePassword()"
+                >
+                  <lucide-icon [img]="LockIcon" [size]="18" class="mr-2" />
+                  Cambia password
+                </app-button>
+              </div>
+            </div>
+          }
+
+          <!-- Theme Section -->
+          @if (activeSection() === 'theme') {
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                Tema applicazione
+              </h2>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Light -->
+                <button
+                  type="button"
+                  (click)="setTheme('light')"
+                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  [class.border-primary-500]="currentTheme() === 'light'"
+                  [class.bg-primary-50]="currentTheme() === 'light'"
+                  [class.dark:bg-primary-900/20]="currentTheme() === 'light'"
+                  [class.border-gray-200]="currentTheme() !== 'light'"
+                  [class.dark:border-gray-600]="currentTheme() !== 'light'"
+                  [class.hover:border-gray-300]="currentTheme() !== 'light'"
+                  [class.dark:hover:border-gray-500]="currentTheme() !== 'light'"
+                >
+                  <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <lucide-icon [img]="SunIcon" [size]="24" class="text-yellow-500" />
+                  </div>
+                  <span class="font-medium text-gray-900 dark:text-white">Chiaro</span>
+                  @if (currentTheme() === 'light') {
+                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                  }
+                </button>
+
+                <!-- Dark -->
+                <button
+                  type="button"
+                  (click)="setTheme('dark')"
+                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  [class.border-primary-500]="currentTheme() === 'dark'"
+                  [class.bg-primary-50]="currentTheme() === 'dark'"
+                  [class.dark:bg-primary-900/20]="currentTheme() === 'dark'"
+                  [class.border-gray-200]="currentTheme() !== 'dark'"
+                  [class.dark:border-gray-600]="currentTheme() !== 'dark'"
+                  [class.hover:border-gray-300]="currentTheme() !== 'dark'"
+                  [class.dark:hover:border-gray-500]="currentTheme() !== 'dark'"
+                >
+                  <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                    <lucide-icon [img]="MoonIcon" [size]="24" class="text-gray-300" />
+                  </div>
+                  <span class="font-medium text-gray-900 dark:text-white">Scuro</span>
+                  @if (currentTheme() === 'dark') {
+                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                  }
+                </button>
+
+                <!-- System -->
+                <button
+                  type="button"
+                  (click)="setTheme('system')"
+                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  [class.border-primary-500]="currentTheme() === 'system'"
+                  [class.bg-primary-50]="currentTheme() === 'system'"
+                  [class.dark:bg-primary-900/20]="currentTheme() === 'system'"
+                  [class.border-gray-200]="currentTheme() !== 'system'"
+                  [class.dark:border-gray-600]="currentTheme() !== 'system'"
+                  [class.hover:border-gray-300]="currentTheme() !== 'system'"
+                  [class.dark:hover:border-gray-500]="currentTheme() !== 'system'"
+                >
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-100 to-gray-700 flex items-center justify-center">
+                    <lucide-icon [img]="MonitorIcon" [size]="24" class="text-gray-600" />
+                  </div>
+                  <span class="font-medium text-gray-900 dark:text-white">Sistema</span>
+                  @if (currentTheme() === 'system') {
+                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                  }
+                </button>
+              </div>
+
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                L'opzione "Sistema" seguirà automaticamente le preferenze del tuo dispositivo.
+              </p>
+            </div>
+          }
+
+          <!-- Account Section -->
+          @if (activeSection() === 'account') {
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Disattiva account
+              </h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                La disattivazione è reversibile. Potrai riattivare il tuo account contattando l'assistenza.
+              </p>
+
+              <!-- Warning -->
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                <div class="flex gap-3">
+                  <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 class="text-sm font-medium text-red-800 dark:text-red-300">Attenzione</h4>
+                    <p class="text-sm text-red-700 dark:text-red-400 mt-1">
+                      Dopo la disattivazione non potrai più accedere al tuo account.
+                      I tuoi post e commenti rimarranno visibili ma il tuo profilo risulterà inattivo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Conferma con la tua password
+                  </label>
+                  <div class="relative">
+                    <input
+                      [type]="showDeactivatePassword() ? 'text' : 'password'"
+                      [value]="deactivatePassword()"
+                      (input)="deactivatePassword.set($any($event.target).value)"
+                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Inserisci la tua password"
+                    />
+                    <button
+                      type="button"
+                      (click)="togglePasswordVisibility('deactivate')"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <lucide-icon [img]="showDeactivatePassword() ? EyeOffIcon : EyeIcon" [size]="20" />
+                    </button>
+                  </div>
+                </div>
+
+                <app-button
+                  variant="danger"
+                  [disabled]="!canDeactivate()"
+                  [loading]="isSaving()"
+                  (clicked)="deactivateAccount()"
+                >
+                  <lucide-icon [img]="PowerIcon" [size]="18" class="mr-2" />
+                  Disattiva account
+                </app-button>
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

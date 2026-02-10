@@ -1,0 +1,31 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Stile scrollbar per la textarea
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 3px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}
+
+// Dark mode scrollbar
+:host-context(.dark) textarea::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+}
+
+:host-context(.dark) textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-dark);
+}

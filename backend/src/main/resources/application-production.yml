@@ -1,0 +1,73 @@
+# application-production.yml
+# Profilo Spring Boot per produzione (Fly.io)
+# Attivato con: SPRING_PROFILE=production
+
+spring:
+  output:
+    ansi:
+      enabled: always
+
+  datasource:
+    # Fly.io fornisce DATABASE_URL automaticamente quando attacchi il database
+    url: ${DATABASE_URL}
+    # Username e password sono inclusi in DATABASE_URL
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    # Disabilita SQL logging in produzione per performance
+    show-sql: false
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: "*"
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 1800000  # 30 minuti
+  refresh-token-expiration: 2592000000  # 30 giorni
+
+cors:
+  # URL del frontend su Firebase
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+app:
+  max-students: 17
+
+# Logging ottimizzato per produzione
+logging:
+  level:
+    root: WARN
+    com.example.backend: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+
+server:
+  port: 8080
+  # Compression per ridurre bandwidth
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024

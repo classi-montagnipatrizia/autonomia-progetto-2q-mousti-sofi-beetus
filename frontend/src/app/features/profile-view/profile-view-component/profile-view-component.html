@@ -1,0 +1,361 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="max-w-5xl mx-auto px-4">
+      <!-- Header skeleton -->
+      <div class="p-6 pb-4">
+        <div class="flex items-start justify-between mb-4">
+          <app-skeleton shape="circle" width="90px" height="90px" />
+          <app-skeleton width="40px" height="40px" borderRadius="50%" />
+        </div>
+        <app-skeleton width="180px" height="24px" class="mb-2" />
+        <app-skeleton width="120px" height="16px" class="mb-3" />
+        <app-skeleton width="100%" height="40px" class="mb-4" />
+        <div class="flex gap-6">
+          <app-skeleton width="60px" height="40px" />
+          <app-skeleton width="60px" height="40px" />
+          <app-skeleton width="60px" height="40px" />
+        </div>
+      </div>
+      <!-- Tabs skeleton -->
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
+        <app-skeleton width="50%" height="48px" />
+        <app-skeleton width="50%" height="48px" />
+      </div>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+      <div class="w-16 h-16 mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+        <span class="text-3xl">😕</span>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+        {{ error() }}
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Riprova più tardi
+      </p>
+    </div>
+  }
+
+  <!-- Profile content -->
+  @if (!isLoading() && !error() && user()) {
+    <div class="max-w-5xl mx-auto px-4">
+      <!-- Profile Header -->
+      <header class="relative p-4 pb-3">
+        <!-- Gradient background for header -->
+        <div class="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-purple-500/5 to-pink-500/10 dark:from-primary-500/5 dark:via-purple-500/5 dark:to-pink-500/5 rounded-b-3xl -z-10"></div>
+
+        <!-- Top row: Back button + Settings -->
+        <div class="flex items-center justify-between mb-3">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            aria-label="Torna indietro"
+          >
+            <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+          </button>
+
+          <!-- Settings button (only for own profile) -->
+          @if (isOwnProfile()) {
+            <button
+              type="button"
+              (click)="goToSettings()"
+              class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Impostazioni"
+            >
+              <lucide-icon [img]="SettingsIcon" [size]="24" />
+            </button>
+          }
+        </div>
+
+        <!-- Avatar + Info row -->
+        <div class="flex items-center gap-4 mb-3">
+          <!-- Avatar with online status (clickable to view full size) -->
+          <button
+            type="button"
+            (click)="openProfilePictureViewer()"
+            class="shrink-0 rounded-full transition-opacity hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 touch-manipulation active:opacity-70"
+            [attr.aria-label]="'Visualizza foto profilo di ' + user()!.nomeCompleto"
+          >
+            <app-avatar
+              [src]="user()!.profilePictureUrl"
+              [alt]="user()!.nomeCompleto"
+              [name]="user()!.nomeCompleto"
+              size="xl"
+              [status]="isOwnProfile() ? 'none' : (isOnline() ? 'online' : 'none')"
+              class="ring-4 ring-white dark:ring-gray-900 shadow-lg"
+            />
+          </button>
+
+          <!-- Name and username -->
+          <div class="min-w-0">
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+              {{ user()!.nomeCompleto }}
+              @if (user()!.isAdmin) {
+                <span class="text-primary-500">✓</span>
+              }
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400">
+              &#64;{{ user()!.username }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        @if (user()!.bio) {
+          <p class="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-wrap">
+            {{ user()!.bio }}
+          </p>
+        }
+
+        <!-- Stats -->
+        <div class="flex gap-6 py-4 mt-2 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+              {{ formattedPostsCount() }}
+            </span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Post</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-400 bg-clip-text text-transparent">
+              {{ formattedLikesCount() }}
+            </span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Like</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-400 bg-clip-text text-transparent">
+              {{ formattedCommentsCount() }}
+            </span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Commenti</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="sticky top-0 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="flex">
+          <button
+            type="button"
+            (click)="setTab('posts')"
+            class="flex-1 py-4 text-sm font-semibold transition-all relative"
+            [class.text-gray-900]="activeTab() === 'posts'"
+            [class.dark:text-white]="activeTab() === 'posts'"
+            [class.text-gray-500]="activeTab() !== 'posts'"
+            [class.dark:text-gray-400]="activeTab() !== 'posts'"
+          >
+            Post
+            @if (activeTab() === 'posts') {
+              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-primary-600 to-primary-400 rounded-t-full shadow-lg shadow-primary-500/50"></span>
+            }
+          </button>
+          <button
+            type="button"
+            (click)="setTab('media')"
+            class="flex-1 py-4 text-sm font-semibold transition-all relative"
+            [class.text-gray-900]="activeTab() === 'media'"
+            [class.dark:text-white]="activeTab() === 'media'"
+            [class.text-gray-500]="activeTab() !== 'media'"
+            [class.dark:text-gray-400]="activeTab() !== 'media'"
+          >
+            Media
+            @if (activeTab() === 'media') {
+              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-pink-600 to-rose-400 rounded-t-full shadow-lg shadow-pink-500/50"></span>
+            }
+          </button>
+        </div>
+      </nav>
+
+      <!-- Tab Content -->
+      <main class="pb-20">
+        <!-- Posts Tab -->
+        @if (activeTab() === 'posts') {
+          @if (isLoadingPosts()) {
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+              @for (i of [1, 2, 3]; track i) {
+                <div class="p-4">
+                  <div class="flex items-center gap-3 mb-3">
+                    <app-skeleton shape="circle" width="40px" height="40px" />
+                    <div class="flex-1">
+                      <app-skeleton width="120px" height="14px" class="mb-1" />
+                      <app-skeleton width="80px" height="12px" />
+                    </div>
+                  </div>
+                  <app-skeleton width="100%" height="60px" borderRadius="8px" />
+                </div>
+              }
+            </div>
+          } @else if (posts().length === 0) {
+            <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div class="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <span class="text-3xl">📝</span>
+              </div>
+              <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
+                Nessun post
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                @if (isOwnProfile()) {
+                  Non hai ancora pubblicato nulla
+                } @else {
+                  Questo utente non ha ancora pubblicato nulla
+                }
+              </p>
+            </div>
+          } @else {
+            <div
+              class="space-y-4 p-4"
+              appInfiniteScroll
+              [useWindow]="true"
+              [threshold]="400"
+              [disabled]="isLoadingMore() || !hasMorePosts()"
+              (scrolled)="loadMorePosts()"
+            >
+              @for (post of posts(); track post.id) {
+                <app-post-card-component
+                  [post]="post"
+                  (deleted)="onPostDeleted($event)"
+                  (edited)="onPostEdited($event)"
+                  (hidden)="onPostHidden($event)"
+                />
+              }
+            </div>
+
+            <!-- Loader per caricamento altri post -->
+            @if (isLoadingMore()) {
+              <div class="flex justify-center py-4">
+                <app-spinner size="md" />
+              </div>
+            }
+
+            <!-- Messaggio fine post -->
+            @if (!hasMorePosts() && posts().length > 0) {
+              <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
+                Hai visto tutti i post 🎉
+              </p>
+            }
+          }
+        }
+
+        <!-- Media Tab -->
+        @if (activeTab() === 'media') {
+          @if (isLoadingPosts()) {
+            <div class="grid grid-cols-3 gap-0.5">
+              @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+                <app-skeleton width="100%" height="0" class="pb-[100%]" />
+              }
+            </div>
+          } @else if (mediaPosts().length === 0) {
+            <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div class="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <lucide-icon [img]="ImageIcon" [size]="32" class="text-gray-400" />
+              </div>
+              <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
+                Nessuna foto
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                @if (isOwnProfile()) {
+                  Non hai ancora condiviso foto
+                } @else {
+                  Questo utente non ha ancora condiviso foto
+                }
+              </p>
+            </div>
+          } @else {
+            <div
+              class="grid grid-cols-3 gap-0.5"
+              appInfiniteScroll
+              [useWindow]="true"
+              [threshold]="400"
+              [disabled]="isLoadingMore() || !hasMorePosts()"
+              (scrolled)="loadMorePosts()"
+            >
+              @for (post of mediaPosts(); track post.id) {
+                <button
+                  type="button"
+                  class="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                  (click)="openImagePreview(post.imageUrl!)"
+                >
+                  <img
+                    [src]="post.imageUrl"
+                    [alt]="'Media di ' + post.autore.nomeCompleto"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              }
+            </div>
+
+            <!-- Loader per caricamento altre foto -->
+            @if (isLoadingMore()) {
+              <div class="flex justify-center py-4">
+                <app-spinner size="md" />
+              </div>
+            }
+
+            <!-- Messaggio fine foto -->
+            @if (!hasMorePosts() && mediaPosts().length > 0) {
+              <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
+                Hai visto tutte le foto 🎉
+              </p>
+            }
+          }
+        }
+      </main>
+    </div>
+  }
+</div>
+
+<!-- Image Preview Modal (tab Media) -->
+@if (selectedImageUrl()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+    (click)="closeImagePreview()"
+  >
+    <!-- Close button -->
+    <button
+      type="button"
+      class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+      (click)="closeImagePreview()"
+      aria-label="Chiudi anteprima"
+    >
+      <lucide-icon [img]="XIcon" [size]="24" />
+    </button>
+
+    <!-- Image -->
+    <img
+      [src]="selectedImageUrl()!"
+      [alt]="'Foto di ' + user()?.nomeCompleto"
+      class="max-w-full max-h-full object-contain"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}
+
+<!-- Profile Picture Viewer Modal -->
+@if (isProfilePictureViewerOpen() && user()?.profilePictureUrl) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+    (click)="closeProfilePictureViewer()"
+  >
+    <!-- Close button -->
+    <button
+      type="button"
+      class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+      (click)="closeProfilePictureViewer()"
+      aria-label="Chiudi foto profilo"
+    >
+      <lucide-icon [img]="XIcon" [size]="24" />
+    </button>
+
+    <!-- Profile Picture -->
+    <img
+      [src]="user()!.profilePictureUrl!"
+      [alt]="'Foto profilo di ' + user()!.nomeCompleto"
+      class="max-w-full max-h-full object-contain rounded-lg"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}

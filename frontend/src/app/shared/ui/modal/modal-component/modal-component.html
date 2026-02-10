@@ -1,0 +1,44 @@
+<dialog 
+  #dialogElement
+  class="modal-element"
+  [class]="sizeClasses()"
+  (click)="onOverlayClick($event)"
+  (cancel)="onCancel($event)"
+>
+  <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex-1">
+        <!-- Slot per header custom -->
+        <ng-content select="[modal-header]"></ng-content>
+        
+        <!-- Titolo default se non c'è header custom -->
+        @if (title()) {
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            {{ title() }}
+          </h2>
+        }
+      </div>
+
+      <!-- Pulsante chiudi -->
+      @if (showCloseButton()) {
+        <button
+          type="button"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Chiudi"
+          (click)="close()"
+        >
+          <lucide-icon [img]="X" [size]="20"></lucide-icon>
+        </button>
+      }
+    </div>
+
+    <!-- Body -->
+    <div class="flex-1 overflow-y-auto px-6 py-5">
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Footer (opzionale) -->
+    <ng-content select="[modal-footer]"></ng-content>
+  </div>
+</dialog>

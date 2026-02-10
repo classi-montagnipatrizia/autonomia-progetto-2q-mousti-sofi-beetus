@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+// Margine sinistro per allineare con la textarea (avatar width + gap)
+.ml-13 {
+  margin-left: calc(2.5rem + 0.75rem); // 40px avatar + 12px gap
+}
+
+// Smooth transition per textarea
+textarea {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}

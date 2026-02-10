@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="flex items-center gap-3 h-14">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          aria-label="Torna alla dashboard"
+        >
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Manutenzione Sistema</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-5xl mx-auto px-4 py-6">
+    
+    <!-- Pulizia Database -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <lucide-icon [img]="DatabaseIcon" [size]="24" class="text-primary-500" />
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Pulizia Database</h2>
+      </div>
+
+      <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+        <div class="flex items-start gap-3">
+          <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div>
+            <p class="font-medium text-amber-800 dark:text-amber-300 mb-1">Attenzione</p>
+            <p class="text-sm text-amber-700 dark:text-amber-400">
+              Questa operazione eliminerà permanentemente tutti i dati obsoleti più vecchi del numero di giorni specificato.
+              L'operazione non può essere annullata.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Elimina dati più vecchi di (giorni)
+        </label>
+        <div class="flex items-center gap-4">
+          <input
+            type="number"
+            [ngModel]="giorni()"
+            (ngModelChange)="giorni.set($event)"
+            min="30"
+            max="365"
+            class="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            Consigliato: 90 giorni
+          </span>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <app-button
+          variant="danger"
+          (click)="cleanupDatabase()"
+          [disabled]="isCleaningUp()"
+        >
+          @if (isCleaningUp()) {
+            <lucide-icon [img]="Loader2Icon" [size]="16" class="animate-spin mr-2" />
+            Pulizia in corso...
+          } @else {
+            <lucide-icon [img]="Trash2Icon" [size]="16" class="mr-2" />
+            Avvia Pulizia
+          }
+        </app-button>
+      </div>
+
+      <!-- Risultati Pulizia -->
+      @if (cleanupResult()) {
+        <div class="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div class="flex items-start gap-3 mb-4">
+            <lucide-icon [img]="CheckCircleIcon" [size]="20" class="text-green-600 dark:text-green-400 mt-0.5" />
+            <div class="flex-1">
+              <p class="font-medium text-green-800 dark:text-green-300 mb-1">
+                {{ cleanupResult()!.message }}
+              </p>
+              <p class="text-sm text-green-700 dark:text-green-400">
+                Operazione completata con successo
+              </p>
+            </div>
+          </div>
+
+          @if (getResultKeys().length > 0) {
+            <div class="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+              <p class="text-sm font-medium text-green-800 dark:text-green-300 mb-3">
+                Elementi eliminati:
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                @for (key of getResultKeys(); track key) {
+                  <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                      {{ formatKey(key) }}
+                    </span>
+                    <span class="text-sm font-semibold text-green-600 dark:text-green-400">
+                      {{ getResultValue(key) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Info Aggiuntive -->
+    <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <lucide-icon [img]="InfoIcon" [size]="20" class="text-blue-600 dark:text-blue-400 mt-0.5" />
+        <div class="text-sm text-blue-800 dark:text-blue-300">
+          <p class="font-medium mb-2">Informazioni sulla pulizia</p>
+          <ul class="space-y-1 list-disc list-inside">
+            <li>La pulizia elimina notifiche vecchie</li>
+            <li>Elimina log di audit obsoleti</li>
+            <li>Rimuove sessioni scadute</li>
+            <li>Pulisce la cache del sistema</li>
+            <li>L'operazione può richiedere alcuni minuti</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

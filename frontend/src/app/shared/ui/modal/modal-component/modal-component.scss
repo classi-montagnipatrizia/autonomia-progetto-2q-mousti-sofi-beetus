@@ -1,0 +1,64 @@
+:host {
+  display: contents;
+}
+
+.modal-element {
+  // Reset stili default del browser
+  border: none;
+  padding: 0;
+  background: transparent;
+  width: calc(100% - 2rem);
+
+  // Centratura
+  margin: auto;
+
+  // Backdrop
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: backdropFadeIn 150ms ease-out;
+  }
+
+  // Animazione apertura
+  &[open] {
+    animation: modalFadeIn 150ms ease-out;
+  }
+
+  &[open] .modal-content {
+    animation: modalScaleIn 150ms ease-out;
+  }
+}
+
+.modal-content {
+  // Altezza massima per modal scrollabile
+  max-height: calc(100vh - 4rem);
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

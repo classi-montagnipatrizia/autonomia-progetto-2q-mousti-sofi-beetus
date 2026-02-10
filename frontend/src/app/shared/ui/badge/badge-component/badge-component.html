@@ -1,0 +1,9 @@
+@if (dot()) {
+  <!-- Dot badge (solo pallino) -->
+  <span [ngClass]="dotClasses()"></span>
+} @else {
+  <!-- Badge con contenuto -->
+  <span [ngClass]="badgeClasses()">
+    <ng-content></ng-content>
+  </span>
+}

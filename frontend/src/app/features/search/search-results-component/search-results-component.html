@@ -1,0 +1,216 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header con ricerca -->
+  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-3xl mx-auto px-4">
+      <!-- Search bar row -->
+      <div class="flex items-center gap-3 h-14">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
+          aria-label="Torna indietro"
+        >
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+
+        <!-- Search input -->
+        <div class="flex-1 relative">
+          <lucide-icon 
+            [img]="SearchIcon" 
+            [size]="18" 
+            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" 
+          />
+          <input
+            type="text"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            placeholder="Cerca utenti o post..."
+            class="w-full pl-14 pr-10 py-2.5 rounded-full bg-gray-100 dark:bg-gray-800 border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              (click)="clearSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400"
+            >
+              <lucide-icon [img]="XIcon" [size]="16" />
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-transparent -mb-px">
+        <button
+          type="button"
+          (click)="setTab('users')"
+          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors"
+          [class.border-primary-500]="activeTab() === 'users'"
+          [class.text-primary-500]="activeTab() === 'users'"
+          [class.border-transparent]="activeTab() !== 'users'"
+          [class.text-gray-500]="activeTab() !== 'users'"
+          [class.hover:text-gray-700]="activeTab() !== 'users'"
+          [class.dark:text-gray-400]="activeTab() !== 'users'"
+          [class.dark:hover:text-gray-200]="activeTab() !== 'users'"
+        >
+          <lucide-icon [img]="UsersIcon" [size]="18" />
+          Utenti
+        </button>
+        <button
+          type="button"
+          (click)="setTab('posts')"
+          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors"
+          [class.border-primary-500]="activeTab() === 'posts'"
+          [class.text-primary-500]="activeTab() === 'posts'"
+          [class.border-transparent]="activeTab() !== 'posts'"
+          [class.text-gray-500]="activeTab() !== 'posts'"
+          [class.hover:text-gray-700]="activeTab() !== 'posts'"
+          [class.dark:text-gray-400]="activeTab() !== 'posts'"
+          [class.dark:hover:text-gray-200]="activeTab() !== 'posts'"
+        >
+          <lucide-icon [img]="FileTextIcon" [size]="18" />
+          Post
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-3xl mx-auto">
+    <!-- Initial state -->
+    @if (showInitialState()) {
+      <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div class="w-20 h-20 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <lucide-icon [img]="SearchIcon" [size]="40" class="text-gray-400 dark:text-gray-500" />
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          Cerca su beetUs
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+          Cerca utenti per nome o username, oppure cerca contenuti nei post.
+        </p>
+      </div>
+    }
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        @if (activeTab() === 'users') {
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="px-4 py-4 flex items-center gap-3">
+              <app-skeleton shape="circle" width="48px" height="48px" />
+              <div class="flex-1 space-y-2">
+                <app-skeleton width="150px" height="16px" />
+                <app-skeleton width="100px" height="14px" />
+              </div>
+            </div>
+          }
+        } @else {
+          @for (i of [1, 2, 3]; track i) {
+            <div class="p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <app-skeleton shape="circle" width="40px" height="40px" />
+                <app-skeleton width="120px" height="14px" />
+              </div>
+              <app-skeleton width="100%" height="80px" borderRadius="12px" />
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Users results -->
+    @if (!isLoading() && activeTab() === 'users') {
+      @if (isUsersEmpty()) {
+        <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <lucide-icon [img]="UsersIcon" [size]="48" class="text-gray-300 dark:text-gray-600 mb-3" />
+          <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
+            Nessun utente trovato
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Prova a cercare con termini diversi
+          </p>
+        </div>
+      } @else if (users().length > 0) {
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+          @for (user of users(); track user.id) {
+            <button
+              type="button"
+              (click)="goToProfile(user.id)"
+              class="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
+            >
+              <app-avatar
+                [src]="user.profilePictureUrl"
+                [name]="user.nomeCompleto"
+                size="md"
+                [status]="isUserOnline(user.id) ? 'online' : 'offline'"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 dark:text-white truncate">
+                  {{ user.nomeCompleto }}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  &#64;{{ user.username }}
+                </p>
+              </div>
+            </button>
+          }
+        </div>
+
+        @if (hasMoreUsers()) {
+          <div class="p-4">
+            <app-button
+              variant="outline"
+              [fullWidth]="true"
+              [loading]="isLoadingMore()"
+              (clicked)="loadMore()"
+            >
+              Carica altri utenti
+            </app-button>
+          </div>
+        }
+      }
+    }
+
+    <!-- Posts results -->
+    @if (!isLoading() && activeTab() === 'posts') {
+      @if (isPostsEmpty()) {
+        <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <lucide-icon [img]="FileTextIcon" [size]="48" class="text-gray-300 dark:text-gray-600 mb-3" />
+          <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
+            Nessun post trovato
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Prova a cercare con termini diversi
+          </p>
+        </div>
+      } @else if (posts().length > 0) {
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+          @for (post of posts(); track post.id) {
+            <div class="p-4">
+              <app-post-card-component
+                [post]="post"
+                (deleted)="onPostDeleted($event)"
+                (edited)="onPostEdited($event)"
+                (hidden)="onPostHidden($event)"
+              />
+            </div>
+          }
+        </div>
+
+        @if (hasMorePosts()) {
+          <div class="p-4">
+            <app-button
+              variant="outline"
+              [fullWidth]="true"
+              [loading]="isLoadingMore()"
+              (clicked)="loadMore()"
+            >
+              Carica altri post
+            </app-button>
+          </div>
+        }
+      }
+    }
+  </main>
+</div>

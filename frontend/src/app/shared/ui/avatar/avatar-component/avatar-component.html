@@ -1,0 +1,42 @@
+<!--
+  Avatar Component
+
+  Mostra l'avatar di un utente con:
+  - Immagine se disponibile
+  - Iniziali come fallback
+  - Status badge opzionale (online/offline)
+  - Dimensioni configurabili
+  - Bordo opzionale
+-->
+
+<div
+  class="relative inline-flex items-center justify-center shrink-0"
+  [ngClass]="containerClasses()"
+>
+  <!-- Immagine Avatar -->
+  @if (shouldShowImage()) {
+  <img
+    [src]="src()"
+    [alt]="computedAlt()"
+    class="w-full h-full object-cover rounded-full"
+    (error)="onImageError()"
+  />
+  }
+
+  <!-- Fallback con Iniziali -->
+  @else {
+  <div
+    class="w-full h-full flex items-center justify-center font-semibold select-none bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full"
+  >
+    {{ initials() }}
+  </div>
+  }
+
+  <!-- Status Badge -->
+  @if (status() !== 'none') {
+  <span
+    [ngClass]="statusClasses()"
+    [attr.aria-label]="status() === 'online' ? 'Online' : 'Offline'"
+  ></span>
+  }
+</div>
