@@ -34,6 +34,14 @@ export const homeRoutes: Routes = [
       import('../notifications/notifications-list-component/notifications-list-component').then((m) => m.NotificationsListComponent),
     title: 'Notifiche - beetUs',
   },
+  // Library - Full screen senza header
+  {
+    path: 'library',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/library-page/library-page').then((m) => m.LibraryPage),
+    title: 'Libreria - beetUs',
+  },
   // Search - Full screen senza header
   {
     path: 'search',
