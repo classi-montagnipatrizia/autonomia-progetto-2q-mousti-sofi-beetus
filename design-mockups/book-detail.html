@@ -14,10 +14,10 @@
 
   <!-- Header -->
   <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center h-16">
+    <div class="max-w-2xl mx-auto px-4">
+      <div class="flex items-center h-14">
         <button class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
@@ -26,68 +26,50 @@
     </div>
   </header>
 
-  <!-- Contenuto -->
-  <main class="pt-20 pb-24 px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto">
 
-    <!-- Card principale -->
+  <!-- ============================================
+       CONTENUTO: CON 2 IMMAGINI (fronte + retro)
+       ============================================ -->
+  <main class="pt-16 pb-28 px-4 max-w-2xl mx-auto">
+
     <article class="bg-white rounded-2xl shadow-sm overflow-hidden">
 
-      <!-- ============================================
-           IMMAGINI AFFIANCATE
-           ============================================ -->
-      <div class="grid grid-cols-2 gap-1 bg-gray-100">
-        <!-- Fronte -->
-        <div class="relative aspect-[3/4]">
-          <img
-            src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400"
-            alt="Fronte libro"
-            class="w-full h-full object-cover"
-          />
-          <span class="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
-            Fronte
-          </span>
+      <!-- Immagini affiancate (fronte + retro) -->
+      <div class="grid grid-cols-2 gap-0.5 bg-gray-200">
+        <div class="relative aspect-[3/4] bg-gray-100">
+          <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400" alt="Fronte libro" class="w-full h-full object-cover"/>
+          <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Fronte</span>
         </div>
-        <!-- Retro -->
-        <div class="relative aspect-[3/4]">
-          <img
-            src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400"
-            alt="Retro libro"
-            class="w-full h-full object-cover"
-          />
-          <span class="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
-            Retro
-          </span>
+        <div class="relative aspect-[3/4] bg-gray-100">
+          <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400" alt="Retro libro" class="w-full h-full object-cover"/>
+          <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Retro</span>
         </div>
       </div>
 
       <!-- Info libro -->
       <div class="p-5">
 
-        <!-- Badge condizione + Prezzo -->
+        <!-- Badge condizione + Stato + Prezzo -->
         <div class="flex items-center justify-between mb-3">
-          <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-            Come nuovo
-          </span>
-          <span class="text-2xl font-bold text-blue-600">€15</span>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">Come nuovo</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+              Disponibile
+            </span>
+          </div>
+          <span class="text-2xl font-bold text-blue-600">&euro;15</span>
         </div>
 
         <!-- Titolo -->
-        <h1 class="text-xl font-bold text-gray-900 mb-1">
-          Matematica Blu 2.0 - Volume 3
-        </h1>
+        <h1 class="text-xl font-bold text-gray-900 mb-1">Matematica Blu 2.0 - Volume 3</h1>
         <p class="text-gray-500 mb-4">Bergamini, Barozzi, Trifone</p>
 
         <!-- Tags -->
         <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-            3° Anno
-          </span>
-          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-            Matematica
-          </span>
-          <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
-            ISBN: 9788808537010
-          </span>
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">3° Anno</span>
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">Matematica</span>
+          <span class="px-3 py-1.5 bg-gray-50 text-gray-500 rounded-full text-sm font-mono">ISBN: 9788808537010</span>
         </div>
 
         <!-- Descrizione -->
@@ -95,44 +77,177 @@
           Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra. Include anche il quaderno degli esercizi.
         </p>
 
-        <!-- Divider -->
         <div class="border-t border-gray-100 my-4"></div>
 
         <!-- Venditore -->
         <div class="flex items-center gap-3">
           <div class="relative">
-            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-              MR
-            </div>
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">MR</div>
             <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
           </div>
           <div class="flex-1 min-w-0">
             <p class="font-semibold text-gray-900">Mario Rossi</p>
-            <p class="text-sm text-gray-500">@mario_rossi • 5IA</p>
+            <p class="text-sm text-gray-500">@mario_rossi &middot; 5IA</p>
           </div>
-          <span class="text-xs text-gray-400">
-            15 gen 2026
-          </span>
+          <span class="text-xs text-gray-400">15 gen 2026</span>
         </div>
-
       </div>
     </article>
 
   </main>
 
+
   <!-- ============================================
-       FOOTER FISSO - Contatta venditore
+       CONTENUTO ALTERNATIVO: SOLO 1 IMMAGINE (senza retro)
+       (Decommentare per vedere)
+       ============================================ -->
+  <!--
+  <main class="pt-16 pb-28 px-4 max-w-2xl mx-auto">
+    <article class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="relative aspect-[4/5] bg-gray-100 max-h-[400px]">
+        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600" alt="Fronte libro" class="w-full h-full object-cover"/>
+        <span class="absolute bottom-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Copertina</span>
+      </div>
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-full">Buone condizioni</span>
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+              Disponibile
+            </span>
+          </div>
+          <span class="text-2xl font-bold text-blue-600">&euro;8</span>
+        </div>
+        <h1 class="text-xl font-bold text-gray-900 mb-1">I Promessi Sposi - Edizione integrale</h1>
+        <p class="text-gray-500 mb-4">Alessandro Manzoni</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">2° Anno</span>
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">Italiano</span>
+        </div>
+        <p class="text-gray-600 text-sm leading-relaxed mb-5">
+          Qualche appunto a matita sulle prime pagine, facilmente cancellabili. Per il resto in buone condizioni.
+        </p>
+        <div class="border-t border-gray-100 my-4"></div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center text-white font-semibold">LB</div>
+            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-300 border-2 border-white rounded-full"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900">Lucia Bianchi</p>
+            <p class="text-sm text-gray-500">@lucia_b &middot; 4IB</p>
+          </div>
+          <span class="text-xs text-gray-400">12 gen 2026</span>
+        </div>
+      </div>
+    </article>
+  </main>
+  -->
+
+
+  <!-- ============================================
+       CONTENUTO ALTERNATIVO: LIBRO GIA' RICHIESTO
+       (Decommentare per vedere)
+       ============================================ -->
+  <!--
+  <main class="pt-16 pb-28 px-4 max-w-2xl mx-auto">
+    <article class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="grid grid-cols-2 gap-0.5 bg-gray-200">
+        <div class="relative aspect-[3/4] bg-gray-100">
+          <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400" alt="" class="w-full h-full object-cover"/>
+          <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Fronte</span>
+        </div>
+        <div class="relative aspect-[3/4] bg-gray-100">
+          <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400" alt="" class="w-full h-full object-cover"/>
+          <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Retro</span>
+        </div>
+      </div>
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">Come nuovo</span>
+            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+              Richiesto
+            </span>
+          </div>
+          <span class="text-2xl font-bold text-blue-600">&euro;15</span>
+        </div>
+        <h1 class="text-xl font-bold text-gray-900 mb-1">Matematica Blu 2.0 - Volume 3</h1>
+        <p class="text-gray-500 mb-4">Bergamini, Barozzi, Trifone</p>
+
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            <p class="text-sm text-yellow-800">Questo libro e' stato gia' richiesto da un altro utente.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">3° Anno</span>
+          <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">Matematica</span>
+        </div>
+        <p class="text-gray-600 text-sm leading-relaxed mb-5">
+          Libro in ottime condizioni, usato per un solo anno scolastico.
+        </p>
+        <div class="border-t border-gray-100 my-4"></div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">MR</div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900">Mario Rossi</p>
+            <p class="text-sm text-gray-500">@mario_rossi &middot; 5IA</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </main>
+  -->
+
+
+  <!-- ============================================
+       FOOTER FISSO - Azioni
        ============================================ -->
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-30">
-    <div class="max-w-2xl mx-auto">
-      <button class="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-colors">
+    <div class="max-w-2xl mx-auto flex gap-3">
+      <!-- Bottone richiedi -->
+      <button class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-colors shadow-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Richiedi libro
+      </button>
+      <!-- Bottone contatta venditore -> apre/crea BookConversation nel tab Messaggi della libreria -->
+      <button onclick="window.location.href='library-page.html#messaggi'" class="flex items-center justify-center gap-2 px-5 py-3.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-full font-semibold transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        Contatta il venditore
+        <span class="hidden sm:inline">Contatta venditore</span>
       </button>
     </div>
   </div>
+
+
+  <!-- ============================================
+       FOOTER ALTERNATIVO: Libro gia' richiesto (disabilitato)
+       (Decommentare per vedere)
+       ============================================ -->
+  <!--
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-30">
+    <div class="max-w-2xl mx-auto flex gap-3">
+      <button disabled class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-200 text-gray-500 rounded-full font-semibold cursor-not-allowed">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        Gia' richiesto
+      </button>
+      <button class="flex items-center justify-center gap-2 px-5 py-3.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-full font-semibold transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span class="hidden sm:inline">Contatta venditore</span>
+      </button>
+    </div>
+  </div>
+  -->
 
 </body>
 </html>

@@ -8,11 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-  <!-- Header -->
+  <!-- ============================================
+       HEADER
+       ============================================ -->
   <header class="fixed top-0 left-0 right-0 z-40 w-full bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
@@ -27,7 +38,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <a href="/library" class="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+          <a href="/library" class="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" title="Libreria">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           </a>
           <button class="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
@@ -42,10 +53,11 @@
     </div>
   </header>
 
+
   <!-- ============================================
        CONTENUTO PRINCIPALE LIBRERIA
        ============================================ -->
-  <main class="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+  <main class="pt-20 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
     <!-- Titolo e azioni -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -53,45 +65,54 @@
         <h1 class="text-2xl font-bold text-gray-900">Libreria</h1>
         <p class="text-gray-500 text-sm mt-1">Compra e vendi libri scolastici usati</p>
       </div>
-      <div class="flex gap-3">
-        <button class="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium text-sm transition-colors">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-          <span class="hidden sm:inline">Chiedi all'AI</span>
-        </button>
-        <button class="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium text-sm transition-colors shadow-sm">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Vendi un libro
-        </button>
-      </div>
+      <button id="btnVendi" class="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium text-sm transition-colors shadow-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Vendi un libro
+      </button>
     </div>
 
+
     <!-- ============================================
-         TAB: I miei annunci | Compra
+         TAB: Compra | I miei annunci | Messaggi
          ============================================ -->
-    <div class="flex bg-gray-100 rounded-xl p-1 mb-6 max-w-xs">
-      <button class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 transition-all" id="tabMiei">
-        I miei annunci
-      </button>
+    <div class="flex bg-gray-100 rounded-xl p-1 mb-6 max-w-md">
       <button class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg bg-white text-gray-900 shadow-sm transition-all" id="tabCompra">
         Compra
       </button>
+      <button class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 transition-all" id="tabMiei">
+        I miei annunci
+      </button>
+      <button class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg text-gray-500 hover:text-gray-700 transition-all relative" id="tabMessaggi">
+        Messaggi
+        <span class="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center">3</span>
+      </button>
     </div>
 
 
     <!-- ============================================
-         SEZIONE: COMPRA (libri degli altri, solo disponibili)
+         SEZIONE: COMPRA
          ============================================ -->
     <section id="sectionCompra">
 
-      <!-- Filtri -->
+      <!-- Filtri desktop -->
       <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-100">
-        <div class="flex flex-wrap gap-3">
-          <div class="flex-1 min-w-[200px]">
+        <!-- Riga 1: Ricerca + toggle filtri mobile -->
+        <div class="flex gap-3">
+          <div class="flex-1">
             <div class="relative">
-              <input type="text" placeholder="Cerca per titolo, materia, ISBN..." class="w-full px-4 py-2.5 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
+              <input type="text" placeholder="Cerca per titolo, autore, ISBN..." class="w-full px-4 py-2.5 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
           </div>
+          <!-- Bottone filtri (mobile) -->
+          <button id="btnFiltriMobile" class="sm:hidden px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            Filtri
+          </button>
+        </div>
+
+        <!-- Riga 2: Select filtri (nascosti su mobile, visibili da sm in su) -->
+        <div class="hidden sm:flex flex-wrap gap-3 mt-3" id="filtriDesktop">
           <select class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
             <option value="">Tutti gli anni</option>
             <option>1° Anno</option><option>2° Anno</option><option>3° Anno</option><option>4° Anno</option><option>5° Anno</option>
@@ -106,153 +127,269 @@
           </select>
           <select class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
             <option value="">Qualsiasi prezzo</option>
-            <option>Fino a 10€</option><option>10€ - 20€</option><option>20€ - 30€</option><option>Oltre 30€</option>
+            <option>Fino a 10&euro;</option><option>10&euro; - 20&euro;</option><option>20&euro; - 30&euro;</option><option>Oltre 30&euro;</option>
           </select>
         </div>
       </div>
 
-      <!-- Griglia libri disponibili -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <!-- Risultati e conteggio -->
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">12</span> libri disponibili</p>
+        <select class="text-sm text-gray-500 bg-transparent border-none focus:outline-none cursor-pointer">
+          <option>Piu' recenti</option>
+          <option>Prezzo crescente</option>
+          <option>Prezzo decrescente</option>
+        </select>
+      </div>
 
-        <!-- Book Card disponibile -->
-        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+      <!-- Griglia libri disponibili -->
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+
+        <!-- Book Card 1 -->
+        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group">
           <div class="relative aspect-[3/4] bg-gray-100 overflow-hidden">
             <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400" alt="Matematica Blu 2.0" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-            <span class="absolute top-3 left-3 px-2.5 py-1 bg-green-500 text-white text-xs font-medium rounded-full">Come nuovo</span>
+            <span class="absolute top-3 left-3 px-2.5 py-1 bg-green-500 text-white text-xs font-medium rounded-full shadow-sm">Come nuovo</span>
           </div>
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Matematica Blu 2.0 - Volume 3</h3>
-            <p class="text-sm text-gray-500 mb-2">Bergamini, Barozzi, Trifone</p>
-            <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          <div class="p-3 sm:p-4">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Matematica Blu 2.0 - Volume 3</h3>
+            <p class="text-xs sm:text-sm text-gray-500 mb-2">Bergamini, Barozzi, Trifone</p>
+            <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 mb-3">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">3° Anno</span>
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">Matematica</span>
             </div>
             <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-              <span class="text-lg font-bold text-blue-600">€15,00</span>
-              <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-blue-600">&euro;15</span>
+              <div class="flex items-center gap-1.5">
                 <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">M</div>
-                <span class="text-sm text-gray-600">@mario</span>
+                <span class="text-xs text-gray-500 hidden sm:inline">@mario</span>
               </div>
             </div>
           </div>
         </article>
 
-        <!-- Book Card disponibile -->
-        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+        <!-- Book Card 2 -->
+        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group">
           <div class="relative aspect-[3/4] bg-gray-100 overflow-hidden">
             <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400" alt="Promessi Sposi" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-            <span class="absolute top-3 left-3 px-2.5 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full">Buone condizioni</span>
+            <span class="absolute top-3 left-3 px-2.5 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full shadow-sm">Buone condizioni</span>
           </div>
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">I Promessi Sposi - Edizione integrale</h3>
-            <p class="text-sm text-gray-500 mb-2">Alessandro Manzoni</p>
-            <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          <div class="p-3 sm:p-4">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">I Promessi Sposi - Edizione integrale</h3>
+            <p class="text-xs sm:text-sm text-gray-500 mb-2">Alessandro Manzoni</p>
+            <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 mb-3">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">2° Anno</span>
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">Italiano</span>
             </div>
             <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-              <span class="text-lg font-bold text-blue-600">€8,00</span>
-              <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-blue-600">&euro;8</span>
+              <div class="flex items-center gap-1.5">
                 <div class="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs font-medium">L</div>
-                <span class="text-sm text-gray-600">@lucia</span>
+                <span class="text-xs text-gray-500 hidden sm:inline">@lucia</span>
               </div>
             </div>
           </div>
         </article>
 
-        <!-- Book Card disponibile -->
-        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+        <!-- Book Card 3 -->
+        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group">
           <div class="relative aspect-[3/4] bg-gray-100 overflow-hidden">
             <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?w=400" alt="Physics" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-            <span class="absolute top-3 left-3 px-2.5 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">Usato</span>
+            <span class="absolute top-3 left-3 px-2.5 py-1 bg-orange-500 text-white text-xs font-medium rounded-full shadow-sm">Usato</span>
           </div>
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Fisica! Le leggi della natura - Vol. 1</h3>
-            <p class="text-sm text-gray-500 mb-2">Romeni</p>
-            <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          <div class="p-3 sm:p-4">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Fisica! Le leggi della natura - Vol. 1</h3>
+            <p class="text-xs sm:text-sm text-gray-500 mb-2">Romeni</p>
+            <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 mb-3">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">1° Anno</span>
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">Fisica</span>
             </div>
             <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-              <span class="text-lg font-bold text-blue-600">€12,00</span>
-              <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-blue-600">&euro;12</span>
+              <div class="flex items-center gap-1.5">
                 <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-medium">P</div>
-                <span class="text-sm text-gray-600">@paolo</span>
+                <span class="text-xs text-gray-500 hidden sm:inline">@paolo</span>
               </div>
             </div>
           </div>
         </article>
 
-        <!-- Book Card disponibile -->
-        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+        <!-- Book Card 4 -->
+        <article class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group">
           <div class="relative aspect-[3/4] bg-gray-100 overflow-hidden">
             <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400" alt="English Grammar" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-            <span class="absolute top-3 left-3 px-2.5 py-1 bg-green-500 text-white text-xs font-medium rounded-full">Come nuovo</span>
+            <span class="absolute top-3 left-3 px-2.5 py-1 bg-green-500 text-white text-xs font-medium rounded-full shadow-sm">Come nuovo</span>
           </div>
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Grammar Files - Blue Edition</h3>
-            <p class="text-sm text-gray-500 mb-2">Jordan, Fiocchi</p>
-            <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          <div class="p-3 sm:p-4">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">Grammar Files - Blue Edition</h3>
+            <p class="text-xs sm:text-sm text-gray-500 mb-2">Jordan, Fiocchi</p>
+            <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 mb-3">
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">Tutti gli anni</span>
               <span class="px-2 py-0.5 bg-gray-100 rounded-full">Inglese</span>
             </div>
             <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-              <span class="text-lg font-bold text-blue-600">€18,00</span>
-              <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-blue-600">&euro;18</span>
+              <div class="flex items-center gap-1.5">
                 <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">G</div>
-                <span class="text-sm text-gray-600">@giulia</span>
+                <span class="text-xs text-gray-500 hidden sm:inline">@giulia</span>
               </div>
             </div>
           </div>
         </article>
+
       </div>
+
+
+      <!-- ============================================
+           STATO: Empty - nessun risultato filtri
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="text-center py-16">
+        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Nessun libro trovato</h3>
+        <p class="text-sm text-gray-500 max-w-sm mx-auto">Prova a modificare i filtri di ricerca o cerca con termini diversi</p>
+      </div>
+      -->
+
+
+      <!-- ============================================
+           STATO: Empty - nessun libro in libreria
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="text-center py-16">
+        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">La libreria e' ancora vuota</h3>
+        <p class="text-sm text-gray-500 max-w-sm mx-auto mb-4">Sii il primo a vendere un libro scolastico!</p>
+        <button class="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium text-sm transition-colors">
+          Vendi il tuo primo libro
+        </button>
+      </div>
+      -->
+
+
+      <!-- ============================================
+           STATO: Skeleton Loading
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          <div class="aspect-[3/4] skeleton"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 skeleton rounded-lg w-3/4"></div>
+            <div class="h-3 skeleton rounded-lg w-1/2"></div>
+            <div class="flex gap-2">
+              <div class="h-5 skeleton rounded-full w-16"></div>
+              <div class="h-5 skeleton rounded-full w-20"></div>
+            </div>
+            <div class="pt-3 border-t border-gray-100 flex justify-between">
+              <div class="h-6 skeleton rounded-lg w-12"></div>
+              <div class="h-6 skeleton rounded-full w-6"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          <div class="aspect-[3/4] skeleton"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 skeleton rounded-lg w-3/4"></div>
+            <div class="h-3 skeleton rounded-lg w-1/2"></div>
+            <div class="flex gap-2">
+              <div class="h-5 skeleton rounded-full w-16"></div>
+              <div class="h-5 skeleton rounded-full w-20"></div>
+            </div>
+            <div class="pt-3 border-t border-gray-100 flex justify-between">
+              <div class="h-6 skeleton rounded-lg w-12"></div>
+              <div class="h-6 skeleton rounded-full w-6"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hidden lg:block">
+          <div class="aspect-[3/4] skeleton"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 skeleton rounded-lg w-3/4"></div>
+            <div class="h-3 skeleton rounded-lg w-1/2"></div>
+            <div class="flex gap-2">
+              <div class="h-5 skeleton rounded-full w-16"></div>
+              <div class="h-5 skeleton rounded-full w-20"></div>
+            </div>
+            <div class="pt-3 border-t border-gray-100 flex justify-between">
+              <div class="h-6 skeleton rounded-lg w-12"></div>
+              <div class="h-6 skeleton rounded-full w-6"></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hidden xl:block">
+          <div class="aspect-[3/4] skeleton"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 skeleton rounded-lg w-3/4"></div>
+            <div class="h-3 skeleton rounded-lg w-1/2"></div>
+            <div class="flex gap-2">
+              <div class="h-5 skeleton rounded-full w-16"></div>
+              <div class="h-5 skeleton rounded-full w-20"></div>
+            </div>
+            <div class="pt-3 border-t border-gray-100 flex justify-between">
+              <div class="h-6 skeleton rounded-lg w-12"></div>
+              <div class="h-6 skeleton rounded-full w-6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      -->
+
     </section>
 
 
     <!-- ============================================
-         SEZIONE: I MIEI ANNUNCI (nascosta di default)
+         SEZIONE: I MIEI ANNUNCI
          ============================================ -->
     <section id="sectionMiei" class="hidden">
 
       <!-- Info stati -->
       <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-        <p class="text-sm text-blue-800">
-          Gestisci i tuoi annunci cambiando lo stato:
-          <span class="font-semibold text-green-700">Disponibile</span> →
-          <span class="font-semibold text-yellow-700">Richiesto</span> →
-          <span class="font-semibold text-gray-500">Venduto</span>
-        </p>
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p class="text-sm text-blue-800">
+            Gestisci i tuoi annunci cambiando lo stato:
+            <span class="inline-flex items-center gap-1 font-semibold text-green-700"><span class="w-2 h-2 bg-green-500 rounded-full"></span>Disponibile</span> &rarr;
+            <span class="inline-flex items-center gap-1 font-semibold text-yellow-700"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span>Richiesto</span> &rarr;
+            <span class="inline-flex items-center gap-1 font-semibold text-gray-500"><span class="w-2 h-2 bg-gray-400 rounded-full"></span>Venduto</span>
+          </p>
+        </div>
       </div>
 
       <!-- Lista miei annunci -->
-      <div class="space-y-4">
+      <div class="space-y-3">
 
         <!-- Mio annuncio - DISPONIBILE -->
-        <article class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <div class="flex gap-4">
-            <!-- Immagine -->
-            <div class="w-24 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+        <article class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div class="p-4 flex gap-4">
+            <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
               <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200" alt="" class="w-full h-full object-cover"/>
             </div>
-            <!-- Info -->
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2 mb-1">
-                <h3 class="font-semibold text-gray-900 line-clamp-1">Matematica Blu 2.0 - Volume 3</h3>
-                <span class="text-lg font-bold text-blue-600 shrink-0">€15</span>
+                <h3 class="font-semibold text-gray-900 line-clamp-1 text-sm sm:text-base">Matematica Blu 2.0 - Volume 3</h3>
+                <span class="text-lg font-bold text-blue-600 shrink-0">&euro;15</span>
               </div>
-              <p class="text-sm text-gray-500 mb-2">Bergamini, Barozzi • 3° Anno</p>
+              <p class="text-sm text-gray-500 mb-1">Bergamini, Barozzi &middot; 3° Anno</p>
               <p class="text-xs text-gray-400 mb-3">Pubblicato il 15 gen 2026</p>
 
-              <!-- Stato + Azioni -->
               <div class="flex items-center justify-between">
-                <!-- Dropdown stato -->
-                <select class="px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                  <option value="disponibile" selected>Disponibile</option>
-                  <option value="richiesto">Richiesto</option>
-                  <option value="venduto">Venduto</option>
-                </select>
-                <!-- Azioni -->
-                <div class="flex gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+                  <select class="px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2315803d%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]">
+                    <option value="disponibile" selected>Disponibile</option>
+                    <option value="richiesto">Richiesto</option>
+                    <option value="venduto">Venduto</option>
+                  </select>
+                </div>
+                <div class="flex gap-1">
                   <button class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Modifica">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                   </button>
@@ -266,31 +403,35 @@
         </article>
 
         <!-- Mio annuncio - RICHIESTO -->
-        <article class="bg-white rounded-2xl shadow-sm border border-yellow-200 p-4">
-          <div class="flex gap-4">
-            <div class="w-24 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+        <article class="bg-white rounded-2xl shadow-sm border-2 border-yellow-200 hover:shadow-md transition-shadow">
+          <div class="p-4 flex gap-4">
+            <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0">
               <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200" alt="" class="w-full h-full object-cover"/>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2 mb-1">
-                <h3 class="font-semibold text-gray-900 line-clamp-1">Grammar Files - Blue Edition</h3>
-                <span class="text-lg font-bold text-blue-600 shrink-0">€18</span>
+                <h3 class="font-semibold text-gray-900 line-clamp-1 text-sm sm:text-base">Grammar Files - Blue Edition</h3>
+                <span class="text-lg font-bold text-blue-600 shrink-0">&euro;18</span>
               </div>
-              <p class="text-sm text-gray-500 mb-2">Jordan, Fiocchi • Tutti gli anni</p>
+              <p class="text-sm text-gray-500 mb-2">Jordan, Fiocchi &middot; Tutti gli anni</p>
 
               <!-- Richiedente -->
-              <div class="flex items-center gap-2 mb-3 px-2 py-1.5 bg-yellow-50 rounded-lg">
-                <div class="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs">L</div>
+              <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-yellow-50 rounded-lg border border-yellow-100">
+                <div class="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs">L</div>
                 <p class="text-xs text-yellow-800">Richiesto da <span class="font-semibold">@lucia</span></p>
+                <button class="ml-auto text-xs text-blue-600 hover:text-blue-700 font-medium">Contatta</button>
               </div>
 
               <div class="flex items-center justify-between">
-                <select class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                  <option value="disponibile">Disponibile</option>
-                  <option value="richiesto" selected>Richiesto</option>
-                  <option value="venduto">Venduto</option>
-                </select>
-                <div class="flex gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+                  <select class="px-3 py-1.5 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-8 bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a16207%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]">
+                    <option value="disponibile">Disponibile</option>
+                    <option value="richiesto" selected>Richiesto</option>
+                    <option value="venduto">Venduto</option>
+                  </select>
+                </div>
+                <div class="flex gap-1">
                   <button class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Modifica">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                   </button>
@@ -304,30 +445,32 @@
         </article>
 
         <!-- Mio annuncio - VENDUTO -->
-        <article class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 opacity-60">
-          <div class="flex gap-4">
-            <div class="w-24 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+        <article class="bg-white rounded-2xl shadow-sm border border-gray-200 opacity-60">
+          <div class="p-4 flex gap-4">
+            <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
               <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?w=200" alt="" class="w-full h-full object-cover"/>
-              <!-- Overlay venduto -->
-              <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span class="text-white font-bold text-sm">VENDUTO</span>
+              <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span class="text-white font-bold text-xs tracking-wider uppercase">Venduto</span>
               </div>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2 mb-1">
-                <h3 class="font-semibold text-gray-900 line-clamp-1">Fisica! Le leggi della natura - Vol. 1</h3>
-                <span class="text-lg font-bold text-gray-400 shrink-0 line-through">€12</span>
+                <h3 class="font-semibold text-gray-900 line-clamp-1 text-sm sm:text-base">Fisica! Le leggi della natura - Vol. 1</h3>
+                <span class="text-lg font-bold text-gray-400 shrink-0 line-through">&euro;12</span>
               </div>
-              <p class="text-sm text-gray-500 mb-2">Romeni • 1° Anno</p>
+              <p class="text-sm text-gray-500 mb-2">Romeni &middot; 1° Anno</p>
 
-              <!-- Acquirente -->
-              <div class="flex items-center gap-2 mb-3 px-2 py-1.5 bg-gray-50 rounded-lg">
-                <div class="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">P</div>
+              <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-gray-50 rounded-lg">
+                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">P</div>
                 <p class="text-xs text-gray-600">Venduto a <span class="font-semibold">@paolo</span></p>
+                <svg class="w-4 h-4 text-green-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
               </div>
 
               <div class="flex items-center justify-between">
-                <span class="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">Venduto</span>
+                <span class="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                  Venduto
+                </span>
                 <button class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Elimina annuncio">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
@@ -337,28 +480,317 @@
         </article>
 
       </div>
+
+      <!-- ============================================
+           STATO: Empty - nessun annuncio
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="text-center py-16">
+        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Non hai ancora annunci</h3>
+        <p class="text-sm text-gray-500 max-w-sm mx-auto mb-4">Inizia a vendere i tuoi libri usati e guadagna qualcosa!</p>
+        <button class="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium text-sm transition-colors">
+          Vendi il tuo primo libro
+        </button>
+      </div>
+      -->
+
+    </section>
+
+
+    <!-- ============================================
+         SEZIONE: MESSAGGI LIBRERIA
+         ============================================ -->
+    <section id="sectionMessaggi" class="hidden">
+
+      <!-- Lista conversazioni -->
+      <div class="space-y-2" id="listaConversazioni">
+
+        <!-- Conversazione con messaggi non letti -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="openChat(this)">
+          <div class="p-4 flex gap-3">
+            <div class="w-14 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+              <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200" alt="" class="w-full h-full object-cover"/>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-0.5">
+                <h3 class="font-semibold text-gray-900 text-sm truncate">Matematica Blu 2.0 - Volume 3</h3>
+                <span class="text-xs text-gray-400 shrink-0 ml-2">14:32</span>
+              </div>
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-medium">M</div>
+                <span class="text-xs text-gray-500">Mario Rossi</span>
+                <span class="text-xs text-gray-300">&middot;</span>
+                <span class="text-xs text-gray-400">Venditore</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <p class="text-sm text-gray-600 truncate font-medium">Si, il libro e' ancora disponibile!</p>
+                <span class="w-5 h-5 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0 ml-2">2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversazione letta -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="openChat(this)">
+          <div class="p-4 flex gap-3">
+            <div class="w-14 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+              <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200" alt="" class="w-full h-full object-cover"/>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-0.5">
+                <h3 class="font-semibold text-gray-900 text-sm truncate">Grammar Files - Blue Edition</h3>
+                <span class="text-xs text-gray-400 shrink-0 ml-2">ieri</span>
+              </div>
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <div class="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center text-white text-[10px] font-medium">L</div>
+                <span class="text-xs text-gray-500">Lucia Bianchi</span>
+                <span class="text-xs text-gray-300">&middot;</span>
+                <span class="text-xs text-gray-400">Acquirente</span>
+              </div>
+              <p class="text-sm text-gray-500 truncate">Perfetto, ci troviamo domani a scuola</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversazione letta vecchia -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="openChat(this)">
+          <div class="p-4 flex gap-3">
+            <div class="w-14 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+              <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?w=200" alt="" class="w-full h-full object-cover"/>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-0.5">
+                <h3 class="font-semibold text-gray-900 text-sm truncate">Fisica! Le leggi della natura</h3>
+                <span class="text-xs text-gray-400 shrink-0 ml-2">lun</span>
+              </div>
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <div class="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-medium">P</div>
+                <span class="text-xs text-gray-500">Paolo Verdi</span>
+                <span class="text-xs text-gray-300">&middot;</span>
+                <span class="text-xs text-gray-400">Venditore</span>
+              </div>
+              <p class="text-sm text-gray-500 truncate">Ok, grazie mille!</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chat aperta (nascosta di default, si mostra al click) -->
+      <div id="chatAperta" class="hidden">
+
+        <!-- Header chat con bottone indietro -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-3">
+          <div class="p-4 flex items-center gap-3">
+            <button onclick="closeChat()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="w-10 h-14 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+              <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=100" alt="" class="w-full h-full object-cover"/>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-900 text-sm truncate">Matematica Blu 2.0 - Volume 3</h3>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span class="text-xs text-gray-500">Mario Rossi</span>
+                <span class="text-xs text-green-600">&middot; Online</span>
+              </div>
+            </div>
+            <a href="book-detail.html" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400" title="Vedi libro">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Area messaggi -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-3">
+          <div class="p-4 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
+
+            <!-- Data separatore -->
+            <div class="flex items-center justify-center">
+              <span class="px-3 py-1 bg-gray-100 text-gray-400 text-xs rounded-full">Oggi</span>
+            </div>
+
+            <!-- Messaggio ricevuto -->
+            <div class="flex gap-3">
+              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0">M</div>
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-xs sm:max-w-md">
+                <p class="text-gray-800 text-sm">Ciao! Ho visto che sei interessato al libro di matematica. Hai qualche domanda?</p>
+                <span class="text-xs text-gray-400 mt-1 block">14:28</span>
+              </div>
+            </div>
+
+            <!-- Messaggio inviato -->
+            <div class="flex gap-3 justify-end">
+              <div class="bg-blue-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-xs sm:max-w-md">
+                <p class="text-sm">Ciao! Si, il libro e' ancora disponibile? In che condizioni e'?</p>
+                <span class="text-xs text-blue-200 mt-1 block text-right">14:30</span>
+              </div>
+            </div>
+
+            <!-- Messaggio ricevuto -->
+            <div class="flex gap-3">
+              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0">M</div>
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-xs sm:max-w-md">
+                <p class="text-gray-800 text-sm">Si, il libro e' ancora disponibile! E' in ottime condizioni, usato solo un anno. Nessun appunto o sottolineatura.</p>
+                <span class="text-xs text-gray-400 mt-1 block">14:32</span>
+              </div>
+            </div>
+
+            <!-- Messaggio inviato -->
+            <div class="flex gap-3 justify-end">
+              <div class="bg-blue-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-xs sm:max-w-md">
+                <p class="text-sm">Perfetto! Possiamo vederci domani a scuola per lo scambio?</p>
+                <span class="text-xs text-blue-200 mt-1 block text-right">14:33</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Input messaggio -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div class="p-3 flex items-center gap-3">
+            <input type="text" placeholder="Scrivi un messaggio..." class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
+            <button class="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ============================================
+           STATO: Empty - nessuna conversazione
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="text-center py-16">
+        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Nessuna conversazione</h3>
+        <p class="text-sm text-gray-500 max-w-sm mx-auto">Quando contatterai un venditore, le conversazioni appariranno qui</p>
+      </div>
+      -->
+
     </section>
 
   </main>
 
+
+  <!-- ============================================
+       FLOATING: Chiedi all'AI
+       ============================================ -->
+  <button class="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full font-medium text-sm shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 active:scale-95">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    <span class="hidden sm:inline">Chiedi all'AI</span>
+  </button>
+
+
+  <!-- ============================================
+       FILTRI MOBILE (drawer dal basso)
+       ============================================ -->
+  <div id="filtriMobileDrawer" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50" id="filtriOverlay"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 space-y-4 animate-slide-up">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-gray-900">Filtri</h3>
+        <button id="closeFiltri" class="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Anno</label>
+        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <option value="">Tutti gli anni</option>
+          <option>1° Anno</option><option>2° Anno</option><option>3° Anno</option><option>4° Anno</option><option>5° Anno</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Materia</label>
+        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <option value="">Tutte le materie</option>
+          <option>Matematica</option><option>Italiano</option><option>Inglese</option><option>Storia</option><option>Fisica</option><option>Informatica</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Condizione</label>
+        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <option value="">Tutte le condizioni</option>
+          <option>Come nuovo</option><option>Buone condizioni</option><option>Usato</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Prezzo</label>
+        <select class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <option value="">Qualsiasi prezzo</option>
+          <option>Fino a 10&euro;</option><option>10&euro; - 20&euro;</option><option>20&euro; - 30&euro;</option><option>Oltre 30&euro;</option>
+        </select>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors text-sm">Resetta</button>
+        <button class="flex-1 py-3 bg-blue-500 text-white rounded-full font-medium hover:bg-blue-600 transition-colors text-sm">Applica filtri</button>
+      </div>
+    </div>
+  </div>
+
+
   <script>
     // Tab switching
-    const tabMiei = document.getElementById('tabMiei');
-    const tabCompra = document.getElementById('tabCompra');
-    const sectionMiei = document.getElementById('sectionMiei');
-    const sectionCompra = document.getElementById('sectionCompra');
+    const tabs = {
+      compra: { tab: document.getElementById('tabCompra'), section: document.getElementById('sectionCompra') },
+      miei: { tab: document.getElementById('tabMiei'), section: document.getElementById('sectionMiei') },
+      messaggi: { tab: document.getElementById('tabMessaggi'), section: document.getElementById('sectionMessaggi') }
+    };
 
-    function activateTab(activeTab, inactiveTab, showSection, hideSection) {
-      activeTab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
-      activeTab.classList.remove('text-gray-500');
-      inactiveTab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
-      inactiveTab.classList.add('text-gray-500');
-      showSection.classList.remove('hidden');
-      hideSection.classList.add('hidden');
+    function activateTab(activeKey) {
+      Object.entries(tabs).forEach(([key, { tab, section }]) => {
+        if (key === activeKey) {
+          tab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+          tab.classList.remove('text-gray-500');
+          section.classList.remove('hidden');
+        } else {
+          tab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+          tab.classList.add('text-gray-500');
+          section.classList.add('hidden');
+        }
+      });
     }
 
-    tabMiei.addEventListener('click', () => activateTab(tabMiei, tabCompra, sectionMiei, sectionCompra));
-    tabCompra.addEventListener('click', () => activateTab(tabCompra, tabMiei, sectionCompra, sectionMiei));
+    tabs.compra.tab.addEventListener('click', () => activateTab('compra'));
+    tabs.miei.tab.addEventListener('click', () => activateTab('miei'));
+    tabs.messaggi.tab.addEventListener('click', () => activateTab('messaggi'));
+
+    // Chat open/close in Messaggi tab
+    function openChat(el) {
+      document.getElementById('listaConversazioni').classList.add('hidden');
+      document.getElementById('chatAperta').classList.remove('hidden');
+    }
+    function closeChat() {
+      document.getElementById('chatAperta').classList.add('hidden');
+      document.getElementById('listaConversazioni').classList.remove('hidden');
+    }
+
+    // Mobile filters drawer
+    const btnFiltriMobile = document.getElementById('btnFiltriMobile');
+    const filtriMobileDrawer = document.getElementById('filtriMobileDrawer');
+    const filtriOverlay = document.getElementById('filtriOverlay');
+    const closeFiltri = document.getElementById('closeFiltri');
+
+    if (btnFiltriMobile) {
+      btnFiltriMobile.addEventListener('click', () => filtriMobileDrawer.classList.remove('hidden'));
+    }
+    if (filtriOverlay) {
+      filtriOverlay.addEventListener('click', () => filtriMobileDrawer.classList.add('hidden'));
+    }
+    if (closeFiltri) {
+      closeFiltri.addEventListener('click', () => filtriMobileDrawer.classList.add('hidden'));
+    }
   </script>
 
 </body>
