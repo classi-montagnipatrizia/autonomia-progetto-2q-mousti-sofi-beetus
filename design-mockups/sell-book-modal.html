@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
+    @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
+    .upload-progress { animation: progress 2s ease-out forwards; }
   </style>
 </head>
 <body class="bg-gray-900/50 min-h-screen flex items-center justify-center p-4">
@@ -31,7 +33,7 @@
     <div class="p-6 space-y-6">
 
       <!-- ============================================
-           STEP 1: Upload Foto (Fronte e Retro)
+           STEP 1: Upload Foto
            ============================================ -->
       <section>
         <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -40,10 +42,10 @@
         </h3>
 
         <div class="grid grid-cols-2 gap-4">
-          <!-- Upload Fronte -->
+          <!-- Upload Fronte (stato: vuoto) -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Fronte (copertina) *</label>
-            <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Fronte (copertina) <span class="text-red-500">*</span></label>
+            <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
               <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -54,10 +56,10 @@
             </div>
           </div>
 
-          <!-- Upload Retro -->
+          <!-- Upload Retro (stato: vuoto) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Retro (opzionale)</label>
-            <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
+            <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer bg-gray-50 hover:bg-blue-50/50 aspect-[3/4] flex flex-col items-center justify-center">
               <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -68,87 +70,176 @@
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Preview immagini caricate (esempio con immagini) -->
-        <div class="hidden grid grid-cols-2 gap-4 mt-4">
-          <!-- Preview Fronte -->
+
+      <!-- ============================================
+           STATO: Immagini caricate con preview
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <section>
+        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </span>
+          Foto caricate
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
           <div class="relative">
-            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300" class="w-full aspect-[3/4] object-cover rounded-xl" alt="Fronte"/>
-            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">Fronte</span>
+            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300" class="w-full aspect-[3/4] object-cover rounded-xl border border-gray-200" alt="Fronte"/>
+            <span class="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Fronte</span>
             <button class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
-          <!-- Preview Retro -->
           <div class="relative">
-            <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=300" class="w-full aspect-[3/4] object-cover rounded-xl" alt="Retro"/>
-            <span class="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">Retro</span>
+            <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=300" class="w-full aspect-[3/4] object-cover rounded-xl border border-gray-200" alt="Retro"/>
+            <span class="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Retro</span>
             <button class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
       </section>
+      -->
+
+
+      <!-- ============================================
+           STATO: Upload in corso
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <section>
+        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+            <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </span>
+          Caricamento in corso...
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="relative aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+            <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300" class="w-full h-full object-cover opacity-50" alt=""/>
+            <div class="absolute inset-x-0 bottom-0 p-3">
+              <div class="bg-white/90 backdrop-blur-sm rounded-lg p-2">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <span>Caricamento...</span>
+                  <span>72%</span>
+                </div>
+                <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full" style="width: 72%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="border-2 border-dashed border-gray-200 rounded-xl aspect-[3/4] flex flex-col items-center justify-center bg-gray-50">
+            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-3">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <p class="text-sm text-gray-500">Retro (opzionale)</p>
+          </div>
+        </div>
+      </section>
+      -->
+
 
       <!-- Divider con AI -->
-      <div class="relative py-4">
+      <div class="relative py-2">
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-gray-200"></div>
         </div>
         <div class="relative flex justify-center">
-          <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-medium flex items-center gap-2 shadow-lg transition-colors">
+          <!-- Stato: Attivo (foto caricate) -->
+          <button class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full text-sm font-medium flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 active:scale-95">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
             </svg>
             Genera con AI
           </button>
+
+          <!-- Stato: Disabilitato (nessuna foto) - Decommentare per vedere -->
+          <!--
+          <button disabled class="px-5 py-2.5 bg-gray-200 text-gray-400 rounded-full text-sm font-medium flex items-center gap-2 cursor-not-allowed">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            Genera con AI
+            <span class="text-xs opacity-70">(carica una foto prima)</span>
+          </button>
+          -->
         </div>
       </div>
 
+
       <!-- ============================================
-           AI Loading State
+           STATO: AI Loading
+           (Decommentare per vedere)
            ============================================ -->
-      <div class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4">
+      <!--
+      <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+            <div class="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
           <div>
-            <p class="font-medium text-blue-900">L'AI sta analizzando le foto...</p>
-            <p class="text-sm text-blue-600">Generazione titolo, descrizione e prezzo in corso</p>
+            <p class="font-medium text-blue-900 text-sm">L'AI sta analizzando le foto...</p>
+            <p class="text-xs text-blue-600 mt-0.5">Riconoscimento titolo, autore e dettagli in corso</p>
           </div>
         </div>
       </div>
+      -->
+
 
       <!-- ============================================
-           AI Success State
+           STATO: AI Successo
            ============================================ -->
       <div class="bg-green-50 border border-green-100 rounded-xl p-4">
         <div class="flex items-start gap-3">
           <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
             </svg>
           </div>
           <div>
-            <p class="font-medium text-green-900">Dati generati con successo!</p>
-            <p class="text-sm text-green-700">Controlla e modifica i campi se necessario</p>
+            <p class="font-medium text-green-900 text-sm">Dati generati con successo!</p>
+            <p class="text-xs text-green-700 mt-0.5">Controlla e modifica i campi se necessario prima di pubblicare</p>
           </div>
         </div>
       </div>
+
+
+      <!-- ============================================
+           STATO: AI Errore
+           (Decommentare per vedere)
+           ============================================ -->
+      <!--
+      <div class="bg-red-50 border border-red-100 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="font-medium text-red-900 text-sm">Impossibile analizzare le foto</p>
+            <p class="text-xs text-red-700 mt-0.5">L'AI non e' riuscita a riconoscere il libro. Compila i campi manualmente oppure riprova con foto piu' nitide.</p>
+            <button class="mt-2 text-xs text-red-700 hover:text-red-800 font-medium underline underline-offset-2">Riprova</button>
+          </div>
+        </div>
+      </div>
+      -->
+
 
       <!-- ============================================
            STEP 2: Dati libro
            ============================================ -->
       <section>
-        <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
           Informazioni libro
-          <span class="ml-auto text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full flex items-center gap-1">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          <span class="ml-auto text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full flex items-center gap-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
             </svg>
             Generato da AI
           </span>
@@ -157,42 +248,27 @@
         <div class="space-y-4">
           <!-- Titolo -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Titolo *</label>
-            <input
-              type="text"
-              value="Matematica Blu 2.0 - Volume 3"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Es. Matematica Blu 2.0"
-            />
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Titolo <span class="text-red-500">*</span></label>
+            <input type="text" value="Matematica Blu 2.0 - Volume 3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" placeholder="Es. Matematica Blu 2.0"/>
           </div>
 
           <!-- Autore -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Autore</label>
-            <input
-              type="text"
-              value="Bergamini, Barozzi, Trifone"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Es. Bergamini, Barozzi"
-            />
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Autore <span class="text-red-500">*</span></label>
+            <input type="text" value="Bergamini, Barozzi, Trifone" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm" placeholder="Es. Bergamini, Barozzi"/>
           </div>
 
           <!-- ISBN -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">ISBN (opzionale)</label>
-            <input
-              type="text"
-              value="9788808537010"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Es. 9788808537010"
-            />
+            <input type="text" value="9788808537010" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm font-mono" placeholder="Es. 9788808537010"/>
           </div>
 
           <!-- Riga: Anno e Materia -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Anno di corso *</label>
-              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Anno <span class="text-red-500">*</span></label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-sm">
                 <option value="">Seleziona</option>
                 <option value="1">1° Anno</option>
                 <option value="2">2° Anno</option>
@@ -203,8 +279,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Materia *</label>
-              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Materia <span class="text-red-500">*</span></label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-sm">
                 <option value="">Seleziona</option>
                 <option value="matematica" selected>Matematica</option>
                 <option value="italiano">Italiano</option>
@@ -221,23 +297,17 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                Prezzo *
-                <span class="text-blue-600 text-xs ml-1">(AI suggerisce €15)</span>
+                Prezzo <span class="text-red-500">*</span>
+                <span class="text-blue-500 text-xs ml-1 font-normal">(AI: &euro;15)</span>
               </label>
               <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">€</span>
-                <input
-                  type="number"
-                  value="15"
-                  min="0"
-                  step="0.50"
-                  class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">&euro;</span>
+                <input type="number" value="15" min="0" step="0.50" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"/>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Condizione *</label>
-              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white">
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Condizione <span class="text-red-500">*</span></label>
+              <select class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white text-sm">
                 <option value="">Seleziona</option>
                 <option value="nuovo" selected>Come nuovo</option>
                 <option value="buono">Buone condizioni</option>
@@ -248,17 +318,32 @@
 
           <!-- Descrizione -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">
-              Descrizione
-              <span class="text-blue-600 text-xs ml-1">(generata da AI)</span>
-            </label>
-            <textarea
-              rows="4"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-              placeholder="Descrivi le condizioni del libro..."
-            >Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra, senza pieghe o strappi. Ideale per studenti del terzo anno di informatica.</textarea>
-            <p class="text-xs text-gray-400 mt-1 text-right">234/500 caratteri</p>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Descrizione</label>
+            <textarea rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-sm" placeholder="Descrivi le condizioni del libro...">Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra, senza pieghe o strappi.</textarea>
+            <div class="flex items-center justify-between mt-1.5">
+              <span class="text-xs text-blue-500 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                Generata da AI
+              </span>
+              <span class="text-xs text-gray-400">178/500</span>
+            </div>
           </div>
+
+
+          <!-- ============================================
+               STATO: Campo con errore di validazione
+               (Decommentare per vedere)
+               ============================================ -->
+          <!--
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Titolo <span class="text-red-500">*</span></label>
+            <input type="text" value="" class="w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-sm bg-red-50" placeholder="Es. Matematica Blu 2.0"/>
+            <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+              Il titolo e' obbligatorio
+            </p>
+          </div>
+          -->
 
         </div>
       </section>
@@ -267,11 +352,11 @@
 
     <!-- Footer Modal -->
     <footer class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3">
-      <button class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors">
+      <button class="flex-1 py-3 border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors text-sm">
         Annulla
       </button>
-      <button class="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button class="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-colors shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
         Pubblica annuncio
