@@ -42,6 +42,14 @@ export const homeRoutes: Routes = [
       import('../library/library-page/library-page').then((m) => m.LibraryPage),
     title: 'Libreria - beetUs',
   },
+  // AI Chatbot Libreria - Full screen senza header (prima di :id per evitare conflitto)
+  {
+    path: 'library/ai-chat',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/ai-chatbot/ai-chatbot').then((m) => m.AiChatbot),
+    title: 'Assistente AI - beetUs',
+  },
   // Book Detail - Full screen senza header
   {
     path: 'library/:id',

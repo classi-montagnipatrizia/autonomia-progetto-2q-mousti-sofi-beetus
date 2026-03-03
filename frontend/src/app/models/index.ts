@@ -485,3 +485,50 @@ export interface BookListingFilters {
   prezzoMax?: number;
   sort?: 'recenti' | 'prezzo_asc' | 'prezzo_desc';
 }
+
+// ============================================================================
+// AI CHATBOT - DTOs
+// ============================================================================
+
+/**
+ * Ruolo del messaggio nella chat AI
+ */
+export type AiChatRole = 'user' | 'assistant';
+
+/**
+ * Libro suggerito dall'AI nella risposta
+ */
+export interface AiSuggestedBookDTO {
+  listingId: number;
+  titolo: string;
+  autore: string;
+  prezzo: number;
+  condizione: BookCondition;
+  imageUrl: string;
+}
+
+/**
+ * Messaggio nella conversazione AI
+ */
+export interface AiChatMessageDTO {
+  id: number;
+  ruolo: AiChatRole;
+  contenuto: string;
+  libriSuggeriti: AiSuggestedBookDTO[];
+  errore: boolean;
+  createdAt: string; // ISO 8601
+}
+
+/**
+ * Richiesta invio messaggio all'AI
+ */
+export interface AiChatRequestDTO {
+  messaggio: string;
+}
+
+/**
+ * Risposta dall'AI
+ */
+export interface AiChatResponseDTO {
+  messaggio: AiChatMessageDTO;
+}
