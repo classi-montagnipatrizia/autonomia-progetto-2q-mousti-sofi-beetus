@@ -25,10 +25,10 @@ import {
 
 import { LibraryStore, LibraryTab } from '../../../core/stores/library-store';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
-import { ModalComponent } from '../../../shared/ui/modal/modal-component/modal-component';
 import { ButtonComponent } from '../../../shared/ui/button/button-component/button-component';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
+import { SellBookModal } from '../sell-book-modal/sell-book-modal';
 import {
   BookCondition,
   BookListingResponseDTO,
@@ -46,10 +46,10 @@ import {
     FormsModule,
     LucideAngularModule,
     SkeletonComponent,
-    ModalComponent,
     ButtonComponent,
     AvatarComponent,
     SpinnerComponent,
+    SellBookModal,
   ],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss',
@@ -266,6 +266,15 @@ export class LibraryPage implements OnInit {
 
   updateSellForm(field: keyof CreaBookListingRequestDTO, value: any): void {
     this.sellForm.update((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async onSellBookSubmitted(request: CreaBookListingRequestDTO): Promise<void> {
+    this.sellFormSubmitting.set(true);
+    try {
+      await this.store.createListing(request);
+    } finally {
+      this.sellFormSubmitting.set(false);
+    }
   }
 
   async submitSellForm(): Promise<void> {
