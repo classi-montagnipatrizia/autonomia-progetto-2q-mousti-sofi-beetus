@@ -6,11 +6,32 @@
  * Tipo di notifica
  */
 export enum NotificationType {
-  MENTION = 'MENTION', // Menzione @username
-  COMMENT = 'COMMENT', // Commento su un post
-  LIKE = 'LIKE', // Like su un post
-  DIRECT_MESSAGE = 'DIRECT_MESSAGE', // Messaggio diretto
-  NEW_POST = 'NEW_POST', // Nuovo post pubblicato
+  MENTION = 'MENTION',
+  COMMENT = 'COMMENT',
+  LIKE = 'LIKE',
+  DIRECT_MESSAGE = 'DIRECT_MESSAGE',
+  NEW_POST = 'NEW_POST',
+  BOOK_REQUEST = 'BOOK_REQUEST',   // Qualcuno ha richiesto un tuo libro
+  BOOK_MESSAGE = 'BOOK_MESSAGE',   // Nuovo messaggio nella chat libreria
+  GROUP_MESSAGE = 'GROUP_MESSAGE', // Nuovo messaggio in un gruppo
+}
+
+/**
+ * Condizione fisica del libro
+ */
+export enum BookCondition {
+  COME_NUOVO = 'OTTIMO',
+  BUONE_CONDIZIONI = 'BUONO',
+  USATO = 'USATO',
+}
+
+/**
+ * Stato disponibilità del libro
+ */
+export enum BookStatus {
+  DISPONIBILE = 'DISPONIBILE',
+  RICHIESTO = 'RICHIESTO',
+  VENDUTO = 'VENDUTO',
 }
 
 /**
@@ -143,8 +164,10 @@ export interface MessageResponseDTO {
   id: number;
   mittente: UserSummaryDTO;
   destinatario: UserSummaryDTO;
-  contenuto: string;
+  contenuto: string | null;
   imageUrl: string | null;
+  audioUrl: string | null;       // presente solo per messaggi vocali
+  audioDuration: number | null;  // durata in secondi
   isRead: boolean;
   isDeletedBySender: boolean;
   isHiddenByCurrentUser: boolean;
@@ -191,6 +214,163 @@ export interface ErrorResponseDTO {
   message: string;
   path: string;
   validationErrors?: Record<string, string>; // Solo per errori di validazione
+}
+
+// ============================================================================
+// BOOK DTOs
+// ============================================================================
+
+/**
+ * Riepilogo libro (versione card/griglia)
+ */
+export interface BookSummaryDTO {
+  id: number;
+  titolo: string;
+  autore: string;
+  prezzo: number;
+  condizione: BookCondition;
+  stato: BookStatus;
+  annoScolastico: string | null;
+  materia: string | null;
+  frontImageUrl: string;
+  venditore: UserSummaryDTO;
+  createdAt: string;
+}
+
+/**
+ * Dettaglio completo libro
+ */
+export interface BookResponseDTO {
+  id: number;
+  titolo: string;
+  autore: string;
+  isbn: string | null;
+  descrizione: string | null;
+  prezzo: number;
+  condizione: BookCondition;
+  stato: BookStatus;
+  annoScolastico: string | null;
+  materia: string | null;
+  frontImageUrl: string;
+  backImageUrl: string | null;
+  venditore: UserSummaryDTO;
+  richiedente: UserSummaryDTO | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Conversazione venditore-acquirente per un libro
+ */
+export interface BookConversationDTO {
+  id: number;
+  book: BookSummaryDTO;
+  seller: UserSummaryDTO;
+  buyer: UserSummaryDTO;
+  unreadCount: number;
+  lastMessageAt: string | null;
+  createdAt: string;
+}
+
+/**
+ * Messaggio nella chat venditore-acquirente
+ */
+export interface BookMessageDTO {
+  id: number;
+  conversationId: number;
+  sender: UserSummaryDTO;
+  contenuto: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+// ============================================================================
+// AI DTOs
+// ============================================================================
+
+/**
+ * Risposta analisi libro da Gemini Vision
+ */
+export interface AnalizzaLibroResponseDTO {
+  titolo: string | null;
+  autore: string | null;
+  isbn: string | null;
+  materia: string | null;
+  annoScolastico: string | null;
+  prezzoSuggerito: number | null;
+  descrizione: string | null;
+  condizione: BookCondition | null;
+}
+
+/**
+ * Risposta chatbot Gemini
+ */
+export interface ChatbotResponseDTO {
+  risposta: string;
+  libri: BookSummaryDTO[];
+}
+
+// ============================================================================
+// GROUP DTOs
+// ============================================================================
+
+/**
+ * Membro di un gruppo
+ */
+export interface GroupMemberDTO {
+  id: number;
+  username: string;
+  fullName: string;
+  profilePictureUrl: string | null;
+  isAdmin: boolean;
+  joinedAt: string;
+}
+
+/**
+ * Messaggio in un gruppo
+ */
+export interface GroupMessageDTO {
+  id: number;
+  groupId: number;
+  senderId: number;
+  senderUsername: string;
+  senderFullName: string;
+  senderProfilePictureUrl: string | null;
+  content: string | null;
+  audioUrl: string | null;
+  audioDuration: number | null;
+  createdAt: string;
+}
+
+/**
+ * Riepilogo gruppo (lista "I miei gruppi")
+ */
+export interface GroupSummaryDTO {
+  id: number;
+  name: string;
+  description: string | null;
+  profilePictureUrl: string | null;
+  memberCount: number;
+  unreadCount: number;
+  lastMessageContent: string | null;
+  lastMessageAt: string | null;
+  isAdmin: boolean;
+}
+
+/**
+ * Dettaglio gruppo con lista membri
+ */
+export interface GroupResponseDTO {
+  id: number;
+  name: string;
+  description: string | null;
+  profilePictureUrl: string | null;
+  adminId: number;
+  adminUsername: string;
+  memberCount: number;
+  members: GroupMemberDTO[];
+  createdAt: string;
+  isAdmin: boolean;
 }
 
 // ============================================================================
@@ -291,8 +471,69 @@ export interface CreaCommentoRequestDTO {
  */
 export interface InviaMessaggioRequestDTO {
   destinatarioId: number;
-  contenuto?: string; // Max 5000 caratteri (opzionale se c'è imageUrl)
-  imageUrl?: string; // URL immagine Cloudinary (opzionale)
+  contenuto?: string;      // Max 5000 caratteri (opzionale se c'è imageUrl)
+  imageUrl?: string;       // URL immagine Cloudinary (opzionale, compatibile con testo)
+  audioUrl?: string;       // URL audio Cloudinary (esclusivo: no testo/immagine)
+  audioDuration?: number;  // Durata in secondi, obbligatorio con audioUrl, max 120
+}
+
+/**
+ * Creazione annuncio libro
+ */
+export interface CreaLibroRequestDTO {
+  titolo: string;
+  autore: string;
+  isbn?: string;
+  descrizione?: string;
+  prezzo: number;
+  condizione: BookCondition;
+  annoScolastico?: string;
+  materia?: string;
+  frontImageUrl: string;
+  backImageUrl?: string;
+}
+
+/**
+ * Modifica annuncio libro (campi opzionali)
+ */
+export interface ModificaLibroRequestDTO {
+  titolo?: string;
+  autore?: string;
+  isbn?: string;
+  descrizione?: string;
+  prezzo?: number;
+  condizione?: BookCondition;
+  annoScolastico?: string;
+  materia?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+}
+
+/**
+ * Creazione gruppo
+ */
+export interface CreaGruppoRequestDTO {
+  nome: string;           // Max 100 caratteri
+  descrizione?: string;  // Max 500 caratteri
+  profilePictureUrl?: string;
+}
+
+/**
+ * Modifica gruppo (solo admin)
+ */
+export interface ModificaGruppoRequestDTO {
+  nome?: string;
+  descrizione?: string;
+  profilePictureUrl?: string;
+}
+
+/**
+ * Invio messaggio in un gruppo
+ */
+export interface InviaMessaggioGruppoRequestDTO {
+  contenuto?: string;      // Max 2000 caratteri (opzionale se c'è audioUrl)
+  audioUrl?: string;       // URL audio Cloudinary (esclusivo: no testo)
+  audioDuration?: number;  // Durata in secondi, obbligatorio con audioUrl, max 120
 }
 
 /**
