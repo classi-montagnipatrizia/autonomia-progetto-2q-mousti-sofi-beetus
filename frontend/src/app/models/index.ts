@@ -532,3 +532,37 @@ export interface AiChatRequestDTO {
 export interface AiChatResponseDTO {
   messaggio: AiChatMessageDTO;
 }
+
+// ============================================================================
+// GROUP MESSAGING - DTOs
+// ============================================================================
+
+/**
+ * Colore del gruppo (gradiente)
+ */
+export type GroupColor = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan';
+
+/**
+ * Risposta gruppo
+ */
+export interface GroupResponseDTO {
+  id: number;
+  nome: string;
+  descrizione: string | null;
+  colore: GroupColor;
+  creatore: UserSummaryDTO;
+  membri: UserSummaryDTO[];
+  ultimoMessaggio: string | null;
+  ultimaAttivita: string | null; // ISO 8601
+  createdAt: string; // ISO 8601
+}
+
+/**
+ * Richiesta creazione gruppo
+ */
+export interface CreaGruppoRequestDTO {
+  nome: string;
+  descrizione?: string;
+  colore: GroupColor;
+  membriIds: number[];
+}
