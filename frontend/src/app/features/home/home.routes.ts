@@ -50,6 +50,14 @@ export const homeRoutes: Routes = [
       import('../library/ai-chatbot/ai-chatbot').then((m) => m.AiChatbot),
     title: 'Assistente AI - beetUs',
   },
+  // Book Conversation - Full screen chat per annuncio libro
+  {
+    path: 'library/conversation/:conversationId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/book-conversation/book-conversation').then((m) => m.BookConversation),
+    title: 'Conversazione Libro - beetUs',
+  },
   // Book Detail - Full screen senza header
   {
     path: 'library/:id',

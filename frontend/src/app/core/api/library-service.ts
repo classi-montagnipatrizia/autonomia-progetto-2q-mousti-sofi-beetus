@@ -350,6 +350,17 @@ export class LibraryService {
   }
 
   /**
+   * Ottieni una conversazione per ID
+   */
+  getConversationById(id: number): Observable<LibraryConversationResponseDTO> {
+    const found = MOCK_CONVERSATIONS.find((c) => c.id === id) ?? MOCK_CONVERSATIONS[0];
+    return of(found).pipe(delay(400));
+
+    // TODO: API reale
+    // return this.http.get<LibraryConversationResponseDTO>(`${this.baseUrl}/conversations/${id}`);
+  }
+
+  /**
    * Ottieni un singolo annuncio per ID
    */
   getListingById(id: number): Observable<BookListingResponseDTO> {

@@ -228,6 +228,28 @@ export class LibraryStore {
     }
   }
 
+  async openConversationById(conversationId: number): Promise<void> {
+    this._chatLoading.set(true);
+
+    try {
+      // Carica la conversazione se non già in lista
+      let conversation = this._conversations().find((c) => c.id === conversationId) ?? null;
+      if (!conversation) {
+        conversation = await firstValueFrom(this.libraryService.getConversationById(conversationId));
+      }
+      this._activeConversation.set(conversation);
+
+      const messages = await firstValueFrom(
+        this.libraryService.getConversationMessages(conversationId)
+      );
+      this._chatMessages.set(messages);
+    } catch (error) {
+      this.logger.error('Errore caricamento conversazione per ID', error);
+    } finally {
+      this._chatLoading.set(false);
+    }
+  }
+
   closeConversation(): void {
     this._activeConversation.set(null);
     this._chatMessages.set([]);
