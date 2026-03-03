@@ -350,6 +350,34 @@ export class LibraryService {
   }
 
   /**
+   * Ottieni un singolo annuncio per ID
+   */
+  getListingById(id: number): Observable<BookListingResponseDTO> {
+    const all = [...MOCK_LISTINGS, ...MOCK_MY_LISTINGS];
+    const found = all.find((l) => l.id === id) ?? MOCK_LISTINGS[0];
+    return of(found).pipe(delay(500));
+
+    // TODO: API reale
+    // return this.http.get<BookListingResponseDTO>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Richiedi un libro (cambia stato a RICHIESTO)
+   */
+  requestListing(listingId: number): Observable<BookListingResponseDTO> {
+    const listing = MOCK_LISTINGS.find((l) => l.id === listingId);
+    if (listing) {
+      listing.stato = BookListingStatus.RICHIESTO;
+      listing.richiedente = MOCK_USERS[0];
+      listing.updatedAt = new Date().toISOString();
+    }
+    return of(listing!).pipe(delay(600));
+
+    // TODO: API reale
+    // return this.http.post<BookListingResponseDTO>(`${this.baseUrl}/${listingId}/request`, {});
+  }
+
+  /**
    * Conteggio messaggi non letti nelle conversazioni della libreria
    */
   getUnreadConversationsCount(): Observable<number> {

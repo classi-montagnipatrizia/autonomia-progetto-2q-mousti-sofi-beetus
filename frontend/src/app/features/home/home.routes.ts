@@ -42,6 +42,14 @@ export const homeRoutes: Routes = [
       import('../library/library-page/library-page').then((m) => m.LibraryPage),
     title: 'Libreria - beetUs',
   },
+  // Book Detail - Full screen senza header
+  {
+    path: 'library/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/book-detail/book-detail').then((m) => m.BookDetail),
+    title: 'Dettaglio Libro - beetUs',
+  },
   // Search - Full screen senza header
   {
     path: 'search',

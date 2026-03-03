@@ -45,6 +45,13 @@ export class LibraryStore {
   private readonly _activeConversation = signal<LibraryConversationResponseDTO | null>(null);
 
   // =========================================================================
+  // STATE - Book Detail
+  // =========================================================================
+  private readonly _bookDetail = signal<BookListingResponseDTO | null>(null);
+  private readonly _bookDetailLoading = signal<boolean>(false);
+  private readonly _bookRequesting = signal<boolean>(false);
+
+  // =========================================================================
   // STATE - Generale
   // =========================================================================
   private readonly _activeTab = signal<LibraryTab>('compra');
@@ -70,6 +77,10 @@ export class LibraryStore {
 
   readonly activeTab = this._activeTab.asReadonly();
   readonly sellModalOpen = this._sellModalOpen.asReadonly();
+
+  readonly bookDetail = this._bookDetail.asReadonly();
+  readonly bookDetailLoading = this._bookDetailLoading.asReadonly();
+  readonly bookRequesting = this._bookRequesting.asReadonly();
 
   // Computed
   readonly hasListings = computed(() => this._listings().length > 0);
@@ -237,6 +248,41 @@ export class LibraryStore {
   }
 
   // =========================================================================
+  // ACTIONS - Book Detail
+  // =========================================================================
+  async loadBookDetail(id: number): Promise<void> {
+    this._bookDetailLoading.set(true);
+    this._bookDetail.set(null);
+
+    try {
+      const book = await firstValueFrom(this.libraryService.getListingById(id));
+      this._bookDetail.set(book);
+    } catch (error) {
+      this.logger.error('Errore caricamento dettaglio libro', error);
+    } finally {
+      this._bookDetailLoading.set(false);
+    }
+  }
+
+  async requestBook(listingId: number): Promise<boolean> {
+    this._bookRequesting.set(true);
+    try {
+      const updated = await firstValueFrom(this.libraryService.requestListing(listingId));
+      this._bookDetail.set(updated);
+      return true;
+    } catch (error) {
+      this.logger.error('Errore richiesta libro', error);
+      return false;
+    } finally {
+      this._bookRequesting.set(false);
+    }
+  }
+
+  clearBookDetail(): void {
+    this._bookDetail.set(null);
+  }
+
+  // =========================================================================
   // ACTIONS - Pulizia
   // =========================================================================
   clear(): void {
@@ -248,5 +294,6 @@ export class LibraryStore {
     this._activeTab.set('compra');
     this._filters.set({});
     this._sellModalOpen.set(false);
+    this._bookDetail.set(null);
   }
 }
