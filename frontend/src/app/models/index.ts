@@ -608,3 +608,202 @@ export interface CountResponse {
 export interface MessageResponse {
   message: string;
 }
+
+// ============================================================================
+// LIBRARY (LIBRERIA) - ENUMS
+// ============================================================================
+
+/**
+ * Condizione del libro in vendita
+ */
+export enum BookCondition {
+  COME_NUOVO = 'COME_NUOVO',
+  BUONE_CONDIZIONI = 'BUONE_CONDIZIONI',
+  USATO = 'USATO',
+}
+
+/**
+ * Stato dell'annuncio libro
+ */
+export enum BookListingStatus {
+  DISPONIBILE = 'DISPONIBILE',
+  RICHIESTO = 'RICHIESTO',
+  VENDUTO = 'VENDUTO',
+}
+
+/**
+ * Materia scolastica del libro
+ */
+export enum BookSubject {
+  MATEMATICA = 'MATEMATICA',
+  ITALIANO = 'ITALIANO',
+  INGLESE = 'INGLESE',
+  STORIA = 'STORIA',
+  FISICA = 'FISICA',
+  INFORMATICA = 'INFORMATICA',
+  ALTRO = 'ALTRO',
+}
+
+// ============================================================================
+// LIBRARY (LIBRERIA) - RESPONSE DTOs
+// ============================================================================
+
+/**
+ * Annuncio libro nella libreria
+ */
+export interface BookListingResponseDTO {
+  id: number;
+  titolo: string;
+  autore: string;
+  isbn: string | null;
+  anno: number; // 1-5, 0 = "Tutti gli anni"
+  materia: BookSubject;
+  condizione: BookCondition;
+  prezzo: number;
+  descrizione: string | null;
+  imageUrl: string;
+  imageUrlRetro: string | null;
+  venditore: UserSummaryDTO;
+  stato: BookListingStatus;
+  richiedente: UserSummaryDTO | null;
+  acquirente: UserSummaryDTO | null;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+/**
+ * Conversazione legata a un annuncio libro
+ */
+export interface LibraryConversationResponseDTO {
+  id: number;
+  annuncio: BookListingResponseDTO;
+  altroUtente: UserSummaryDTO;
+  ruolo: 'VENDITORE' | 'ACQUIRENTE';
+  ultimoMessaggio: string;
+  messaggiNonLetti: number;
+  ultimaAttivita: string; // ISO 8601
+}
+
+/**
+ * Messaggio in una conversazione della libreria
+ */
+export interface LibraryMessageResponseDTO {
+  id: number;
+  mittente: UserSummaryDTO;
+  contenuto: string;
+  createdAt: string; // ISO 8601
+}
+
+// ============================================================================
+// LIBRARY (LIBRERIA) - REQUEST DTOs
+// ============================================================================
+
+/**
+ * Richiesta creazione annuncio libro
+ */
+export interface CreaBookListingRequestDTO {
+  titolo: string;
+  autore: string;
+  isbn?: string;
+  anno: number;
+  materia: BookSubject;
+  condizione: BookCondition;
+  prezzo: number;
+  descrizione?: string;
+  imageUrl: string;
+  imageUrlRetro?: string;
+}
+
+/**
+ * Filtri per la ricerca libri
+ */
+export interface BookListingFilters {
+  search?: string;
+  anno?: number;
+  materia?: BookSubject;
+  condizione?: BookCondition;
+  prezzoMin?: number;
+  prezzoMax?: number;
+  sort?: 'recenti' | 'prezzo_asc' | 'prezzo_desc';
+}
+
+// ============================================================================
+// AI CHATBOT - DTOs
+// ============================================================================
+
+/**
+ * Ruolo del messaggio nella chat AI
+ */
+export type AiChatRole = 'user' | 'assistant';
+
+/**
+ * Libro suggerito dall'AI nella risposta
+ */
+export interface AiSuggestedBookDTO {
+  listingId: number;
+  titolo: string;
+  autore: string;
+  prezzo: number;
+  condizione: BookCondition;
+  imageUrl: string;
+}
+
+/**
+ * Messaggio nella conversazione AI
+ */
+export interface AiChatMessageDTO {
+  id: number;
+  ruolo: AiChatRole;
+  contenuto: string;
+  libriSuggeriti: AiSuggestedBookDTO[];
+  errore: boolean;
+  createdAt: string; // ISO 8601
+}
+
+/**
+ * Richiesta invio messaggio all'AI
+ */
+export interface AiChatRequestDTO {
+  messaggio: string;
+}
+
+/**
+ * Risposta dall'AI
+ */
+export interface AiChatResponseDTO {
+  messaggio: AiChatMessageDTO;
+}
+
+// ============================================================================
+// GROUP MESSAGING - DTOs
+// ============================================================================
+
+/**
+ * Colore del gruppo (gradiente)
+ */
+export type GroupColor = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan';
+
+/**
+ * Risposta gruppo
+ */
+export interface GroupResponseDTO {
+  id: number;
+  nome: string;
+  descrizione: string | null;
+  colore: GroupColor;
+  creatore: UserSummaryDTO;
+  membri: UserSummaryDTO[];
+  ultimoMessaggio: string | null;
+  ultimaAttivita: string | null; // ISO 8601
+  createdAt: string; // ISO 8601
+}
+
+/**
+ * Richiesta creazione gruppo
+ */
+export interface CreaGruppoRequestDTO {
+  nome: string;
+  descrizione?: string;
+  colore: GroupColor;
+  membriIds: number[];
+}

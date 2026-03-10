@@ -1,0 +1,179 @@
+<app-modal-component
+  [isOpen]="isOpen()"
+  size="md"
+  [showCloseButton]="false"
+  (closed)="onClose()"
+>
+  <!-- Custom Header -->
+  <div modal-header class="flex items-center justify-between w-full">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Nuovo gruppo</h2>
+  </div>
+
+  <!-- Body -->
+  <div class="space-y-5">
+
+    <!-- ====================================================
+         ICONA GRUPPO + COLOR PICKER
+         ==================================================== -->
+    <div class="flex flex-col items-center">
+      <!-- Icona gruppo -->
+      <div class="relative mb-4">
+        <div
+          class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg bg-gradient-to-br"
+          [class]="activeColorOption().from + ' ' + activeColorOption().to"
+        >
+          {{ groupInitials() }}
+        </div>
+        <button
+          type="button"
+          class="absolute -bottom-1 -right-1 w-8 h-8 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+        >
+          <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Color picker -->
+      <div class="flex gap-2">
+        @for (color of colorOptions; track color.value) {
+          <button
+            type="button"
+            class="w-8 h-8 rounded-full bg-gradient-to-br transition-all hover:scale-110"
+            [class]="color.from + ' ' + color.to + (selectedColor() === color.value ? ' ring-2 ring-offset-2 dark:ring-offset-gray-800 ' + color.ring : '')"
+            (click)="selectColor(color.value)"
+          ></button>
+        }
+      </div>
+    </div>
+
+    <!-- ====================================================
+         NOME GRUPPO
+         ==================================================== -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        Nome del gruppo <span class="text-error-500">*</span>
+      </label>
+      <input
+        type="text"
+        [value]="nome()"
+        (input)="nome.set($any($event.target).value)"
+        class="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+        placeholder="Es. Club Robotica"
+      />
+    </div>
+
+    <!-- ====================================================
+         DESCRIZIONE
+         ==================================================== -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Descrizione (opzionale)</label>
+      <textarea
+        rows="2"
+        [value]="descrizione()"
+        (input)="descrizione.set($any($event.target).value)"
+        class="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+        placeholder="Di cosa si occupa il gruppo?"
+      ></textarea>
+    </div>
+
+    <!-- ====================================================
+         AGGIUNGI MEMBRI
+         ==================================================== -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Aggiungi membri</label>
+
+      <!-- Barra ricerca -->
+      <div class="relative mb-3">
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+          class="w-full px-4 py-2.5 pl-10 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+          placeholder="Cerca studenti..."
+        />
+        <lucide-icon
+          [img]="SearchIcon"
+          [size]="20"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        ></lucide-icon>
+      </div>
+
+      <!-- Info cross-class -->
+      <p class="text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 px-3 py-2 rounded-lg mb-3 flex items-center gap-1.5">
+        <lucide-icon [img]="InfoIcon" [size]="14" class="shrink-0"></lucide-icon>
+        Puoi aggiungere studenti di qualsiasi classe
+      </p>
+
+      <!-- Membri selezionati (chips) -->
+      @if (selectedMembers().length > 0) {
+        <div class="flex flex-wrap gap-2 mb-3">
+          @for (member of selectedMembers(); track member.id) {
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm">
+              {{ member.nomeCompleto }}
+              <button
+                type="button"
+                class="hover:text-primary-900 dark:hover:text-primary-100 transition-colors"
+                (click)="removeMember(member.id)"
+              >
+                <lucide-icon [img]="XIcon" [size]="14"></lucide-icon>
+              </button>
+            </span>
+          }
+        </div>
+      }
+
+      <!-- Lista suggerimenti studenti -->
+      @if (filteredSuggestions().length > 0) {
+        <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+          @for (student of filteredSuggestions(); track student.id; let first = $first) {
+            <div
+              class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+              [class]="!first ? 'border-t border-gray-100 dark:border-gray-700' : ''"
+              (click)="addMember(student)"
+            >
+              <app-avatar
+                [name]="student.nomeCompleto"
+                [src]="student.profilePictureUrl"
+                size="sm"
+                [status]="student.isOnline ? 'online' : 'none'"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ student.nomeCompleto }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">&#64;{{ student.username }} · {{ student.classroom }}</p>
+              </div>
+              <lucide-icon [img]="PlusIcon" [size]="20" class="text-gray-300 dark:text-gray-500"></lucide-icon>
+            </div>
+          }
+        </div>
+      } @else if (searchQuery().trim()) {
+        <div class="text-center py-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Nessuno studente trovato</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div modal-footer class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 bg-white dark:bg-gray-800">
+    <button
+      type="button"
+      class="flex-1 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+      (click)="onClose()"
+    >
+      Annulla
+    </button>
+    <button
+      type="button"
+      class="flex-1 py-3 rounded-full font-medium transition-colors text-sm flex items-center justify-center gap-2"
+      [class]="isFormValid() ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/25' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'"
+      [disabled]="!isFormValid() || submitting()"
+      (click)="onSubmit()"
+    >
+      @if (submitting()) {
+        <app-spinner size="sm"></app-spinner>
+        Creazione...
+      } @else {
+        Crea gruppo
+      }
+    </button>
+  </div>
+</app-modal-component>

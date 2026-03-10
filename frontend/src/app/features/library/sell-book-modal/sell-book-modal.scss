@@ -1,0 +1,12 @@
+:host {
+  display: contents;
+}
+
+@keyframes upload-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.upload-progress {
+  animation: upload-progress 0.8s ease-out forwards;
+}

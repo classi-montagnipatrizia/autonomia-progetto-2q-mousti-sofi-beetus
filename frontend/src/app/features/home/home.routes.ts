@@ -34,6 +34,38 @@ export const homeRoutes: Routes = [
       import('../notifications/notifications-list-component/notifications-list-component').then((m) => m.NotificationsListComponent),
     title: 'Notifiche - beetUs',
   },
+  // Library - Full screen senza header
+  {
+    path: 'library',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/library-page/library-page').then((m) => m.LibraryPage),
+    title: 'Libreria - beetUs',
+  },
+  // AI Chatbot Libreria - Full screen senza header (prima di :id per evitare conflitto)
+  {
+    path: 'library/ai-chat',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/ai-chatbot/ai-chatbot').then((m) => m.AiChatbot),
+    title: 'Assistente AI - beetUs',
+  },
+  // Book Conversation - Full screen chat per annuncio libro
+  {
+    path: 'library/conversation/:conversationId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/book-conversation/book-conversation').then((m) => m.BookConversation),
+    title: 'Conversazione Libro - beetUs',
+  },
+  // Book Detail - Full screen senza header
+  {
+    path: 'library/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('../library/book-detail/book-detail').then((m) => m.BookDetail),
+    title: 'Dettaglio Libro - beetUs',
+  },
   // Search - Full screen senza header
   {
     path: 'search',

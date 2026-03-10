@@ -1,0 +1,597 @@
+<div class="min-h-screen bg-background-light dark:bg-background-dark">
+
+  <!-- ============================================
+       HEADER
+       ============================================ -->
+  <header class="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14">
+        <div class="flex items-center gap-3">
+          <button type="button" (click)="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" aria-label="Torna indietro">
+            <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+          </button>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Libreria</h1>
+        </div>
+        <button type="button" (click)="openSellModal()" class="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium text-sm transition-colors shadow-sm">
+          <lucide-icon [img]="PlusIcon" [size]="18" />
+          <span class="hidden sm:inline">Vendi un libro</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================
+       CONTENUTO PRINCIPALE
+       ============================================ -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Titolo e sottotitolo -->
+    <div class="mb-6">
+      <p class="text-gray-500 dark:text-gray-400 text-sm">Compra e vendi libri scolastici usati</p>
+    </div>
+
+    <!-- ============================================
+         TABS
+         ============================================ -->
+    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 max-w-md">
+      <button type="button"
+        (click)="switchTab('compra')"
+        class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all"
+        [class.bg-surface-light]="store.activeTab() === 'compra'"
+        [class.dark:bg-gray-700]="store.activeTab() === 'compra'"
+        [class.text-gray-900]="store.activeTab() === 'compra'"
+        [class.dark:text-white]="store.activeTab() === 'compra'"
+        [class.shadow-sm]="store.activeTab() === 'compra'"
+        [class.text-gray-500]="store.activeTab() !== 'compra'"
+        [class.dark:text-gray-400]="store.activeTab() !== 'compra'"
+        [class.hover:text-gray-700]="store.activeTab() !== 'compra'">
+        Compra
+      </button>
+      <button type="button"
+        (click)="switchTab('miei')"
+        class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all"
+        [class.bg-surface-light]="store.activeTab() === 'miei'"
+        [class.dark:bg-gray-700]="store.activeTab() === 'miei'"
+        [class.text-gray-900]="store.activeTab() === 'miei'"
+        [class.dark:text-white]="store.activeTab() === 'miei'"
+        [class.shadow-sm]="store.activeTab() === 'miei'"
+        [class.text-gray-500]="store.activeTab() !== 'miei'"
+        [class.dark:text-gray-400]="store.activeTab() !== 'miei'"
+        [class.hover:text-gray-700]="store.activeTab() !== 'miei'">
+        I miei annunci
+      </button>
+      <button type="button"
+        (click)="switchTab('messaggi')"
+        class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all relative"
+        [class.bg-surface-light]="store.activeTab() === 'messaggi'"
+        [class.dark:bg-gray-700]="store.activeTab() === 'messaggi'"
+        [class.text-gray-900]="store.activeTab() === 'messaggi'"
+        [class.dark:text-white]="store.activeTab() === 'messaggi'"
+        [class.shadow-sm]="store.activeTab() === 'messaggi'"
+        [class.text-gray-500]="store.activeTab() !== 'messaggi'"
+        [class.dark:text-gray-400]="store.activeTab() !== 'messaggi'"
+        [class.hover:text-gray-700]="store.activeTab() !== 'messaggi'">
+        Messaggi
+        @if (store.unreadMessagesCount() > 0) {
+          <span class="absolute -top-1 -right-1 w-5 h-5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {{ store.unreadMessagesCount() }}
+          </span>
+        }
+      </button>
+    </div>
+
+    <!-- ============================================
+         SEZIONE: COMPRA
+         ============================================ -->
+    @if (store.activeTab() === 'compra') {
+      <section class="animate-fade-in">
+
+        <!-- Filtri -->
+        <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 mb-6 shadow-sm border border-border-light dark:border-border-dark">
+          <!-- Riga 1: Ricerca + filtri mobile -->
+          <div class="flex gap-3">
+            <div class="flex-1 relative">
+              <input
+                type="text"
+                [value]="searchQuery()"
+                (input)="onSearchInput($event)"
+                placeholder="Cerca per titolo, autore, ISBN..."
+                class="w-full px-4 py-2.5 pl-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              />
+              <lucide-icon [img]="SearchIcon" [size]="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+            <button type="button" (click)="toggleMobileFilters()" class="sm:hidden px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center gap-2">
+              <lucide-icon [img]="SlidersIcon" [size]="16" />
+              Filtri
+            </button>
+          </div>
+
+          <!-- Riga 2: Select filtri desktop -->
+          <div class="hidden sm:flex flex-wrap gap-3 mt-3">
+            <select [value]="filterAnno()" (change)="onFilterAnnoChange($event)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              @for (opt of anniOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <select [value]="filterMateria()" (change)="onFilterMateriaChange($event)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              @for (opt of materieOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <select [value]="filterCondizione()" (change)="onFilterCondizioneChange($event)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              @for (opt of condizioneOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <select [value]="filterPrezzo()" (change)="onFilterPrezzoChange($event)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
+              @for (opt of prezzoOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Risultati e conteggio -->
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            <span class="font-medium text-gray-700 dark:text-gray-200">{{ store.listingsTotalElements() }}</span> libri disponibili
+          </p>
+          <select [value]="sortOrder()" (change)="onSortChange($event)" class="text-sm text-gray-500 dark:text-gray-400 bg-transparent border-none focus:outline-none cursor-pointer">
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Skeleton Loading -->
+        @if (store.listingsLoading()) {
+          <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-border-light dark:border-border-dark">
+                <app-skeleton width="100%" height="0" className="aspect-[3/4]" />
+                <div class="p-4 space-y-3">
+                  <app-skeleton width="90%" height="16px" />
+                  <app-skeleton width="60%" height="14px" />
+                  <div class="flex gap-2">
+                    <app-skeleton width="60px" height="20px" />
+                    <app-skeleton width="80px" height="20px" />
+                  </div>
+                  <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <app-skeleton width="50px" height="24px" />
+                    <app-skeleton shape="circle" width="24px" height="24px" />
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (showListingsEmpty()) {
+          <div class="text-center py-16">
+            <div class="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <lucide-icon [img]="BookOpenIcon" [size]="40" class="text-primary-300" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Nessun libro trovato</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">Prova a modificare i filtri di ricerca o cerca con termini diversi</p>
+          </div>
+        }
+
+        <!-- Griglia libri -->
+        @if (!store.listingsLoading() && store.hasListings()) {
+          <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+            @for (book of store.listings(); track book.id) {
+              <article class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-border-light dark:border-border-dark hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all cursor-pointer group">
+                <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <img [src]="book.imageUrl" [alt]="book.titolo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span class="absolute top-3 left-3 px-2.5 py-1 text-white text-xs font-medium rounded-full shadow-sm"
+                    [ngClass]="getConditionColor(book.condizione)">
+                    {{ getConditionLabel(book.condizione) }}
+                  </span>
+                </div>
+                <div class="p-3 sm:p-4">
+                  <h3 class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    {{ book.titolo }}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2">{{ book.autore }}</p>
+                  <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 dark:text-gray-500 mb-3">
+                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">{{ getAnnoLabel(book.anno) }}</span>
+                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">{{ getSubjectLabel(book.materia) }}</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <span class="text-lg font-bold text-primary-600 dark:text-primary-400">€{{ book.prezzo }}</span>
+                    <div class="flex items-center gap-1.5">
+                      <app-avatar [name]="book.venditore.nomeCompleto" [src]="book.venditore.profilePictureUrl" size="xs" />
+                      <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">&#64;{{ book.venditore.username }}</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+
+        <!-- Carica altri -->
+        @if (store.listingsHasMore() && !store.listingsLoading()) {
+          <div class="mt-6 text-center">
+            <app-button variant="outline" (clicked)="store.loadListings(false)">Carica altri libri</app-button>
+          </div>
+        }
+      </section>
+    }
+
+
+    <!-- ============================================
+         SEZIONE: I MIEI ANNUNCI
+         ============================================ -->
+    @if (store.activeTab() === 'miei') {
+      <section class="animate-fade-in">
+
+        <!-- Info stati -->
+        <div class="bg-info-50 dark:bg-info-900/20 border border-info-100 dark:border-info-800 rounded-xl p-4 mb-6">
+          <div class="flex items-start gap-3">
+            <lucide-icon [img]="InfoIcon" [size]="20" class="text-info-500 mt-0.5 shrink-0" />
+            <p class="text-sm text-info-800 dark:text-info-200">
+              Gestisci i tuoi annunci cambiando lo stato:
+              <span class="inline-flex items-center gap-1 font-semibold text-success-700 dark:text-success-400"><span class="w-2 h-2 bg-success-500 rounded-full"></span>Disponibile</span> →
+              <span class="inline-flex items-center gap-1 font-semibold text-warning-700 dark:text-warning-400"><span class="w-2 h-2 bg-warning-500 rounded-full"></span>Richiesto</span> →
+              <span class="inline-flex items-center gap-1 font-semibold text-gray-500 dark:text-gray-400"><span class="w-2 h-2 bg-gray-400 rounded-full"></span>Venduto</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Skeleton Loading -->
+        @if (store.myListingsLoading()) {
+          <div class="space-y-3">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark p-4 flex gap-4">
+                <app-skeleton width="96px" height="128px" className="rounded-xl shrink-0" />
+                <div class="flex-1 space-y-2">
+                  <app-skeleton width="70%" height="18px" />
+                  <app-skeleton width="50%" height="14px" />
+                  <app-skeleton width="30%" height="12px" />
+                  <app-skeleton width="100px" height="32px" />
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (showMyListingsEmpty()) {
+          <div class="text-center py-16">
+            <div class="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <lucide-icon [img]="PlusIcon" [size]="40" class="text-primary-300" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Non hai ancora annunci</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-4">Inizia a vendere i tuoi libri usati e guadagna qualcosa!</p>
+            <app-button (clicked)="openSellModal()">Vendi il tuo primo libro</app-button>
+          </div>
+        }
+
+        <!-- Lista miei annunci -->
+        @if (!store.myListingsLoading() && store.hasMyListings()) {
+          <div class="space-y-3">
+            @for (listing of store.myListings(); track listing.id) {
+              <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm transition-shadow hover:shadow-md"
+                [ngClass]="{
+                  'border border-border-light dark:border-border-dark': listing.stato !== BookListingStatus.RICHIESTO && listing.stato !== BookListingStatus.VENDUTO,
+                  'border-2 border-warning-200 dark:border-warning-700': listing.stato === BookListingStatus.RICHIESTO,
+                  'border border-gray-200 dark:border-gray-700 opacity-60': listing.stato === BookListingStatus.VENDUTO
+                }">
+                <div class="p-4 flex gap-4">
+                  <!-- Immagine -->
+                  <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0 relative">
+                    <img [src]="listing.imageUrl" [alt]="listing.titolo" class="w-full h-full object-cover" />
+                    @if (listing.stato === BookListingStatus.VENDUTO) {
+                      <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span class="text-white font-bold text-xs tracking-wider uppercase">Venduto</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Dettagli -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                      <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-1 text-sm sm:text-base">{{ listing.titolo }}</h3>
+                      <span class="text-lg font-bold shrink-0"
+                        [ngClass]="listing.stato === BookListingStatus.VENDUTO ? 'text-gray-400 line-through' : 'text-primary-600 dark:text-primary-400'">
+                        €{{ listing.prezzo }}
+                      </span>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ listing.autore }} · {{ getAnnoLabel(listing.anno) }}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Pubblicato il {{ formatDate(listing.createdAt) }}</p>
+
+                    <!-- Richiedente (se stato RICHIESTO) -->
+                    @if (listing.stato === BookListingStatus.RICHIESTO && listing.richiedente) {
+                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-100 dark:border-warning-800">
+                        <app-avatar [name]="listing.richiedente.nomeCompleto" [src]="listing.richiedente.profilePictureUrl" size="xs" />
+                        <p class="text-xs text-warning-800 dark:text-warning-200">Richiesto da <span class="font-semibold">&#64;{{ listing.richiedente.username }}</span></p>
+                        <button type="button" class="ml-auto text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 font-medium">Contatta</button>
+                      </div>
+                    }
+
+                    <!-- Acquirente (se stato VENDUTO) -->
+                    @if (listing.stato === BookListingStatus.VENDUTO && listing.acquirente) {
+                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <app-avatar [name]="listing.acquirente.nomeCompleto" [src]="listing.acquirente.profilePictureUrl" size="xs" />
+                        <p class="text-xs text-gray-600 dark:text-gray-300">Venduto a <span class="font-semibold">&#64;{{ listing.acquirente.username }}</span></p>
+                        <lucide-icon [img]="CheckIcon" [size]="16" class="text-success-500 ml-auto" />
+                      </div>
+                    }
+
+                    <!-- Azioni -->
+                    <div class="flex items-center justify-between">
+                      @if (listing.stato !== BookListingStatus.VENDUTO) {
+                        <div class="flex items-center gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full" [ngClass]="getStatusColor(listing.stato)"></span>
+                          <select
+                            [value]="listing.stato"
+                            (change)="onStatusChange($event, listing)"
+                            class="px-3 py-1.5 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                            [ngClass]="getStatusSelectClasses(listing.stato)">
+                            @for (opt of statusOptions; track opt.value) {
+                              <option [value]="opt.value">{{ opt.label }}</option>
+                            }
+                          </select>
+                        </div>
+                      } @else {
+                        <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg text-sm font-medium inline-flex items-center gap-1.5">
+                          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                          Venduto
+                        </span>
+                      }
+
+                      <div class="flex gap-1">
+                        @if (listing.stato !== BookListingStatus.VENDUTO) {
+                          <button type="button" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Modifica">
+                            <lucide-icon [img]="PencilIcon" [size]="16" />
+                          </button>
+                        }
+                        <button type="button" (click)="onDeleteListing(listing)" class="p-2 rounded-lg hover:bg-error-50 dark:hover:bg-error-900/20 text-gray-400 hover:text-error-500 transition-colors" title="Elimina">
+                          <lucide-icon [img]="Trash2Icon" [size]="16" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+
+
+    <!-- ============================================
+         SEZIONE: MESSAGGI LIBRERIA
+         ============================================ -->
+    @if (store.activeTab() === 'messaggi') {
+      <section class="animate-fade-in">
+
+        <!-- Skeleton Loading -->
+        @if (store.conversationsLoading()) {
+          <div class="space-y-2">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark p-4 flex gap-3">
+                <app-skeleton width="56px" height="80px" className="rounded-lg shrink-0" />
+                <div class="flex-1 space-y-2">
+                  <app-skeleton width="70%" height="16px" />
+                  <app-skeleton width="40%" height="14px" />
+                  <app-skeleton width="90%" height="14px" />
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (showConversationsEmpty()) {
+          <div class="text-center py-16">
+            <div class="w-20 h-20 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <lucide-icon [img]="MessageCircleIcon" [size]="40" class="text-primary-300" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Nessuna conversazione</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">Quando contatterai un venditore, le conversazioni appariranno qui</p>
+          </div>
+        }
+
+        <!-- Lista conversazioni -->
+        @if (!store.conversationsLoading() && store.hasConversations() && !store.isChatOpen()) {
+          <div class="space-y-2">
+            @for (conv of store.conversations(); track conv.id) {
+              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark hover:shadow-md transition-shadow cursor-pointer"
+                (click)="openConversation(conv)">
+                <div class="p-4 flex gap-3">
+                  <div class="w-14 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
+                    <img [src]="conv.annuncio.imageUrl" [alt]="conv.annuncio.titolo" class="w-full h-full object-cover" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-0.5">
+                      <h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate">{{ conv.annuncio.titolo }}</h3>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-2">{{ formatRelativeTime(conv.ultimaAttivita) }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mb-1.5">
+                      <app-avatar [name]="conv.altroUtente.nomeCompleto" [src]="conv.altroUtente.profilePictureUrl" size="xs" />
+                      <span class="text-xs text-gray-500 dark:text-gray-400">{{ conv.altroUtente.nomeCompleto }}</span>
+                      <span class="text-xs text-gray-300 dark:text-gray-600">·</span>
+                      <span class="text-xs text-gray-400 dark:text-gray-500">{{ conv.ruolo === 'VENDITORE' ? 'Acquirente' : 'Venditore' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm truncate"
+                        [ngClass]="conv.messaggiNonLetti > 0 ? 'text-gray-600 dark:text-gray-200 font-medium' : 'text-gray-500 dark:text-gray-400'">
+                        {{ conv.ultimoMessaggio }}
+                      </p>
+                      @if (conv.messaggiNonLetti > 0) {
+                        <span class="w-5 h-5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0 ml-2">
+                          {{ conv.messaggiNonLetti }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Chat aperta -->
+        @if (store.isChatOpen()) {
+          <div class="animate-fade-in">
+
+            <!-- Header chat -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark mb-3">
+              <div class="p-4 flex items-center gap-3">
+                <button type="button" (click)="closeChat()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
+                  <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
+                </button>
+                <div class="w-10 h-14 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
+                  <img [src]="store.activeConversation()!.annuncio.imageUrl" alt="" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate">{{ store.activeConversation()!.annuncio.titolo }}</h3>
+                  <div class="flex items-center gap-1.5">
+                    @if (store.activeConversation()!.altroUtente.isOnline) {
+                      <span class="w-2 h-2 bg-success-500 rounded-full"></span>
+                    }
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ store.activeConversation()!.altroUtente.nomeCompleto }}</span>
+                    @if (store.activeConversation()!.altroUtente.isOnline) {
+                      <span class="text-xs text-success-600 dark:text-success-400">· Online</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Area messaggi -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark mb-3">
+              <div class="p-4 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
+
+                <!-- Data separatore -->
+                <div class="flex items-center justify-center">
+                  <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-xs rounded-full">Oggi</span>
+                </div>
+
+                @if (store.chatLoading()) {
+                  <div class="flex justify-center py-8">
+                    <app-spinner size="lg" />
+                  </div>
+                }
+
+                @for (message of store.chatMessages(); track message.id) {
+                  @if (isMyMessage(message)) {
+                    <!-- Messaggio inviato -->
+                    <div class="flex gap-3 justify-end">
+                      <div class="bg-primary-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-xs sm:max-w-md">
+                        <p class="text-sm">{{ message.contenuto }}</p>
+                        <span class="text-xs text-primary-200 mt-1 block text-right">{{ formatTime(message.createdAt) }}</span>
+                      </div>
+                    </div>
+                  } @else {
+                    <!-- Messaggio ricevuto -->
+                    <div class="flex gap-3">
+                      <app-avatar [name]="message.mittente.nomeCompleto" [src]="message.mittente.profilePictureUrl" size="sm" />
+                      <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-4 py-3 max-w-xs sm:max-w-md">
+                        <p class="text-gray-800 dark:text-gray-200 text-sm">{{ message.contenuto }}</p>
+                        <span class="text-xs text-gray-400 dark:text-gray-500 mt-1 block">{{ formatTime(message.createdAt) }}</span>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+
+            <!-- Input messaggio -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark">
+              <div class="p-3 flex items-center gap-3">
+                <input
+                  type="text"
+                  [value]="chatInput()"
+                  (input)="chatInput.set($any($event.target).value)"
+                  (keydown)="onChatKeydown($event)"
+                  placeholder="Scrivi un messaggio..."
+                  class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                />
+                <button type="button" (click)="sendMessage()" class="p-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-colors shrink-0">
+                  <lucide-icon [img]="SendIcon" [size]="18" />
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+  </main>
+
+
+  <!-- ============================================
+       FILTRI MOBILE (drawer dal basso)
+       ============================================ -->
+  @if (showMobileFilters()) {
+    <div class="fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black/50" (click)="toggleMobileFilters()"></div>
+      <div class="absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark rounded-t-2xl p-6 space-y-4 animate-slide-up">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtri</h3>
+          <button type="button" (click)="toggleMobileFilters()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400">
+            <lucide-icon [img]="XIcon" [size]="20" />
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Anno</label>
+          <select [value]="filterAnno()" (change)="onFilterAnnoChange($event)" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+            @for (opt of anniOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Materia</label>
+          <select [value]="filterMateria()" (change)="onFilterMateriaChange($event)" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+            @for (opt of materieOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Condizione</label>
+          <select [value]="filterCondizione()" (change)="onFilterCondizioneChange($event)" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+            @for (opt of condizioneOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Prezzo</label>
+          <select [value]="filterPrezzo()" (change)="onFilterPrezzoChange($event)" class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+            @for (opt of prezzoOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="resetFilters(); toggleMobileFilters()" class="flex-1 py-3 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm">
+            Resetta
+          </button>
+          <button type="button" (click)="applyMobileFilters()" class="flex-1 py-3 bg-primary-500 text-white rounded-full font-medium hover:bg-primary-600 transition-colors text-sm">
+            Applica filtri
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+
+  <!-- ============================================
+       MODAL: Vendi un libro
+       ============================================ -->
+  <app-sell-book-modal
+    [isOpen]="store.sellModalOpen()"
+    (closed)="closeSellModal()"
+    (submitted)="onSellBookSubmitted($event)"
+  />
+
+</div>
