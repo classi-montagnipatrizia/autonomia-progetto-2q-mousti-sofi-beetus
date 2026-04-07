@@ -62,7 +62,11 @@ export const LIMITS = {
   /** Lunghezza minima ricerca */
   MIN_SEARCH_LENGTH: 2,
   /** Numero massimo file upload simultanei */
-  MAX_CONCURRENT_UPLOADS: 3
+  MAX_CONCURRENT_UPLOADS: 3,
+  /** Durata massima messaggi vocali in secondi */
+  AUDIO_MAX_DURATION: 120,
+  /** Dimensione massima file audio (MB) */
+  AUDIO_MAX_SIZE_MB: 10
 } as const;
 
 /**
