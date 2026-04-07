@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, computed, ElementRef, inject, OnInit, output, signal, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,14 +9,14 @@ import {
   Send,
   RefreshCw,
   Search,
-  AlertTriangle,
+  TriangleAlert,
 } from 'lucide-angular';
 
 import { AiChatbotStore } from '../../../core/stores/ai-chatbot-store';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
-import { AiChatMessageDTO, AiSuggestedBookDTO, BookCondition } from '../../../models';
+import { BookCondition, BookSummaryDTO } from '../../../models';
 
 @Component({
   selector: 'app-ai-chatbot',
@@ -30,7 +30,7 @@ import { AiChatMessageDTO, AiSuggestedBookDTO, BookCondition } from '../../../mo
   templateUrl: './ai-chatbot.html',
   styleUrl: './ai-chatbot.scss',
 })
-export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
+export class AiChatbot implements OnInit, AfterViewChecked {
   private readonly router = inject(Router);
   readonly store = inject(AiChatbotStore);
   readonly authStore = inject(AuthStore);
@@ -38,12 +38,14 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
 
   // Icons
+  readonly closed = output<void>();
+
   readonly XIcon = X;
   readonly LightbulbIcon = Lightbulb;
   readonly SendIcon = Send;
   readonly RefreshCwIcon = RefreshCw;
   readonly SearchIcon = Search;
-  readonly AlertTriangleIcon = AlertTriangle;
+  readonly AlertTriangleIcon = TriangleAlert;
 
   // Enums
   readonly BookCondition = BookCondition;
@@ -70,10 +72,6 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
     this.shouldScrollToBottom = true;
   }
 
-  ngOnDestroy(): void {
-    // Non puliamo lo store per mantenere la cronologia se l'utente torna
-  }
-
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
@@ -82,7 +80,7 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   onClose(): void {
-    this.router.navigate(['/library']);
+    this.closed.emit();
   }
 
   async onSend(): Promise<void> {
@@ -107,8 +105,8 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
     this.onSend();
   }
 
-  onBookClick(book: AiSuggestedBookDTO): void {
-    this.router.navigate(['/library', book.listingId]);
+  onBookClick(book: BookSummaryDTO): void {
+    this.router.navigate(['/library', book.id]);
   }
 
   async onRetry(): Promise<void> {
@@ -119,18 +117,18 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
 
   conditionLabel(condizione: BookCondition): string {
     switch (condizione) {
-      case BookCondition.COME_NUOVO: return 'Come nuovo';
-      case BookCondition.BUONE_CONDIZIONI: return 'Buone cond.';
-      case BookCondition.USATO: return 'Usato';
+      case BookCondition.OTTIMO: return 'Ottimo';
+      case BookCondition.BUONO: return 'Buono';
+      case BookCondition.ACCETTABILE: return 'Accettabile';
       default: return '';
     }
   }
 
   conditionColorClass(condizione: BookCondition): string {
     switch (condizione) {
-      case BookCondition.COME_NUOVO: return 'text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30';
-      case BookCondition.BUONE_CONDIZIONI: return 'text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-900/30';
-      case BookCondition.USATO: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+      case BookCondition.OTTIMO: return 'text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30';
+      case BookCondition.BUONO: return 'text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-900/30';
+      case BookCondition.ACCETTABILE: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
       default: return '';
     }
   }
@@ -141,6 +139,6 @@ export class AiChatbot implements OnInit, OnDestroy, AfterViewChecked {
         const el = this.messagesContainer.nativeElement;
         el.scrollTop = el.scrollHeight;
       }
-    } catch (_) { /* ignore */ }
+    } catch { /* scroll non critico */ }
   }
 }

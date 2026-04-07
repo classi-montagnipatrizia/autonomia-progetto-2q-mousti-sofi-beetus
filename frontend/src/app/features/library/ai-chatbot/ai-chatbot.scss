@@ -20,3 +20,40 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Header styling - professional polish */
+.chatbot-header {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Messages container - custom scrollbar */
+.chatbot-messages {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+    &:hover {
+      background: rgba(156, 163, 175, 0.7);
+    }
+  }
+}
+
+/* Composer wrapper - subtle background panel */
+.composer-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .composer-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
