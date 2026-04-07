@@ -153,6 +153,7 @@ public class RateLimitAdminController {
             case POST_CREATION -> "10 richieste/minuto";
             case LIKE -> "30 richieste/minuto";
             case MESSAGE -> "20 richieste/minuto";
+            case AI -> "10 richieste/minuto";
             case API_GENERAL -> "100 richieste/minuto";
             case WEBSOCKET -> "50 messaggi/minuto";
         };
