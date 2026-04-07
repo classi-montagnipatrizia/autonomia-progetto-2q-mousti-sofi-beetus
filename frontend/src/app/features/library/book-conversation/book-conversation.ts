@@ -9,13 +9,16 @@ import {
   BookOpen,
   ExternalLink,
   MessageCircle,
+  Trash2,
 } from 'lucide-angular';
 
 import { LibraryStore } from '../../../core/stores/library-store';
 import { AuthStore } from '../../../core/stores/auth-store';
+import { WebsocketService } from '../../../core/services/websocket-service';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
-import { LibraryMessageResponseDTO } from '../../../models';
+import { BookMessageDTO } from '../../../models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-book-conversation',
@@ -34,6 +37,7 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
   private readonly router = inject(Router);
   readonly store = inject(LibraryStore);
   private readonly authStore = inject(AuthStore);
+  private readonly websocketService = inject(WebsocketService);
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
 
@@ -43,40 +47,64 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
   readonly BookOpenIcon = BookOpen;
   readonly ExternalLinkIcon = ExternalLink;
   readonly MessageCircleIcon = MessageCircle;
+  readonly Trash2Icon = Trash2;
 
   // Local state
   readonly chatInput = signal('');
+  readonly deletingIds = signal<Set<number>>(new Set());
   private shouldScrollToBottom = false;
+  private bookIdFromRoute = 0;
+  private wsSubscription?: Subscription;
 
   // Computed
-  readonly conversation = this.store.activeConversation;
-  readonly messages = this.store.chatMessages;
-  readonly loading = this.store.chatLoading;
+  readonly conversation = this.store.currentConversation;
+  readonly messages = this.store.currentConversationMessages;
+  readonly loading = this.store.isLoading;
   readonly currentUserId = computed(() => this.authStore.userId() ?? 0);
 
   readonly otherUserName = computed(() => this.conversation()?.altroUtente.nomeCompleto ?? '');
   readonly otherUserAvatar = computed(() => this.conversation()?.altroUtente.profilePictureUrl ?? null);
   readonly otherUserOnline = computed(() => this.conversation()?.altroUtente.isOnline ?? false);
-  readonly bookTitle = computed(() => this.conversation()?.annuncio.titolo ?? '');
-  readonly bookImage = computed(() => this.conversation()?.annuncio.imageUrl ?? '');
-  readonly bookPrice = computed(() => this.conversation()?.annuncio.prezzo ?? 0);
-  readonly bookId = computed(() => this.conversation()?.annuncio.id ?? 0);
+  readonly bookTitle = computed(() => this.conversation()?.libro.titolo ?? '');
+  readonly bookImage = computed(() => this.conversation()?.libro.frontImageUrl ?? '');
+  readonly bookPrice = computed(() => this.conversation()?.libro.prezzo ?? 0);
+  readonly bookId = computed(() => this.conversation()?.libro.id ?? this.bookIdFromRoute);
+
+  readonly isSeller = computed(() => {
+    const conv = this.conversation();
+    if (!conv) return false;
+    return conv.libro.venditore.id === this.currentUserId();
+  });
+
   readonly roleLabel = computed(() => {
     const conv = this.conversation();
     if (!conv) return '';
-    return conv.ruolo === 'VENDITORE' ? 'Stai vendendo' : 'Vuoi comprare';
+    return conv.libro.venditore.id === this.currentUserId() ? 'Stai vendendo' : 'Vuoi comprare';
   });
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('conversationId'));
-    if (id) {
-      this.store.openConversationById(id);
+    const bookId = Number(this.route.snapshot.paramMap.get('bookId'));
+    const convId = this.route.snapshot.queryParamMap.get('convId');
+    if (bookId) {
+      this.bookIdFromRoute = bookId;
+      this.store.openConversazione(bookId, convId ? Number(convId) : undefined);
       this.shouldScrollToBottom = true;
     }
+
+    // Sottoscrizione WebSocket per messaggi libro real-time
+    this.wsSubscription = this.websocketService.bookMessages$.subscribe({
+      next: (message: BookMessageDTO) => {
+        this.store.handleIncomingBookMessage(message);
+        if (message.conversationId === this.conversation()?.id) {
+          this.shouldScrollToBottom = true;
+        }
+      },
+    });
   }
 
   ngOnDestroy(): void {
-    this.store.closeConversation();
+    this.store.closeConversazione();
+    this.wsSubscription?.unsubscribe();
   }
 
   ngAfterViewChecked(): void {
@@ -105,13 +133,8 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  isMyMessage(message: LibraryMessageResponseDTO): boolean {
-    const userId = this.currentUserId();
-    // In mock, userId potrebbe essere 0 se non autenticato. Fallback: messaggio pari = mio
-    if (userId > 0) {
-      return message.mittente.id === userId;
-    }
-    return message.id % 2 === 0;
+  isMyMessage(message: BookMessageDTO): boolean {
+    return message.mittente.id === this.currentUserId();
   }
 
   async onSend(): Promise<void> {
@@ -120,7 +143,7 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
 
     this.chatInput.set('');
     this.shouldScrollToBottom = true;
-    await this.store.sendMessage(msg);
+    await this.store.inviaMessaggio(this.bookId(), msg, this.conversation()?.id);
     this.shouldScrollToBottom = true;
   }
 
@@ -128,6 +151,21 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.onSend();
+    }
+  }
+
+  async deleteMessage(messageId: number): Promise<void> {
+    if (this.deletingIds().has(messageId)) return;
+
+    this.deletingIds.update(set => new Set(set).add(messageId));
+    try {
+      await this.store.eliminaMessaggio(messageId);
+    } finally {
+      this.deletingIds.update(set => {
+        const next = new Set(set);
+        next.delete(messageId);
+        return next;
+      });
     }
   }
 

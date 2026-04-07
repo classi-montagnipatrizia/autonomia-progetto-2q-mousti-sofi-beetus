@@ -1,3 +1,50 @@
 :host {
   display: block;
 }
+
+.chat-shell {
+  background-image: radial-gradient(circle at top center, rgba(59, 130, 246, 0.08), transparent 46%);
+}
+
+.chat-header,
+.chat-composer {
+  backdrop-filter: saturate(140%) blur(8px);
+}
+
+.chat-header {
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05);
+}
+
+.chat-composer {
+  box-shadow: 0 -1px 0 rgba(15, 23, 42, 0.04);
+}
+
+.composer-panel {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 1rem;
+  padding: 0.35rem;
+}
+
+:host-context(.dark) .composer-panel {
+  border-color: rgba(100, 116, 139, 0.36);
+  background: rgba(17, 24, 39, 0.72);
+}
+
+#messagesContainer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.65) transparent;
+}
+
+#messagesContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#messagesContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#messagesContainer::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.65);
+  border-radius: 999px;
+}
