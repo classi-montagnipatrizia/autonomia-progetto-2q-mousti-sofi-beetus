@@ -13,36 +13,39 @@
   <div class="space-y-5">
 
     <!-- ====================================================
-         ICONA GRUPPO + COLOR PICKER
+         FOTO PROFILO GRUPPO (opzionale)
          ==================================================== -->
     <div class="flex flex-col items-center">
-      <!-- Icona gruppo -->
-      <div class="relative mb-4">
-        <div
-          class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg bg-gradient-to-br"
-          [class]="activeColorOption().from + ' ' + activeColorOption().to"
-        >
-          {{ groupInitials() }}
-        </div>
-        <button
-          type="button"
-          class="absolute -bottom-1 -right-1 w-8 h-8 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-        >
-          <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-500 dark:text-gray-400"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Color picker -->
-      <div class="flex gap-2">
-        @for (color of colorOptions; track color.value) {
+      <div class="relative mb-2">
+        @if (uploadingPhoto()) {
+          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm">
+            <app-spinner size="sm"></app-spinner>
+          </div>
+        } @else if (profilePictureUrl()) {
+          <img [src]="profilePictureUrl()" class="w-20 h-20 rounded-2xl object-cover shadow-sm" alt="Foto gruppo"/>
           <button
             type="button"
-            class="w-8 h-8 rounded-full bg-gradient-to-br transition-all hover:scale-110"
-            [class]="color.from + ' ' + color.to + (selectedColor() === color.value ? ' ring-2 ring-offset-2 dark:ring-offset-gray-800 ' + color.ring : '')"
-            (click)="selectColor(color.value)"
-          ></button>
+            class="absolute -top-1 -right-1 w-6 h-6 bg-error-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-error-600 transition-colors"
+            (click)="removePhoto()"
+          >
+            <lucide-icon [img]="XIcon" [size]="12"></lucide-icon>
+          </button>
+        } @else {
+          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm text-2xl font-bold text-gray-400 dark:text-gray-500">
+            {{ groupInitials() }}
+          </div>
+        }
+        @if (!uploadingPhoto()) {
+          <button
+            type="button"
+            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-500 hover:bg-primary-600 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center shadow-sm transition-colors"
+            (click)="triggerPhotoUpload()"
+          >
+            <lucide-icon [img]="CameraIcon" [size]="16" class="text-white"></lucide-icon>
+          </button>
         }
       </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500">Foto opzionale</p>
     </div>
 
     <!-- ====================================================
