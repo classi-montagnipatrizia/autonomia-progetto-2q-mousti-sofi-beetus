@@ -7,6 +7,7 @@ import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mappers.NotificationMapper;
 import com.example.backend.models.*;
 import com.example.backend.repositories.*;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,8 +43,10 @@ public class NotificationService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final DirectMessageRepository directMessageRepository;
+    private final BookRepository bookRepository;
     private final NotificationMapper notificationMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final PushNotificationService pushNotificationService;
 
     private static final String ENTITY_NOTIFICATION = "Notifica";
     private static final String FIELD_ID = "id";
@@ -97,8 +100,8 @@ public class NotificationService {
         notificationRepository.save(notification);
         log.info("Notifica like creata - ID: {}", notification.getId());
 
-        // Pubblica evento per invio WebSocket asincrono
         publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -150,8 +153,8 @@ public class NotificationService {
         notificationRepository.save(notification);
         log.info("Notifica commento creata - ID: {}", notification.getId());
 
-        // Pubblica evento per invio WebSocket asincrono
         publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -201,8 +204,8 @@ public class NotificationService {
         notificationRepository.save(notification);
         log.info("Notifica risposta creata - ID: {}", notification.getId());
 
-        // Pubblica evento per invio WebSocket asincrono
         publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -268,8 +271,8 @@ public class NotificationService {
         notificationRepository.save(notification);
         log.info("Notifica menzione creata - ID: {}", notification.getId());
 
-        // Pubblica evento per invio WebSocket asincrono
         publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -304,8 +307,8 @@ public class NotificationService {
         notificationRepository.save(notification);
         log.info("Notifica messaggio creata - ID: {}", notification.getId());
 
-        // Pubblica evento per invio WebSocket asincrono
         publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -364,12 +367,13 @@ public class NotificationService {
 
         log.info("Notifiche nuovo post salvate: {} notifiche create", savedNotifications.size());
 
-        // Pubblica eventi per invio WebSocket asincrono
         for (Notification notification : savedNotifications) {
             publishNotificationEvent(notification.getUser().getUsername(), notification);
+            pushNotificationService.sendToUser(notification.getUser().getId(), "beetUs",
+                    notification.getContent(), notification.getActionUrl());
         }
 
-        log.info("Eventi WebSocket pubblicati per {} notifiche", savedNotifications.size());
+        log.info("Notifiche nuovo post inviate (WS + push): {}", savedNotifications.size());
     }
 
     /**
@@ -565,6 +569,143 @@ public class NotificationService {
         return count;
     }
 
+    // ── NOTIFICHE VERSIONE 2 ──────────────────────────────────────────────────
+
+    /**
+     * Notifica al venditore che qualcuno ha richiesto il suo libro.
+     */
+    @Transactional
+    public void creaNotificaRichiestaLibro(Long sellerId, Long buyerId, Long bookId) {
+        log.debug("Notifica richiesta libro - Venditore: {}, Acquirente: {}, Libro: {}",
+                sellerId, buyerId, bookId);
+
+        Book book = bookRepository.findById(bookId).orElse(null);
+        if (book == null) return;
+
+        String actionUrl = "/library?tab=miei";
+        if (isNotificaDuplicataRecente(sellerId, buyerId, NotificationType.BOOK_REQUEST, actionUrl)) {
+            log.debug("Notifica BOOK_REQUEST duplicata, skip");
+            return;
+        }
+
+        User receiver = userRepository.getReferenceById(sellerId);
+        User buyer = userRepository.getReferenceById(buyerId);
+
+        Notification notification = Notification.builder()
+                .user(receiver)
+                .type(NotificationType.BOOK_REQUEST)
+                .triggeredByUser(buyer)
+                .content(String.format("%s ha richiesto il tuo libro \"%s\"", buyer.getFullName(), book.getTitle()))
+                .actionUrl(actionUrl)
+                .isRead(false)
+                .build();
+
+        notificationRepository.save(notification);
+        publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(sellerId, "beetUs", notification.getContent(), notification.getActionUrl());
+        log.info("Notifica BOOK_REQUEST creata - Venditore: {}", sellerId);
+    }
+
+    /**
+     * Notifica al destinatario (venditore o acquirente) che ha ricevuto un messaggio
+     * nella chat di un libro.
+     */
+    @Transactional
+    public void creaNotificaMessaggioLibro(Long receiverId, Long senderId, Long bookId, Long conversationId, String bookTitle) {
+        log.debug("Notifica messaggio libro - Ricevente: {}, Mittente: {}", receiverId, senderId);
+
+        String actionUrl = "/library/conversation/" + bookId + "?convId=" + conversationId;
+        if (isNotificaDuplicataRecente(receiverId, senderId, NotificationType.BOOK_MESSAGE, actionUrl)) {
+            log.debug("Notifica BOOK_MESSAGE duplicata, skip");
+            return;
+        }
+
+        User receiver = userRepository.getReferenceById(receiverId);
+        User sender = userRepository.getReferenceById(senderId);
+
+        Notification notification = Notification.builder()
+                .user(receiver)
+                .type(NotificationType.BOOK_MESSAGE)
+                .triggeredByUser(sender)
+                .content(String.format("%s ti ha inviato un messaggio per \"%s\"", sender.getFullName(), bookTitle))
+                .actionUrl(actionUrl)
+                .isRead(false)
+                .build();
+
+        notificationRepository.save(notification);
+        publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
+        log.info("Notifica BOOK_MESSAGE creata - Ricevente: {}", receiverId);
+    }
+
+    /**
+     * Notifica a un utente che è stato aggiunto a un gruppo.
+     */
+    @Transactional
+    public void creaNotificaInvitoGruppo(Long receiverId, Long adminId, Long groupId, String groupName) {
+        log.debug("Notifica invito gruppo - Ricevente: {}, Admin: {}, Gruppo: {}", receiverId, adminId, groupId);
+
+        User receiver = userRepository.getReferenceById(receiverId);
+        User admin = userRepository.getReferenceById(adminId);
+
+        Notification notification = Notification.builder()
+                .user(receiver)
+                .type(NotificationType.GROUP_INVITE)
+                .triggeredByUser(admin)
+                .content(String.format("%s ti ha aggiunto al gruppo \"%s\"", admin.getFullName(), groupName))
+                .actionUrl("/messages/group/"+groupId)
+                .isRead(false)
+                .build();
+
+        notificationRepository.save(notification);
+        publishNotificationEvent(receiver.getUsername(), notification);
+        pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
+        log.info("Notifica GROUP_INVITE creata - Ricevente: {}, Gruppo: {}", receiverId, groupId);
+    }
+
+    /**
+     * Notifica a tutti i membri di un gruppo (tranne il mittente) che è arrivato un nuovo messaggio.
+     * Usa batch save per efficienza e anti-spam per evitare notifiche duplicate ravvicinate.
+     */
+    @Transactional
+    public void creaNotificheMessaggioGruppo(List<Long> memberIds, Long senderId,
+                                              Long groupId, String groupName) {
+        log.debug("Notifiche GROUP_MESSAGE - Gruppo: {}, Mittente: {}, Membri: {}",
+                groupId, senderId, memberIds.size());
+
+        String actionUrl = "/messages/group/" + groupId;
+        User sender = userRepository.findById(senderId).orElse(null);
+        if (sender == null) return;
+
+        String senderName = sender.getFullName();
+
+        List<Notification> toSave = new ArrayList<>();
+        for (Long memberId : memberIds) {
+            if (memberId.equals(senderId)) continue;
+            if (isNotificaDuplicataRecente(memberId, senderId, NotificationType.GROUP_MESSAGE, actionUrl)) continue;
+
+            User member = userRepository.getReferenceById(memberId);
+            toSave.add(Notification.builder()
+                    .user(member)
+                    .type(NotificationType.GROUP_MESSAGE)
+                    .triggeredByUser(sender)
+                    .content(String.format("%s ha inviato un messaggio nel gruppo \"%s\"", senderName, groupName))
+                    .actionUrl("/messages/group/"+groupId)
+                    .isRead(false)
+                    .build());
+        }
+
+        if (!toSave.isEmpty()) {
+            List<Notification> saved = notificationRepository.saveAll(toSave);
+            for (Notification n : saved) {
+                publishNotificationEvent(n.getUser().getUsername(), n);
+                pushNotificationService.sendToUser(n.getUser().getId(), "beetUs",
+                        n.getContent(), n.getActionUrl());
+            }
+            log.info("Notifiche GROUP_MESSAGE create: {} per gruppo {}", saved.size(), groupId);
+        }
+    }
+
     /**
      * Pulisce automaticamente le notifiche vecchie dal database.
      * <p>
@@ -609,6 +750,16 @@ public class NotificationService {
                 userId, triggeredByUserId, type, relatedId, contentType, since);
 
         return !duplicates.isEmpty();
+    }
+
+    /**
+     * Anti-spam per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE, BOOK_REQUEST).
+     * Usa actionUrl come discriminatore: stessa URL = stessa conversazione/gruppo.
+     */
+    private boolean isNotificaDuplicataRecente(Long userId, Long triggeredByUserId,
+                                               NotificationType type, String actionUrl) {
+        LocalDateTime since = LocalDateTime.now().minusMinutes(DUPLICATE_CHECK_MINUTES);
+        return notificationRepository.existsRecentNotification(userId, triggeredByUserId, type, actionUrl, since);
     }
 
     /**

@@ -104,6 +104,26 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     );
 
     /**
+     * Controlla duplicati per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE, BOOK_REQUEST).
+     * Usato per anti-spam: evita notifiche duplicate negli ultimi N minuti.
+     */
+    @Query("""
+        SELECT COUNT(n) > 0 FROM Notification n
+        WHERE n.user.id = :userId
+        AND n.triggeredByUser.id = :triggeredByUserId
+        AND n.type = :type
+        AND n.actionUrl = :actionUrl
+        AND n.createdAt > :since
+        """)
+    boolean existsRecentNotification(
+            @Param("userId") Long userId,
+            @Param("triggeredByUserId") Long triggeredByUserId,
+            @Param("type") com.example.backend.models.NotificationType type,
+            @Param("actionUrl") String actionUrl,
+            @Param("since") LocalDateTime since
+    );
+
+    /**
      * Trova tutte le notifiche di un utente (per eliminazione account).
      */
     List<Notification> findByUserId(Long userId);
