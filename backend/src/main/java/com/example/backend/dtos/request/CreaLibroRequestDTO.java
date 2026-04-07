@@ -1,0 +1,46 @@
+package com.example.backend.dtos.request;
+
+import com.example.backend.models.BookCondition;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+@Data
+public class CreaLibroRequestDTO {
+
+    @NotBlank(message = "Il titolo è obbligatorio")
+    @Size(max = 200, message = "Il titolo non può superare 200 caratteri")
+    private String titolo;
+
+    @NotBlank(message = "L'autore è obbligatorio")
+    @Size(max = 200, message = "L'autore non può superare 200 caratteri")
+    private String autore;
+
+    @Size(max = 20, message = "L'ISBN non può superare 20 caratteri")
+    private String isbn;
+
+    @Size(max = 500, message = "La descrizione non può superare 500 caratteri")
+    private String descrizione;
+
+    @NotNull(message = "Il prezzo è obbligatorio")
+    @DecimalMin(value = "0.00", message = "Il prezzo non può essere negativo")
+    @Digits(integer = 6, fraction = 2, message = "Il prezzo non è valido")
+    private BigDecimal prezzo;
+
+    @NotNull(message = "La condizione è obbligatoria")
+    private BookCondition condizione;
+
+    @NotBlank(message = "L'anno scolastico è obbligatorio")
+    @Size(max = 20, message = "L'anno scolastico non può superare 20 caratteri")
+    private String annoScolastico;
+
+    @NotBlank(message = "La materia è obbligatoria")
+    @Size(max = 50, message = "La materia non può superare 50 caratteri")
+    private String materia;
+
+    @NotBlank(message = "L'immagine frontale è obbligatoria")
+    private String frontImageUrl;
+
+    private String backImageUrl;
+}
