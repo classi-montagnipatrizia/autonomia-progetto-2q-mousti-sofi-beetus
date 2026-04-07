@@ -12,7 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:create-drop}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -69,5 +69,19 @@ cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
+
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.0-flash}
+
+groq:
+  api-key: ${GROQ_API_KEY:}
+  model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY:}
+  private-key: ${VAPID_PRIVATE_KEY:}
+  subject: mailto:beetus@example.com
+
 server:
   port: 8080
