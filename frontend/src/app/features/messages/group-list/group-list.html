@@ -1,1 +1,139 @@
-<p>group-list works!</p>
+<div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+
+  <!-- Header con tab -->
+  <header class="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          aria-label="Torna alla home"
+        >
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Messaggi</h1>
+      </div>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="p-2 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 transition-colors text-blue-600 dark:text-blue-400"
+        title="Nuovo gruppo"
+      >
+        <lucide-icon [img]="PlusIcon" [size]="20" />
+      </button>
+    </div>
+
+    <!-- Tab bar: Chat | Gruppi -->
+    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+      <button
+        type="button"
+        (click)="tabChanged.emit('chat')"
+        class="flex-1 py-2 px-4 text-sm font-medium rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
+      >Chat</button>
+      <button
+        type="button"
+        class="flex-1 py-2 px-4 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition-all"
+      >Gruppi</button>
+    </div>
+  </header>
+
+  <!-- Lista gruppi -->
+  <div class="flex-1 min-h-0 overflow-y-auto">
+
+    <!-- Loading -->
+    @if (groupStore.isLoading()) {
+      <div class="p-4 space-y-3">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="flex items-center gap-3 p-3 animate-pulse">
+            <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (isEmpty()) {
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div class="w-20 h-20 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <lucide-icon [img]="UsersIcon" [size]="40" class="text-gray-400" />
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Nessun gruppo
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400 max-w-xs mb-4">
+          Crea il tuo primo gruppo per chattare con più persone.
+        </p>
+        <button
+          type="button"
+          (click)="openCreateModal()"
+          class="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-medium transition-colors shadow-sm"
+        >
+          Crea gruppo
+        </button>
+      </div>
+    }
+
+    <!-- Lista gruppi -->
+    @if (!groupStore.isLoading() && !isEmpty()) {
+      @for (group of groupStore.myGroups(); track group.id) {
+        <div class="px-3 py-1.5">
+          <button
+            type="button"
+            (click)="openGroup(group)"
+            class="w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors text-left"
+            [class]="selectedGroupId() === group.id
+              ? 'bg-blue-50 dark:bg-blue-900/20'
+              : 'hover:bg-gray-50 dark:hover:bg-gray-800'"
+          >
+            <!-- Avatar: foto o colore+iniziali -->
+            @if (group.profilePictureUrl) {
+              <img
+                [src]="group.profilePictureUrl"
+                [alt]="group.name"
+                class="w-12 h-12 rounded-xl object-cover shrink-0"
+              />
+            } @else {
+              <div
+                class="w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center text-white font-semibold shrink-0"
+                [class]="getAvatarColor(group.id).from + ' ' + getAvatarColor(group.id).to"
+              >{{ getInitials(group.name) }}</div>
+            }
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold text-gray-900 dark:text-white truncate text-sm">{{ group.name }}</p>
+                @if (group.lastMessageAt) {
+                  <span class="text-xs text-gray-400 shrink-0 ml-2">{{ group.lastMessageAt | timeAgo }}</span>
+                }
+              </div>
+              @if (group.lastMessageContent) {
+                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ group.lastMessageContent }}</p>
+              } @else {
+                <p class="text-sm text-gray-400 dark:text-gray-500 italic truncate">Nessun messaggio</p>
+              }
+            </div>
+
+            <!-- Badge unread -->
+            @if (group.unreadCount > 0) {
+              <span class="w-5 h-5 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0">
+                {{ group.unreadCount > 9 ? '9+' : group.unreadCount }}
+              </span>
+            }
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Create group modal -->
+  <app-create-group-modal
+    [isOpen]="showCreateModal()"
+    (closed)="showCreateModal.set(false)"
+    (submitted)="onGroupCreated($event)"
+  />
+</div>
