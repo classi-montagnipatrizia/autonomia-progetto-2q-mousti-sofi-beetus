@@ -40,6 +40,13 @@ public enum RateLimitType {
     MESSAGE,
 
     /**
+     * Rate limit per chiamate AI (analisi libro, chatbot).
+     * Previene abuso dei servizi AI esterni.
+     * Default: 10 richieste per minuto
+     */
+    AI,
+
+    /**
      * Rate limit generico per API.
      * Limite base per tutte le richieste API.
      * Default: 100 richieste per minuto

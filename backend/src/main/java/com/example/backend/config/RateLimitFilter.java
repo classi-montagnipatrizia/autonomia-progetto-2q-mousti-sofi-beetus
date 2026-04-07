@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,24 +35,43 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitService rateLimitService;
 
-    // Mappa degli endpoint e i loro limiti specifici
-    private static final Map<String, RateLimitType> ENDPOINT_LIMITS = new HashMap<>();
+    // Lista ordinata degli endpoint e i loro limiti specifici.
+    // L'ordine è importante: i pattern più specifici devono venire prima.
+    private static final List<Map.Entry<String, RateLimitType>> ENDPOINT_LIMITS = new java.util.ArrayList<>();
 
     static {
         // Autenticazione - molto restrittivo
-        ENDPOINT_LIMITS.put("/api/auth/login", RateLimitType.AUTH);
-        ENDPOINT_LIMITS.put("/api/auth/register", RateLimitType.AUTH);
-        ENDPOINT_LIMITS.put("/api/auth/forgot-password", RateLimitType.AUTH);
+        ENDPOINT_LIMITS.add(Map.entry("/api/auth/login", RateLimitType.AUTH));
+        ENDPOINT_LIMITS.add(Map.entry("/api/auth/register", RateLimitType.AUTH));
+        ENDPOINT_LIMITS.add(Map.entry("/api/auth/forgot-password", RateLimitType.AUTH));
+
+        // AI - limite chiamate servizi AI (prima di pattern più generici)
+        ENDPOINT_LIMITS.add(Map.entry("/api/ai", RateLimitType.AI));
+
+        // Messaggi libro - prevenzione spam (prima di /api/books generico)
+        ENDPOINT_LIMITS.add(Map.entry("/api/books/conversations", RateLimitType.MESSAGE));
+
+        // Libri - creazione annunci
+        ENDPOINT_LIMITS.add(Map.entry("/api/books", RateLimitType.POST_CREATION));
 
         // Creazione contenuti - prevenzione spam
-        ENDPOINT_LIMITS.put("/api/posts", RateLimitType.POST_CREATION);
-        ENDPOINT_LIMITS.put("/api/comments", RateLimitType.POST_CREATION);
+        ENDPOINT_LIMITS.add(Map.entry("/api/posts", RateLimitType.POST_CREATION));
+        ENDPOINT_LIMITS.add(Map.entry("/api/comments", RateLimitType.POST_CREATION));
 
         // Like - prevenzione abuse
-        ENDPOINT_LIMITS.put("/api/likes", RateLimitType.LIKE);
+        ENDPOINT_LIMITS.add(Map.entry("/api/likes", RateLimitType.LIKE));
 
         // Messaggi - prevenzione spam
-        ENDPOINT_LIMITS.put("/api/messages", RateLimitType.MESSAGE);
+        ENDPOINT_LIMITS.add(Map.entry("/api/messages", RateLimitType.MESSAGE));
+
+        // Gruppi - messaggi (pattern con /messages prima del generico /api/groups)
+        ENDPOINT_LIMITS.add(Map.entry("/api/groups/", RateLimitType.MESSAGE));
+
+        // Gruppi - creazione gruppi (solo POST /api/groups senza slash finale)
+        ENDPOINT_LIMITS.add(Map.entry("/api/groups", RateLimitType.POST_CREATION));
+
+        // Push notifications - subscribe/unsubscribe (operazione infrequente)
+        ENDPOINT_LIMITS.add(Map.entry("/api/push", RateLimitType.POST_CREATION));
     }
 
     @Override
@@ -93,9 +112,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
      * @return Tipo di rate limit da applicare
      */
     private RateLimitType determineRateLimitType(String path, String method) {
-        // Controlla se c'è un limite specifico per questo endpoint
-        for (Map.Entry<String, RateLimitType> entry : ENDPOINT_LIMITS.entrySet()) {
+        // Controlla se c'è un limite specifico per questo endpoint.
+        // La lista è ordinata: pattern più specifici vengono prima.
+        for (Map.Entry<String, RateLimitType> entry : ENDPOINT_LIMITS) {
             if (path.startsWith(entry.getKey())) {
+                // Per MESSAGE su gruppi: applica solo su POST (invio messaggi)
+                if (entry.getValue() == RateLimitType.MESSAGE && method.equals("GET")) {
+                    return RateLimitType.API_GENERAL;
+                }
                 // Solo POST/PUT/DELETE per creazione contenuti
                 if (entry.getValue() == RateLimitType.POST_CREATION) {
                     if (method.equals("POST") || method.equals("PUT") || method.equals("DELETE")) {
@@ -104,6 +128,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 } else {
                     return entry.getValue();
                 }
+                break; // Primo match vince, esci dal loop
             }
         }
 
@@ -196,6 +221,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             case POST_CREATION -> "10/min";
             case LIKE -> "30/min";
             case MESSAGE -> "20/min";
+            case AI -> "10/min";
             case API_GENERAL -> "100/min";
             case WEBSOCKET -> "50/min";
         };

@@ -78,6 +78,10 @@ public class RateLimitService {
         configurations.put(RateLimitType.MESSAGE,
                 new BucketConfiguration(20, Duration.ofMinutes(1)));
 
+        // AI: limita chiamate AI (analisi libro, chatbot)
+        configurations.put(RateLimitType.AI,
+                new BucketConfiguration(10, Duration.ofMinutes(1)));
+
         // API_GENERAL: limite generale per tutte le API
         configurations.put(RateLimitType.API_GENERAL,
                 new BucketConfiguration(100, Duration.ofMinutes(1)));
