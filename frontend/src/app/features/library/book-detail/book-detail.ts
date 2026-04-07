@@ -1,21 +1,23 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   LucideAngularModule,
   ArrowLeft,
   Check,
+  X,
   MessageCircle,
-  AlertTriangle,
+  TriangleAlert,
   BookOpen,
-  User,
+  Users,
 } from 'lucide-angular';
 
 import { LibraryStore } from '../../../core/stores/library-store';
+import { ToastService } from '../../../core/services/toast-service';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
-import { BookCondition, BookListingStatus, BookSubject } from '../../../models';
+import { BookCondition, BookStatus, BookRequestStatus } from '../../../models';
 
 @Component({
   selector: 'app-book-detail',
@@ -32,123 +34,115 @@ import { BookCondition, BookListingStatus, BookSubject } from '../../../models';
 export class BookDetail implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   readonly store = inject(LibraryStore);
 
   // Icons
   readonly ArrowLeftIcon = ArrowLeft;
   readonly CheckIcon = Check;
+  readonly XIcon = X;
   readonly MessageCircleIcon = MessageCircle;
-  readonly AlertTriangleIcon = AlertTriangle;
+  readonly AlertTriangleIcon = TriangleAlert;
   readonly BookOpenIcon = BookOpen;
-  readonly UserIcon = User;
+  readonly UsersIcon = Users;
 
-  // Enums
+  // Enums accessibili nel template
   readonly BookCondition = BookCondition;
-  readonly BookListingStatus = BookListingStatus;
-  readonly BookSubject = BookSubject;
+  readonly BookStatus = BookStatus;
+  readonly BookRequestStatus = BookRequestStatus;
 
-  // Computed helpers
+  // Dati dal store
   readonly book = this.store.bookDetail;
   readonly loading = this.store.bookDetailLoading;
   readonly requesting = this.store.bookRequesting;
 
+  // =========================================================================
+  // Computed
+  // =========================================================================
+
   readonly conditionLabel = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.condizione) {
-      case BookCondition.COME_NUOVO: return 'Come nuovo';
-      case BookCondition.BUONE_CONDIZIONI: return 'Buone condizioni';
-      case BookCondition.USATO: return 'Usato';
+    switch (this.book()?.condizione) {
+      case BookCondition.OTTIMO: return 'Ottimo';
+      case BookCondition.BUONO: return 'Buono';
+      case BookCondition.ACCETTABILE: return 'Accettabile';
       default: return '';
     }
   });
 
   readonly conditionColor = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.condizione) {
-      case BookCondition.COME_NUOVO: return 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400';
-      case BookCondition.BUONE_CONDIZIONI: return 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400';
-      case BookCondition.USATO: return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+    switch (this.book()?.condizione) {
+      case BookCondition.OTTIMO: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      case BookCondition.BUONO: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case BookCondition.ACCETTABILE: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
       default: return '';
     }
   });
 
   readonly statusLabel = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.stato) {
-      case BookListingStatus.DISPONIBILE: return 'Disponibile';
-      case BookListingStatus.RICHIESTO: return 'Richiesto';
-      case BookListingStatus.VENDUTO: return 'Venduto';
+    switch (this.book()?.stato) {
+      case BookStatus.DISPONIBILE: return 'Disponibile';
+      case BookStatus.VENDUTO: return 'Venduto';
       default: return '';
     }
   });
 
   readonly statusColor = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.stato) {
-      case BookListingStatus.DISPONIBILE: return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400';
-      case BookListingStatus.RICHIESTO: return 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400';
-      case BookListingStatus.VENDUTO: return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
+    switch (this.book()?.stato) {
+      case BookStatus.DISPONIBILE: return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400';
+      case BookStatus.VENDUTO: return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
       default: return '';
     }
   });
 
   readonly statusDotColor = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.stato) {
-      case BookListingStatus.DISPONIBILE: return 'bg-primary-500';
-      case BookListingStatus.RICHIESTO: return 'bg-warning-500';
-      case BookListingStatus.VENDUTO: return 'bg-gray-400';
+    switch (this.book()?.stato) {
+      case BookStatus.DISPONIBILE: return 'bg-primary-500';
+      case BookStatus.VENDUTO: return 'bg-gray-400';
       default: return '';
     }
   });
 
-  readonly subjectLabel = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    switch (book.materia) {
-      case BookSubject.MATEMATICA: return 'Matematica';
-      case BookSubject.ITALIANO: return 'Italiano';
-      case BookSubject.INGLESE: return 'Inglese';
-      case BookSubject.STORIA: return 'Storia';
-      case BookSubject.FISICA: return 'Fisica';
-      case BookSubject.INFORMATICA: return 'Informatica';
-      case BookSubject.ALTRO: return 'Altro';
-      default: return '';
-    }
-  });
+  readonly annoLabel = computed(() => this.book()?.annoScolastico ?? '');
+  readonly subjectLabel = computed(() => this.book()?.materia ?? '');
+  readonly hasRetroImage = computed(() => !!this.book()?.backImageUrl);
 
-  readonly annoLabel = computed(() => {
-    const book = this.book();
-    if (!book) return '';
-    return book.anno === 0 ? 'Tutti gli anni' : `${book.anno}° Anno`;
-  });
+  /** L'utente corrente ha già una richiesta PENDING su questo libro */
+  readonly hoGiaRichiesto = computed(() =>
+    this.book()?.miaRichiesta === BookRequestStatus.PENDING
+  );
 
-  readonly isAvailable = computed(() => this.book()?.stato === BookListingStatus.DISPONIBILE);
-  readonly isRequested = computed(() => this.book()?.stato === BookListingStatus.RICHIESTO);
-  readonly hasRetroImage = computed(() => !!this.book()?.imageUrlRetro);
+  /** Il libro è ancora richiedibile (non VENDUTO e non già richiesto da me) */
+  readonly canRequest = computed(() =>
+    this.book()?.stato !== BookStatus.VENDUTO && !this.hoGiaRichiesto()
+  );
+
+  /** Il libro è venduto */
+  readonly isVenduto = computed(() => this.book()?.stato === BookStatus.VENDUTO);
 
   readonly formattedDate = computed(() => {
     const book = this.book();
     if (!book) return '';
-    const date = new Date(book.createdAt);
-    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(book.createdAt).toLocaleDateString('it-IT', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
   });
+
+  // =========================================================================
+  // Lifecycle
+  // =========================================================================
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) {
-      this.store.loadBookDetail(id);
-    }
+    if (id) this.store.loadBookDetail(id);
   }
 
   ngOnDestroy(): void {
     this.store.clearBookDetail();
   }
+
+  // =========================================================================
+  // Azioni
+  // =========================================================================
 
   goBack(): void {
     this.router.navigate(['/library']);
@@ -157,13 +151,29 @@ export class BookDetail implements OnInit, OnDestroy {
   async onRequestBook(): Promise<void> {
     const book = this.book();
     if (!book) return;
-    await this.store.requestBook(book.id);
+    try {
+      await this.store.requestBook(book.id);
+      this.toast.success('Richiesta inviata al venditore!');
+    } catch {
+      this.toast.error('Errore durante la richiesta. Riprova.');
+    }
+  }
+
+  async onAnnullaRichiesta(): Promise<void> {
+    const book = this.book();
+    if (!book) return;
+    try {
+      await this.store.annullaRichiestaLibro(book.id);
+      this.toast.success('Richiesta annullata.');
+    } catch {
+      this.toast.error('Errore durante l\'annullamento. Riprova.');
+    }
   }
 
   onContactSeller(): void {
-    // Naviga alla libreria nel tab messaggi
-    this.store.setActiveTab('messaggi');
-    this.router.navigate(['/library']);
+    const book = this.book();
+    if (!book) return;
+    this.router.navigate(['/library', 'conversation', book.id]);
   }
 
   onViewProfile(): void {

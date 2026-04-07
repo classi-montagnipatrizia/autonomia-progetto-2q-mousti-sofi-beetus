@@ -1,14 +1,14 @@
 <!-- ============================================
      HEADER FISSO
      ============================================ -->
-<header class="fixed top-0 left-0 right-0 z-40 w-full bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+<header class="book-detail-header fixed top-0 left-0 right-0 z-40 w-full bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
   <div class="max-w-2xl mx-auto px-4">
     <div class="flex items-center h-14">
       <button
         (click)="goBack()"
         class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
       >
-        <lucide-angular [img]="ArrowLeftIcon" class="size-5" />
+        <lucide-icon [img]="ArrowLeftIcon" [size]="20" />
       </button>
       <h1 class="ml-2 text-lg font-semibold text-text-light dark:text-text-dark">Dettaglio libro</h1>
     </div>
@@ -23,16 +23,10 @@
   <!-- SKELETON LOADING -->
   @if (loading()) {
     <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
-      <!-- Skeleton immagini -->
       <div class="grid grid-cols-2 gap-0.5">
-        <div class="aspect-[3/4]">
-          <app-skeleton class="w-full h-full" />
-        </div>
-        <div class="aspect-[3/4]">
-          <app-skeleton class="w-full h-full" />
-        </div>
+        <div class="aspect-[3/4]"><app-skeleton class="w-full h-full" /></div>
+        <div class="aspect-[3/4]"><app-skeleton class="w-full h-full" /></div>
       </div>
-      <!-- Skeleton info -->
       <div class="p-5 space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex gap-2">
@@ -62,68 +56,90 @@
 
   <!-- BOOK DETAIL -->
   @if (!loading() && book()) {
-    <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
+    <article class="book-detail-card bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
 
-      <!-- Immagini: 2 colonne se c'è retro, 1 immagine altrimenti -->
+      <!-- Immagini -->
       @if (hasRetroImage()) {
         <div class="grid grid-cols-2 gap-0.5 bg-gray-200 dark:bg-gray-700">
           <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800">
-            <img [src]="book()!.imageUrl" alt="Fronte libro" class="w-full h-full object-cover" />
+            <img [src]="book()!.frontImageUrl" alt="Fronte libro" class="w-full h-full object-cover" />
             <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Fronte</span>
           </div>
           <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800">
-            <img [src]="book()!.imageUrlRetro" alt="Retro libro" class="w-full h-full object-cover" />
+            <img [src]="book()!.backImageUrl" alt="Retro libro" class="w-full h-full object-cover" />
             <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Retro</span>
           </div>
         </div>
       } @else {
         <div class="relative aspect-[4/5] bg-gray-100 dark:bg-gray-800 max-h-[400px]">
-          <img [src]="book()!.imageUrl" alt="Copertina libro" class="w-full h-full object-cover" />
+          <img [src]="book()!.frontImageUrl" alt="Copertina libro" class="w-full h-full object-cover" />
           <span class="absolute bottom-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Copertina</span>
         </div>
       }
 
       <!-- Info libro -->
-      <div class="p-5">
+      <div class="p-6 space-y-5">
 
         <!-- Badge condizione + Stato + Prezzo -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="px-3 py-1 text-sm font-medium rounded-full" [class]="conditionColor()">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-border-light dark:border-border-dark">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-3 py-1 text-sm font-medium rounded-full" [ngClass]="conditionColor()">
               {{ conditionLabel() }}
             </span>
-            <span class="px-3 py-1 text-sm font-medium rounded-full flex items-center gap-1" [class]="statusColor()">
-              <span class="w-1.5 h-1.5 rounded-full" [class]="statusDotColor()"></span>
+            <span class="px-3 py-1 text-sm font-medium rounded-full flex items-center gap-1.5" [ngClass]="statusColor()">
+              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="statusDotColor()"></span>
               {{ statusLabel() }}
             </span>
+            @if (book()!.richiesteCount > 0) {
+              <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                <lucide-icon [img]="UsersIcon" [size]="12" />
+                {{ book()!.richiesteCount }} richiest{{ book()!.richiesteCount === 1 ? 'a' : 'e' }}
+              </span>
+            }
           </div>
           <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">&euro;{{ book()!.prezzo }}</span>
         </div>
 
-        <!-- Titolo -->
-        <h1 class="text-xl font-bold text-text-light dark:text-text-dark mb-1">{{ book()!.titolo }}</h1>
-        <p class="text-gray-500 dark:text-gray-400 mb-4">{{ book()!.autore }}</p>
+        <!-- Titolo e autore -->
+        <div>
+          <h1 class="text-xl font-bold text-text-light dark:text-text-dark mb-1.5">{{ book()!.titolo }}</h1>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">{{ book()!.autore }}</p>
+        </div>
 
-        <!-- Warning: libro già richiesto -->
-        @if (isRequested()) {
-          <div class="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-xl p-3 mb-4">
+        <!-- Banner: già richiesto da me -->
+        @if (hoGiaRichiesto()) {
+          <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-xl p-3">
             <div class="flex items-center gap-2">
-              <lucide-angular [img]="AlertTriangleIcon" class="size-5 text-warning-600 dark:text-warning-400 shrink-0" />
-              <p class="text-sm text-warning-800 dark:text-warning-300">Questo libro è stato già richiesto da un altro utente.</p>
+              <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-600 dark:text-primary-400 shrink-0" />
+              <p class="text-sm text-primary-800 dark:text-primary-300 flex-1">Hai già inviato una richiesta per questo libro.</p>
             </div>
           </div>
         }
 
-        <!-- Tags -->
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-            {{ annoLabel() }}
-          </span>
-          <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-            {{ subjectLabel() }}
-          </span>
+        <!-- Banner: venduto -->
+        @if (isVenduto()) {
+          <div class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+            <div class="flex items-center gap-2">
+              <lucide-icon [img]="AlertTriangleIcon" [size]="18" class="text-gray-500 shrink-0" />
+              <p class="text-sm text-gray-600 dark:text-gray-400">Questo libro è stato già venduto.</p>
+            </div>
+          </div>
+        }
+
+        <!-- Tags anno + materia + ISBN -->
+        <div class="flex flex-wrap gap-1.5">
+          @if (annoLabel()) {
+            <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
+              {{ annoLabel() }}
+            </span>
+          }
+          @if (subjectLabel()) {
+            <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
+              {{ subjectLabel() }}
+            </span>
+          }
           @if (book()!.isbn) {
-            <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full text-sm font-mono">
+            <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full text-xs font-mono">
               ISBN: {{ book()!.isbn }}
             </span>
           }
@@ -131,48 +147,46 @@
 
         <!-- Descrizione -->
         @if (book()!.descrizione) {
-          <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-5">
-            {{ book()!.descrizione }}
-          </p>
+          <div class="pt-2 pb-3 border-t border-b border-border-light dark:border-border-dark">
+            <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+              {{ book()!.descrizione }}
+            </p>
+          </div>
         }
 
-        <div class="border-t border-border-light dark:border-border-dark my-4"></div>
-
         <!-- Venditore -->
-        <div class="flex items-center gap-3 cursor-pointer" (click)="onViewProfile()">
+        <div class="seller-card flex items-center gap-3 cursor-pointer" (click)="onViewProfile()">
           <div class="relative">
             <app-avatar
               [src]="book()!.venditore.profilePictureUrl"
               [name]="book()!.venditore.nomeCompleto"
-              [alt]="book()!.venditore.nomeCompleto"
               size="md"
             />
-            @if (book()!.venditore.isOnline) {
-              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-success-500 border-2 border-surface-light dark:border-surface-dark rounded-full"></span>
-            } @else {
-              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-300 dark:bg-gray-600 border-2 border-surface-light dark:border-surface-dark rounded-full"></span>
-            }
+            <span
+              class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-surface-light dark:border-surface-dark rounded-full"
+              [ngClass]="book()!.venditore.isOnline ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"
+            ></span>
           </div>
           <div class="flex-1 min-w-0">
             <p class="font-semibold text-text-light dark:text-text-dark">{{ book()!.venditore.nomeCompleto }}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
               &#64;{{ book()!.venditore.username }}
               @if (book()!.venditore.classroom) {
                 &middot; {{ book()!.venditore.classroom }}
               }
             </p>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500">{{ formattedDate() }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ formattedDate() }}</span>
         </div>
       </div>
     </article>
   }
 
-  <!-- EMPTY STATE: libro non trovato -->
+  <!-- EMPTY STATE -->
   @if (!loading() && !book()) {
     <div class="flex flex-col items-center justify-center py-20 text-center">
       <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-        <lucide-angular [img]="BookOpenIcon" class="size-8 text-gray-400" />
+        <lucide-icon [img]="BookOpenIcon" [size]="32" class="text-gray-400" />
       </div>
       <p class="text-gray-500 dark:text-gray-400 font-medium mb-1">Libro non trovato</p>
       <p class="text-sm text-gray-400 dark:text-gray-500 mb-4">L'annuncio potrebbe essere stato rimosso</p>
@@ -187,45 +201,52 @@
 </main>
 
 <!-- ============================================
-     FOOTER FISSO - Azioni
+     FOOTER FISSO — Azioni
      ============================================ -->
-@if (!loading() && book()) {
-  <div class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark p-4 z-30">
-    <div class="max-w-2xl mx-auto flex gap-3">
+@if (!loading() && book() && !isVenduto()) {
+  <div class="book-detail-footer fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark z-30">
+    <div class="max-w-2xl mx-auto px-4 py-3.5 flex gap-3">
 
-      @if (isAvailable()) {
-        <!-- Richiedi libro -->
+      <!-- Richiedi / Annulla richiesta -->
+      @if (hoGiaRichiesto()) {
         <button
-          (click)="onRequestBook()"
+          (click)="onAnnullaRichiesta()"
           [disabled]="requesting()"
-          class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white disabled:text-gray-500 dark:disabled:text-gray-400 rounded-full font-semibold transition-colors shadow-sm"
+          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-700 text-error-700 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-900/40 disabled:opacity-50 disabled:hover:bg-error-50 dark:disabled:hover:bg-error-900/20 rounded-xl font-semibold transition-colors active:scale-95"
         >
           @if (requesting()) {
             <app-spinner size="sm" />
-            Richiesta in corso...
+            Annullamento...
           } @else {
-            <lucide-angular [img]="CheckIcon" class="size-5" />
-            Richiedi libro
+            <lucide-icon [img]="XIcon" [size]="18" />
+            Annulla richiesta
           }
         </button>
-      } @else if (isRequested()) {
-        <!-- Già richiesto (disabilitato) -->
+      } @else {
         <button
-          disabled
-          class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full font-semibold cursor-not-allowed"
+          (click)="onRequestBook()"
+          [disabled]="requesting()"
+          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:hover:bg-primary-500 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg active:scale-95"
         >
-          <lucide-angular [img]="AlertTriangleIcon" class="size-5" />
-          Già richiesto
+          @if (requesting()) {
+            <app-spinner size="sm" />
+            <span class="hidden sm:inline">Richiesta in corso...</span>
+            <span class="sm:hidden">In corso...</span>
+          } @else {
+            <lucide-icon [img]="CheckIcon" [size]="18" />
+            <span class="hidden sm:inline">Richiedi libro</span>
+            <span class="sm:hidden">Richiedi</span>
+          }
         </button>
       }
 
       <!-- Contatta venditore -->
       <button
         (click)="onContactSeller()"
-        class="flex items-center justify-center gap-2 px-5 py-3.5 border border-border-light dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full font-semibold transition-colors"
+        class="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors active:scale-95"
       >
-        <lucide-angular [img]="MessageCircleIcon" class="size-5" />
-        <span class="hidden sm:inline">Contatta venditore</span>
+        <lucide-icon [img]="MessageCircleIcon" [size]="18" />
+        <span class="hidden sm:inline">Contatta</span>
       </button>
     </div>
   </div>
