@@ -1,6 +1,7 @@
 import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TimeAgoComponent } from '../../time-ago/time-ago-component/time-ago-component';
+import { AudioPlayerComponent } from '../../audio-player/audio-player-component/audio-player-component';
 
 /**
  * Posizione della bolla (mittente = destra, destinatario = sinistra)
@@ -9,20 +10,30 @@ export type MessageBubblePosition = 'left' | 'right';
 
 @Component({
   selector: 'app-message-bubble-component',
-  imports: [CommonModule, TimeAgoComponent],
+  imports: [CommonModule, TimeAgoComponent, AudioPlayerComponent],
   templateUrl: './message-bubble-component.html',
   styleUrl: './message-bubble-component.scss',
 })
 export class MessageBubbleComponent {
-/**
-   * Contenuto testuale del messaggio
+  /**
+   * Contenuto testuale del messaggio (null per messaggi audio)
    */
-  readonly contenuto = input.required<string>();
+  readonly contenuto = input<string | null>(null);
 
   /**
    * URL immagine allegata (opzionale)
    */
   readonly imageUrl = input<string | null>(null);
+
+  /**
+   * URL audio per messaggi vocali (opzionale, esclusivo con imageUrl/contenuto)
+   */
+  readonly audioUrl = input<string | null>(null);
+
+  /**
+   * Durata in secondi del messaggio audio
+   */
+  readonly audioDuration = input<number | null>(null);
 
   /**
    * Data/ora del messaggio (formato ISO 8601)
@@ -71,14 +82,15 @@ export class MessageBubbleComponent {
    * Classi CSS per la bolla del messaggio
    */
   readonly bubbleClasses = computed(() => {
-    const base = 'max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl';
+    // I messaggi audio hanno padding ridotto (il player ha il proprio padding)
+    const base = this.audioUrl()
+      ? 'max-w-xs sm:max-w-sm px-3 py-2 rounded-2xl'
+      : 'max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl';
 
     if (this.isMine()) {
-      // Messaggio inviato - stile blu
       return `${base} bg-primary-500 text-white rounded-br-sm`;
     }
 
-    // Messaggio ricevuto - stile grigio
     return `${base} bg-gray-200 dark:bg-gray-700 text-text-light dark:text-text-dark rounded-bl-sm`;
   });
 
