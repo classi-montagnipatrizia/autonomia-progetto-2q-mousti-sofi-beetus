@@ -16,6 +16,8 @@ public class MessageResponseDTO {
     private UserSummaryDTO destinatario;
     private String contenuto;
     private String imageUrl;
+    private String audioUrl;
+    private Integer audioDuration;
     private Boolean isRead;
     private Boolean isDeletedBySender;
     private Boolean isHiddenByCurrentUser;

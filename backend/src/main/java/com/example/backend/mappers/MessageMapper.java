@@ -26,6 +26,8 @@ public class MessageMapper {
                 .destinatario(userMapper.toUtenteSummaryDTO(message.getReceiver()))
                 .contenuto(message.getContent())
                 .imageUrl(message.getImageUrl())
+                .audioUrl(message.getAudioUrl())
+                .audioDuration(message.getAudioDuration())
                 .isRead(message.isRead())
                 .isDeletedBySender(message.isDeletedBySender())
                 .isHiddenByCurrentUser(isHiddenByCurrentUser)

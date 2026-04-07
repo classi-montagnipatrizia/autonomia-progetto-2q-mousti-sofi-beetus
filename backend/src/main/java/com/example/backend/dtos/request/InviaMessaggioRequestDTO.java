@@ -11,15 +11,26 @@ public class InviaMessaggioRequestDTO {
     @Size(max = 5000, message = "Il messaggio deve essere al massimo 5000 caratteri")
     private String contenuto;
 
-    // URL immagine Cloudinary (opzionale)
+    // URL immagine Cloudinary (opzionale, compatibile con testo)
     private String imageUrl;
 
+    // URL audio Cloudinary (esclusivo: non combinabile con testo/immagine)
+    private String audioUrl;
+
+    @Min(value = 1, message = "La durata audio deve essere almeno 1 secondo")
+    private Integer audioDuration;
+
     /**
-     * Validazione: almeno uno tra contenuto e imageUrl deve essere presente
+     * Validazione: messaggio valido se ha testo/immagine OPPURE solo audio
      */
     public boolean isValid() {
         boolean hasContent = contenuto != null && !contenuto.isBlank();
         boolean hasImage = imageUrl != null && !imageUrl.isBlank();
-        return hasContent || hasImage;
+        boolean hasAudio = audioUrl != null && !audioUrl.isBlank();
+        return hasContent || hasImage || hasAudio;
+    }
+
+    public boolean isAudioMessage() {
+        return audioUrl != null && !audioUrl.isBlank();
     }
 }
