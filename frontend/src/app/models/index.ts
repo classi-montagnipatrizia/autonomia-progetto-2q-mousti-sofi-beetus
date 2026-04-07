@@ -2,9 +2,6 @@
 // ENUMS
 // ============================================================================
 
-/**
- * Tipo di notifica
- */
 export enum NotificationType {
   MENTION = 'MENTION',
   COMMENT = 'COMMENT',
@@ -16,40 +13,32 @@ export enum NotificationType {
   GROUP_MESSAGE = 'GROUP_MESSAGE', // Nuovo messaggio in un gruppo
 }
 
-/**
- * Condizione fisica del libro
- */
 export enum BookCondition {
-  COME_NUOVO = 'OTTIMO',
-  BUONE_CONDIZIONI = 'BUONO',
-  USATO = 'USATO',
+  OTTIMO = 'OTTIMO',
+  BUONO = 'BUONO',
+  ACCETTABILE = 'ACCETTABILE',
 }
 
-/**
- * Stato disponibilità del libro
- */
 export enum BookStatus {
   DISPONIBILE = 'DISPONIBILE',
-  RICHIESTO = 'RICHIESTO',
   VENDUTO = 'VENDUTO',
 }
 
-/**
- * Tipo di contenuto dove può avvenire una menzione
- */
+export enum BookRequestStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+}
+
 export enum MentionableType {
   POST = 'POST',
   COMMENT = 'COMMENT',
 }
 
 // ============================================================================
-// RESPONSE INTERFACES
+// RESPONSE DTOs
 // ============================================================================
 
-/**
- * Riepilogo utente (versione leggera)
- * Utilizzato quando servono solo info base dell'utente
- */
 export interface UserSummaryDTO {
   id: number;
   username: string;
@@ -59,9 +48,6 @@ export interface UserSummaryDTO {
   classroom: string | null;
 }
 
-/**
- * Dati completi profilo utente
- */
 export interface UserResponseDTO {
   id: number;
   username: string;
@@ -71,15 +57,11 @@ export interface UserResponseDTO {
   profilePictureUrl: string | null;
   isAdmin: boolean;
   isActive: boolean;
-  lastSeen: string; // ISO 8601 format
+  lastSeen: string;
   isOnline: boolean;
   classroom: string | null;
 }
 
-/**
- * Risposta post (versione feed)
- * Utilizzata nella lista dei post senza i commenti
- */
 export interface PostResponseDTO {
   id: number;
   autore: UserSummaryDTO;
@@ -88,14 +70,10 @@ export interface PostResponseDTO {
   likesCount: number;
   commentsCount: number;
   hasLiked: boolean;
-  createdAt: string; // ISO 8601 format
-  updatedAt: string; // ISO 8601 format
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Dettaglio completo post
- * Include tutti i commenti - usata nella pagina singolo post
- */
 export interface PostDettaglioResponseDTO {
   id: number;
   autore: UserSummaryDTO;
@@ -105,124 +83,92 @@ export interface PostDettaglioResponseDTO {
   commentsCount: number;
   hasLiked: boolean;
   commenti: CommentResponseDTO[];
-  createdAt: string; // ISO 8601 format
-  updatedAt: string; // ISO 8601 format
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Commento con struttura gerarchica
- * Può contenere risposte (max 2 livelli di profondità)
- */
 export interface CommentResponseDTO {
   id: number;
   autore: UserSummaryDTO;
   contenuto: string;
-  parentCommentId: number | null; // null se è commento principale
-  risposte: CommentResponseDTO[]; // Array di risposte
-  createdAt: string; // ISO 8601 format
-  updatedAt: string; // ISO 8601 format
+  parentCommentId: number | null;
+  risposte: CommentResponseDTO[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Like su un post o commento
- */
 export interface LikeResponseDTO {
   utente: UserSummaryDTO;
-  createdAt: string; // ISO 8601 format
+  createdAt: string;
 }
 
-/**
- * Notifica ricevuta dall'utente
- */
 export interface NotificationResponseDTO {
   id: number;
   tipo: NotificationType;
   utenteCheLHaGenerata: UserSummaryDTO;
   contenuto: string;
-  actionUrl: string; // URL per navigare al contenuto
+  actionUrl: string;
   isRead: boolean;
-  createdAt: string; // ISO 8601 format
+  createdAt: string;
 }
 
-/**
- * Menzione ricevuta dall'utente
- */
 export interface MentionResponseDTO {
   id: number;
   utenteMenzionante: UserSummaryDTO;
   tipo: MentionableType;
-  contenutoId: number; // ID del post o commento
+  contenutoId: number;
   actionUrl: string;
-  anteprimaContenuto: string; // Primi 100 caratteri
-  createdAt: string; // ISO 8601 format
+  anteprimaContenuto: string;
+  createdAt: string;
 }
 
-/**
- * Messaggio diretto tra utenti
- */
 export interface MessageResponseDTO {
   id: number;
   mittente: UserSummaryDTO;
   destinatario: UserSummaryDTO;
   contenuto: string | null;
   imageUrl: string | null;
-  audioUrl: string | null;       // presente solo per messaggi vocali
-  audioDuration: number | null;  // durata in secondi
+  audioUrl: string | null;
+  audioDuration: number | null;
   isRead: boolean;
   isDeletedBySender: boolean;
   isHiddenByCurrentUser: boolean;
-  createdAt: string; // ISO 8601 format
+  createdAt: string;
 }
 
-/**
- * Conversazione DM con ultimo messaggio
- * Utilizzata nella lista delle conversazioni
- */
 export interface ConversationResponseDTO {
   altroUtente: UserSummaryDTO;
   ultimoMessaggio: MessageResponseDTO;
   messaggiNonLetti: number;
-  ultimaAttivita: string; // ISO 8601 format
+  ultimaAttivita: string;
 }
 
-/**
- * Risposta login/registrazione
- */
 export interface LoginResponseDTO {
   accessToken: string;
   refreshToken: string;
-  type: string; // "Bearer"
+  type: string;
   user: UserResponseDTO;
 }
 
-/**
- * Risposta refresh token
- */
 export interface RefreshTokenResponseDTO {
   accessToken: string;
   refreshToken: string;
-  type: string; // "Bearer"
+  type: string;
 }
 
-/**
- * Risposta errore standardizzata
- */
 export interface ErrorResponseDTO {
-  timestamp: string; // ISO 8601 format
+  timestamp: string;
   status: number;
   error: string;
   message: string;
   path: string;
-  validationErrors?: Record<string, string>; // Solo per errori di validazione
+  validationErrors?: Record<string, string>;
 }
 
 // ============================================================================
 // BOOK DTOs
 // ============================================================================
 
-/**
- * Riepilogo libro (versione card/griglia)
- */
 export interface BookSummaryDTO {
   id: number;
   titolo: string;
@@ -234,12 +180,11 @@ export interface BookSummaryDTO {
   materia: string | null;
   frontImageUrl: string;
   venditore: UserSummaryDTO;
+  richiesteCount: number;       // numero richieste PENDING
+  miaRichiesta: BookRequestStatus | null; // stato della richiesta dell'utente corrente
   createdAt: string;
 }
 
-/**
- * Dettaglio completo libro
- */
 export interface BookResponseDTO {
   id: number;
   titolo: string;
@@ -254,33 +199,43 @@ export interface BookResponseDTO {
   frontImageUrl: string;
   backImageUrl: string | null;
   venditore: UserSummaryDTO;
-  richiedente: UserSummaryDTO | null;
+  richiesteCount: number;
+  miaRichiesta: BookRequestStatus | null;
   createdAt: string;
   updatedAt: string;
 }
 
 /**
- * Conversazione venditore-acquirente per un libro
+ * Richiesta di acquisto libro (vista dal venditore)
  */
-export interface BookConversationDTO {
+export interface BookRequestDTO {
   id: number;
-  book: BookSummaryDTO;
-  seller: UserSummaryDTO;
-  buyer: UserSummaryDTO;
-  unreadCount: number;
-  lastMessageAt: string | null;
+  acquirente: UserSummaryDTO;
+  stato: BookRequestStatus;
   createdAt: string;
 }
 
 /**
- * Messaggio nella chat venditore-acquirente
+ * Conversazione venditore-acquirente per un libro.
+ * Il backend restituisce sempre la prospettiva dell'utente corrente tramite `altroUtente`.
  */
+export interface BookConversationDTO {
+  id: number;
+  libro: BookSummaryDTO;
+  altroUtente: UserSummaryDTO;
+  ultimoMessaggio: BookMessageDTO | null;
+  messaggiNonLetti: number;
+  ultimaAttivita: string | null;
+  createdAt: string;
+}
+
 export interface BookMessageDTO {
   id: number;
   conversationId: number;
-  sender: UserSummaryDTO;
+  mittente: UserSummaryDTO;
   contenuto: string;
   isRead: boolean;
+  isDeletedBySender: boolean;
   createdAt: string;
 }
 
@@ -288,23 +243,17 @@ export interface BookMessageDTO {
 // AI DTOs
 // ============================================================================
 
-/**
- * Risposta analisi libro da Gemini Vision
- */
 export interface AnalizzaLibroResponseDTO {
   titolo: string | null;
   autore: string | null;
   isbn: string | null;
   materia: string | null;
   annoScolastico: string | null;
-  prezzoSuggerito: number | null;
+  prezzo: number | null;
   descrizione: string | null;
   condizione: BookCondition | null;
 }
 
-/**
- * Risposta chatbot Gemini
- */
 export interface ChatbotResponseDTO {
   risposta: string;
   libri: BookSummaryDTO[];
@@ -314,9 +263,6 @@ export interface ChatbotResponseDTO {
 // GROUP DTOs
 // ============================================================================
 
-/**
- * Membro di un gruppo
- */
 export interface GroupMemberDTO {
   id: number;
   username: string;
@@ -326,9 +272,6 @@ export interface GroupMemberDTO {
   joinedAt: string;
 }
 
-/**
- * Messaggio in un gruppo
- */
 export interface GroupMessageDTO {
   id: number;
   groupId: number;
@@ -337,14 +280,19 @@ export interface GroupMessageDTO {
   senderFullName: string;
   senderProfilePictureUrl: string | null;
   content: string | null;
+  imageUrl: string | null;
   audioUrl: string | null;
   audioDuration: number | null;
+  isDeletedBySender: boolean;
   createdAt: string;
 }
 
-/**
- * Riepilogo gruppo (lista "I miei gruppi")
- */
+export interface GroupTypingEvent {
+  senderId: number;
+  senderUsername: string;
+  isTyping: boolean;
+}
+
 export interface GroupSummaryDTO {
   id: number;
   name: string;
@@ -357,9 +305,6 @@ export interface GroupSummaryDTO {
   isAdmin: boolean;
 }
 
-/**
- * Dettaglio gruppo con lista membri
- */
 export interface GroupResponseDTO {
   id: number;
   name: string;
@@ -374,112 +319,72 @@ export interface GroupResponseDTO {
 }
 
 // ============================================================================
-// REQUEST INTERFACES
+// REQUEST DTOs
 // ============================================================================
 
-/**
- * Richiesta registrazione nuovo utente
- */
 export interface RegistrazioneRequestDTO {
-  username: string; // Min 3, max 50 caratteri, solo lettere/numeri/_
-  email: string; // Email valida
-  password: string; // Min 6 caratteri
-  nomeCompleto: string; // Max 100 caratteri
-  classroom: string; // Classe dello studente (es. 5IA)
+  username: string;
+  email: string;
+  password: string;
+  nomeCompleto: string;
+  classroom: string;
 }
 
-/**
- * Richiesta login
- */
 export interface LoginRequestDTO {
   username: string;
   password: string;
 }
 
-/**
- * Richiesta refresh token
- */
 export interface RefreshTokenRequestDTO {
   refreshToken: string;
 }
 
-/**
- * Richiesta reset password (step 1)
- */
 export interface PasswordResetRequestDTO {
   email: string;
 }
 
-/**
- * Conferma reset password (step 2)
- */
 export interface PasswordResetConfirmDTO {
   token: string;
-  newPassword: string; // Min 6 caratteri
+  newPassword: string;
 }
 
-/**
- * Aggiornamento profilo utente
- * Tutti i campi sono opzionali (partial update)
- */
 export interface AggiornaProfiloRequestDTO {
-  nomeCompleto?: string; // Max 100 caratteri
-  bio?: string; // Max 100 caratteri
-  profilePictureUrl?: string; // URL Cloudinary
+  nomeCompleto?: string;
+  bio?: string;
+  profilePictureUrl?: string;
 }
 
-/**
- * Cambio password
- */
 export interface CambiaPasswordRequestDTO {
   vecchiaPassword: string;
-  nuovaPassword: string; // Min 8 caratteri
+  nuovaPassword: string;
 }
 
-/**
- * Disattivazione account
- */
 export interface DisattivaAccountRequestDTO {
-  password: string; // Conferma con password
+  password: string;
 }
 
-/**
- * Creazione nuovo post
- */
 export interface CreaPostRequestDTO {
-  contenuto?: string; // Max 5000 caratteri
-  imageUrl?: string; // URL Cloudinary dopo upload
+  contenuto?: string;
+  imageUrl?: string;
 }
 
-/**
- * Modifica post esistente
- */
 export interface ModificaPostRequestDTO {
-  contenuto?: string; // Max 5000 caratteri
+  contenuto?: string;
 }
 
-/**
- * Creazione commento o risposta
- */
 export interface CreaCommentoRequestDTO {
-  contenuto: string; // Max 2000 caratteri, obbligatorio
-  parentCommentId?: number; // null = commento principale, number = risposta
+  contenuto: string;
+  parentCommentId?: number;
 }
 
-/**
- * Invio messaggio diretto
- */
 export interface InviaMessaggioRequestDTO {
   destinatarioId: number;
-  contenuto?: string;      // Max 5000 caratteri (opzionale se c'è imageUrl)
-  imageUrl?: string;       // URL immagine Cloudinary (opzionale, compatibile con testo)
-  audioUrl?: string;       // URL audio Cloudinary (esclusivo: no testo/immagine)
-  audioDuration?: number;  // Durata in secondi, obbligatorio con audioUrl, max 120
+  contenuto?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
-/**
- * Creazione annuncio libro
- */
 export interface CreaLibroRequestDTO {
   titolo: string;
   autore: string;
@@ -487,15 +392,12 @@ export interface CreaLibroRequestDTO {
   descrizione?: string;
   prezzo: number;
   condizione: BookCondition;
-  annoScolastico?: string;
-  materia?: string;
+  annoScolastico: string;
+  materia: string;
   frontImageUrl: string;
   backImageUrl?: string;
 }
 
-/**
- * Modifica annuncio libro (campi opzionali)
- */
 export interface ModificaLibroRequestDTO {
   titolo?: string;
   autore?: string;
@@ -509,81 +411,52 @@ export interface ModificaLibroRequestDTO {
   backImageUrl?: string;
 }
 
-/**
- * Creazione gruppo
- */
 export interface CreaGruppoRequestDTO {
-  nome: string;           // Max 100 caratteri
-  descrizione?: string;  // Max 500 caratteri
+  nome: string;
+  descrizione?: string;
   profilePictureUrl?: string;
 }
 
-/**
- * Modifica gruppo (solo admin)
- */
 export interface ModificaGruppoRequestDTO {
   nome?: string;
   descrizione?: string;
   profilePictureUrl?: string;
 }
 
-/**
- * Invio messaggio in un gruppo
- */
 export interface InviaMessaggioGruppoRequestDTO {
-  contenuto?: string;      // Max 2000 caratteri (opzionale se c'è audioUrl)
-  audioUrl?: string;       // URL audio Cloudinary (esclusivo: no testo)
-  audioDuration?: number;  // Durata in secondi, obbligatorio con audioUrl, max 120
+  contenuto?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
-/**
- * Indicatore di digitazione WebSocket
- */
 export interface TypingIndicatorRequestDTO {
   recipientUsername: string;
   isTyping: boolean;
 }
 
-/**
- * Messaggio di test WebSocket
- */
 export interface WebSocketTestMessageDTO {
   content: string;
   type?: string;
 }
-/**
- * Interfaccia per le statistiche utente
- * Restituita dall'endpoint /api/users/{userId}/stats
- */
-export interface UserStats {
-  /** Numero di post pubblicati dall'utente */
-  postsCount: number;
 
-  /** Numero di commenti scritti dall'utente */
-  commentsCount: number;
-
-  /** Numero di like ricevuti sui propri post */
-  likesReceivedCount: number;
-
-  /** Totale interazioni (post + commenti) */
-  totalInteractions: number;
-}
 // ============================================================================
 // UTILITY TYPES
 // ============================================================================
 
-/**
- * Parametri per paginazione
- */
-export interface PaginationParams {
-  page: number; // Numero pagina (0-based)
-  size: number; // Elementi per pagina
-  sort?: string; // Campo ordinamento
+export interface UserStats {
+  postsCount: number;
+  commentsCount: number;
+  likesReceivedCount: number;
+  totalInteractions: number;
 }
 
-/**
- * Risposta paginata generica
- */
+export interface PaginationParams {
+  page: number;
+  size: number;
+  sort?: string;
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
@@ -595,215 +468,10 @@ export interface PageResponse<T> {
   empty: boolean;
 }
 
-/**
- * Risposta generica per conteggi
- */
 export interface CountResponse {
   unreadCount: number;
 }
 
-/**
- * Risposta generica per messaggi
- */
 export interface MessageResponse {
   message: string;
-}
-
-// ============================================================================
-// LIBRARY (LIBRERIA) - ENUMS
-// ============================================================================
-
-/**
- * Condizione del libro in vendita
- */
-export enum BookCondition {
-  COME_NUOVO = 'COME_NUOVO',
-  BUONE_CONDIZIONI = 'BUONE_CONDIZIONI',
-  USATO = 'USATO',
-}
-
-/**
- * Stato dell'annuncio libro
- */
-export enum BookListingStatus {
-  DISPONIBILE = 'DISPONIBILE',
-  RICHIESTO = 'RICHIESTO',
-  VENDUTO = 'VENDUTO',
-}
-
-/**
- * Materia scolastica del libro
- */
-export enum BookSubject {
-  MATEMATICA = 'MATEMATICA',
-  ITALIANO = 'ITALIANO',
-  INGLESE = 'INGLESE',
-  STORIA = 'STORIA',
-  FISICA = 'FISICA',
-  INFORMATICA = 'INFORMATICA',
-  ALTRO = 'ALTRO',
-}
-
-// ============================================================================
-// LIBRARY (LIBRERIA) - RESPONSE DTOs
-// ============================================================================
-
-/**
- * Annuncio libro nella libreria
- */
-export interface BookListingResponseDTO {
-  id: number;
-  titolo: string;
-  autore: string;
-  isbn: string | null;
-  anno: number; // 1-5, 0 = "Tutti gli anni"
-  materia: BookSubject;
-  condizione: BookCondition;
-  prezzo: number;
-  descrizione: string | null;
-  imageUrl: string;
-  imageUrlRetro: string | null;
-  venditore: UserSummaryDTO;
-  stato: BookListingStatus;
-  richiedente: UserSummaryDTO | null;
-  acquirente: UserSummaryDTO | null;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-}
-
-/**
- * Conversazione legata a un annuncio libro
- */
-export interface LibraryConversationResponseDTO {
-  id: number;
-  annuncio: BookListingResponseDTO;
-  altroUtente: UserSummaryDTO;
-  ruolo: 'VENDITORE' | 'ACQUIRENTE';
-  ultimoMessaggio: string;
-  messaggiNonLetti: number;
-  ultimaAttivita: string; // ISO 8601
-}
-
-/**
- * Messaggio in una conversazione della libreria
- */
-export interface LibraryMessageResponseDTO {
-  id: number;
-  mittente: UserSummaryDTO;
-  contenuto: string;
-  createdAt: string; // ISO 8601
-}
-
-// ============================================================================
-// LIBRARY (LIBRERIA) - REQUEST DTOs
-// ============================================================================
-
-/**
- * Richiesta creazione annuncio libro
- */
-export interface CreaBookListingRequestDTO {
-  titolo: string;
-  autore: string;
-  isbn?: string;
-  anno: number;
-  materia: BookSubject;
-  condizione: BookCondition;
-  prezzo: number;
-  descrizione?: string;
-  imageUrl: string;
-  imageUrlRetro?: string;
-}
-
-/**
- * Filtri per la ricerca libri
- */
-export interface BookListingFilters {
-  search?: string;
-  anno?: number;
-  materia?: BookSubject;
-  condizione?: BookCondition;
-  prezzoMin?: number;
-  prezzoMax?: number;
-  sort?: 'recenti' | 'prezzo_asc' | 'prezzo_desc';
-}
-
-// ============================================================================
-// AI CHATBOT - DTOs
-// ============================================================================
-
-/**
- * Ruolo del messaggio nella chat AI
- */
-export type AiChatRole = 'user' | 'assistant';
-
-/**
- * Libro suggerito dall'AI nella risposta
- */
-export interface AiSuggestedBookDTO {
-  listingId: number;
-  titolo: string;
-  autore: string;
-  prezzo: number;
-  condizione: BookCondition;
-  imageUrl: string;
-}
-
-/**
- * Messaggio nella conversazione AI
- */
-export interface AiChatMessageDTO {
-  id: number;
-  ruolo: AiChatRole;
-  contenuto: string;
-  libriSuggeriti: AiSuggestedBookDTO[];
-  errore: boolean;
-  createdAt: string; // ISO 8601
-}
-
-/**
- * Richiesta invio messaggio all'AI
- */
-export interface AiChatRequestDTO {
-  messaggio: string;
-}
-
-/**
- * Risposta dall'AI
- */
-export interface AiChatResponseDTO {
-  messaggio: AiChatMessageDTO;
-}
-
-// ============================================================================
-// GROUP MESSAGING - DTOs
-// ============================================================================
-
-/**
- * Colore del gruppo (gradiente)
- */
-export type GroupColor = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan';
-
-/**
- * Risposta gruppo
- */
-export interface GroupResponseDTO {
-  id: number;
-  nome: string;
-  descrizione: string | null;
-  colore: GroupColor;
-  creatore: UserSummaryDTO;
-  membri: UserSummaryDTO[];
-  ultimoMessaggio: string | null;
-  ultimaAttivita: string | null; // ISO 8601
-  createdAt: string; // ISO 8601
-}
-
-/**
- * Richiesta creazione gruppo
- */
-export interface CreaGruppoRequestDTO {
-  nome: string;
-  descrizione?: string;
-  colore: GroupColor;
-  membriIds: number[];
 }
