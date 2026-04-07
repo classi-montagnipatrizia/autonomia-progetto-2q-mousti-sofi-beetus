@@ -1,0 +1,109 @@
+<!-- Stato: idle -->
+@if (state() === 'idle') {
+  <button
+    type="button"
+    class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors cursor-pointer"
+    (click)="startRecording()"
+    aria-label="Avvia registrazione vocale"
+    title="Registra messaggio vocale"
+  >
+    <lucide-icon [img]="MicIcon" [size]="20" />
+  </button>
+}
+
+<!-- Stato: recording -->
+@if (state() === 'recording') {
+  <div class="flex items-center gap-2 bg-surface-light dark:bg-surface-dark rounded-2xl px-3 py-2 shadow-sm border border-gray-100 dark:border-gray-800 min-w-[220px]">
+    <!-- Indicatore pulsante rosso animato -->
+    <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0"></span>
+
+    <!-- Timer e barra -->
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-xs font-mono font-semibold text-gray-700 dark:text-gray-200">
+          {{ timerLabel() }}
+        </span>
+        <span
+          class="text-xs"
+          [class.text-red-500]="secondsLeft() <= 10"
+          [class.text-amber-500]="secondsLeft() > 10 && secondsLeft() <= 30"
+          [class.text-gray-400]="secondsLeft() > 30"
+        >
+          -{{ secondsLeft() }}s
+        </span>
+      </div>
+      <div class="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all duration-1000"
+          [ngClass]="timerBarClass()"
+          [style.width.%]="timerPercent()"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Stop -->
+    <button
+      type="button"
+      class="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors cursor-pointer shrink-0"
+      (click)="stopRecording()"
+      aria-label="Ferma registrazione"
+    >
+      <lucide-icon [img]="SquareIcon" [size]="14" />
+    </button>
+  </div>
+}
+
+<!-- Stato: recorded -->
+@if (state() === 'recorded') {
+  <div class="flex items-center gap-2 bg-surface-light dark:bg-surface-dark rounded-2xl px-3 py-2 shadow-sm border border-gray-100 dark:border-gray-800">
+    <!-- Icona mic -->
+    <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0">
+      <lucide-icon [img]="MicIcon" [size]="16" class="text-primary-600 dark:text-primary-400" />
+    </div>
+
+    <!-- Durata -->
+    <span class="text-sm text-gray-700 dark:text-gray-200 font-medium">
+      Messaggio vocale · {{ timerLabel() }}
+    </span>
+
+    <!-- Azioni -->
+    <div class="flex items-center gap-1 ml-auto">
+      <!-- Scarta -->
+      <button
+        type="button"
+        class="flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+        (click)="discard()"
+        aria-label="Elimina registrazione"
+      >
+        <lucide-icon [img]="Trash2Icon" [size]="16" />
+      </button>
+
+      <!-- Invia -->
+      <button
+        type="button"
+        class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-500 hover:bg-primary-600 text-white transition-colors cursor-pointer"
+        (click)="send()"
+        aria-label="Invia messaggio vocale"
+      >
+        <lucide-icon [img]="SendIcon" [size]="15" />
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Stato: uploading -->
+@if (state() === 'uploading') {
+  <div class="flex items-center gap-2 bg-surface-light dark:bg-surface-dark rounded-2xl px-3 py-2 shadow-sm border border-gray-100 dark:border-gray-800 min-w-[180px]">
+    <span class="inline-block w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin shrink-0"></span>
+    <div class="flex-1 min-w-0">
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Caricamento...</p>
+      <div class="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          class="h-full bg-primary-500 rounded-full transition-all duration-300"
+          [style.width.%]="uploadProgress()"
+        ></div>
+      </div>
+    </div>
+    <span class="text-xs text-gray-400 shrink-0">{{ uploadProgress() }}%</span>
+  </div>
+}
