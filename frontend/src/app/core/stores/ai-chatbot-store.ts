@@ -1,43 +1,64 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { AiChatbotService } from '../api/ai-chatbot-service';
 import { LoggerService } from '../services/logger.service';
-import { AiChatMessageDTO } from '../../models';
-import { firstValueFrom } from 'rxjs';
+import { BookSummaryDTO } from '../../models';
+
+/**
+ * Messaggio nella chat AI (locale al frontend — non è un DTO backend).
+ */
+export interface ChatMessage {
+  id: number;
+  ruolo: 'user' | 'assistant';
+  contenuto: string;
+  libriSuggeriti: BookSummaryDTO[];
+  errore: boolean;
+  createdAt: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AiChatbotStore {
   private readonly aiService = inject(AiChatbotService);
   private readonly logger = inject(LoggerService);
 
-  // =========================================================================
-  // STATE
-  // =========================================================================
-  private readonly _messages = signal<AiChatMessageDTO[]>([]);
-  private readonly _loading = signal<boolean>(false);
-  private readonly _sending = signal<boolean>(false);
-  private readonly _initialized = signal<boolean>(false);
+  // ============================================================================
+  // SIGNALS PRIVATI
+  // ============================================================================
 
-  // =========================================================================
-  // PUBLIC SELECTORS
-  // =========================================================================
+  private readonly _messages = signal<ChatMessage[]>([]);
+  private readonly _loading = signal(false);
+  private readonly _sending = signal(false);
+  private readonly _initialized = signal(false);
+
+  // ============================================================================
+  // SIGNALS PUBBLICI READONLY
+  // ============================================================================
+
   readonly messages = this._messages.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly sending = this._sending.asReadonly();
   readonly initialized = this._initialized.asReadonly();
 
-  // =========================================================================
-  // ACTIONS
-  // =========================================================================
+  // ============================================================================
+  // AZIONI
+  // ============================================================================
 
   /**
-   * Inizializza la chat caricando il messaggio di benvenuto
+   * Carica il messaggio di benvenuto statico. Idempotente.
    */
   async initialize(): Promise<void> {
     if (this._initialized()) return;
     this._loading.set(true);
-
     try {
-      const welcome = await firstValueFrom(this.aiService.getWelcomeMessage());
+      const testo = await firstValueFrom(this.aiService.getWelcomeMessage());
+      const welcome: ChatMessage = {
+        id: 0,
+        ruolo: 'assistant',
+        contenuto: testo,
+        libriSuggeriti: [],
+        errore: false,
+        createdAt: new Date().toISOString(),
+      };
       this._messages.set([welcome]);
       this._initialized.set(true);
     } catch (error) {
@@ -48,13 +69,13 @@ export class AiChatbotStore {
   }
 
   /**
-   * Invia un messaggio all'AI
+   * Invia un messaggio all'AI. Aggiunge il messaggio utente ottimisticamente,
+   * poi aggiunge la risposta del chatbot con gli eventuali libri suggeriti.
    */
   async sendMessage(contenuto: string): Promise<void> {
     if (this._sending() || !contenuto.trim()) return;
 
-    // Aggiungi il messaggio utente immediatamente
-    const userMessage: AiChatMessageDTO = {
+    const userMsg: ChatMessage = {
       id: Date.now(),
       ruolo: 'user',
       contenuto: contenuto.trim(),
@@ -62,59 +83,57 @@ export class AiChatbotStore {
       errore: false,
       createdAt: new Date().toISOString(),
     };
-    this._messages.update((prev) => [...prev, userMessage]);
+    this._messages.update(prev => [...prev, userMsg]);
     this._sending.set(true);
 
     try {
       const response = await firstValueFrom(this.aiService.sendMessage(contenuto.trim()));
-      this._messages.update((prev) => [...prev, response.messaggio]);
-    } catch (error) {
-      this.logger.error('Errore invio messaggio AI', error);
-      // Aggiungi messaggio di errore
-      const errorMessage: AiChatMessageDTO = {
+      const aiMsg: ChatMessage = {
         id: Date.now() + 1,
         ruolo: 'assistant',
-        contenuto: 'Ops! Qualcosa è andato storto. Non sono riuscito a elaborare la tua richiesta.',
+        contenuto: response.risposta,
+        libriSuggeriti: response.libri ?? [],
+        errore: false,
+        createdAt: new Date().toISOString(),
+      };
+      this._messages.update(prev => [...prev, aiMsg]);
+    } catch (error) {
+      this.logger.error('Errore risposta AI chatbot', error);
+      const errMsg: ChatMessage = {
+        id: Date.now() + 1,
+        ruolo: 'assistant',
+        contenuto: 'Ops! Qualcosa è andato storto. Riprova tra qualche secondo.',
         libriSuggeriti: [],
         errore: true,
         createdAt: new Date().toISOString(),
       };
-      this._messages.update((prev) => [...prev, errorMessage]);
+      this._messages.update(prev => [...prev, errMsg]);
     } finally {
       this._sending.set(false);
     }
   }
 
   /**
-   * Riprova l'ultimo messaggio dopo un errore
+   * Rimuove l'ultimo messaggio di errore e re-invia l'ultimo messaggio utente.
    */
   async retryLastMessage(): Promise<void> {
     const msgs = this._messages();
-    // Trova l'ultimo messaggio di errore
-    let errorIndex = -1;
-    for (let i = msgs.length - 1; i >= 0; i--) {
-      if (msgs[i].errore) { errorIndex = i; break; }
-    }
-    if (errorIndex < 0) return;
+    const errorIdx = [...msgs].reverse().findIndex(m => m.errore);
+    if (errorIdx < 0) return;
 
-    // Rimuovi il messaggio di errore
-    const withoutError = msgs.filter((_, i) => i !== errorIndex);
+    const realIdx = msgs.length - 1 - errorIdx;
+    const withoutError = msgs.filter((_, i) => i !== realIdx);
     this._messages.set(withoutError);
 
-    // Trova l'ultimo messaggio utente
-    let lastUserMsg: AiChatMessageDTO | undefined;
-    for (let i = withoutError.length - 1; i >= 0; i--) {
-      if (withoutError[i].ruolo === 'user') { lastUserMsg = withoutError[i]; break; }
-    }
-    if (lastUserMsg) {
-      // Rimuovi anche l'ultimo messaggio utente perché sendMessage lo ri-aggiunge
-      this._messages.set(withoutError.filter((m) => m !== lastUserMsg));
-      await this.sendMessage(lastUserMsg.contenuto);
+    const lastUser = [...withoutError].reverse().find(m => m.ruolo === 'user');
+    if (lastUser) {
+      this._messages.set(withoutError.filter(m => m !== lastUser));
+      await this.sendMessage(lastUser.contenuto);
     }
   }
 
   /**
-   * Pulisci la chat e re-inizializza
+   * Azzera la chat e permette una nuova inizializzazione.
    */
   clear(): void {
     this._messages.set([]);

@@ -1,182 +1,68 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { LibraryService } from '../api/library-service';
-import { LoggerService } from '../services/logger.service';
-import {
-  BookListingResponseDTO,
-  BookListingFilters,
-  BookListingStatus,
-  CreaBookListingRequestDTO,
-  LibraryConversationResponseDTO,
-  LibraryMessageResponseDTO,
-  PageResponse,
-} from '../../models';
-import { firstValueFrom } from 'rxjs';
+import { BookStore } from './book-store';
+import { BookMessageDTO } from '../../models';
 
 export type LibraryTab = 'compra' | 'miei' | 'messaggi';
 
+/**
+ * LibraryStore gestisce solo lo stato UI della pagina libreria.
+ * Tutti i dati (libri, conversazioni, messaggi) sono in BookStore.
+ */
 @Injectable({ providedIn: 'root' })
 export class LibraryStore {
-  private readonly libraryService = inject(LibraryService);
-  private readonly logger = inject(LoggerService);
+  readonly bookStore = inject(BookStore);
 
-  // =========================================================================
-  // STATE - Tab Compra
-  // =========================================================================
-  private readonly _listings = signal<BookListingResponseDTO[]>([]);
-  private readonly _listingsLoading = signal<boolean>(false);
-  private readonly _listingsTotalElements = signal<number>(0);
-  private readonly _listingsHasMore = signal<boolean>(false);
-  private readonly _listingsCurrentPage = signal<number>(0);
-  private readonly _filters = signal<BookListingFilters>({});
+  // ============================================================================
+  // SIGNALS PRIVATI — solo UI state
+  // ============================================================================
 
-  // =========================================================================
-  // STATE - Tab I miei annunci
-  // =========================================================================
-  private readonly _myListings = signal<BookListingResponseDTO[]>([]);
-  private readonly _myListingsLoading = signal<boolean>(false);
-
-  // =========================================================================
-  // STATE - Tab Messaggi
-  // =========================================================================
-  private readonly _conversations = signal<LibraryConversationResponseDTO[]>([]);
-  private readonly _conversationsLoading = signal<boolean>(false);
-  private readonly _chatMessages = signal<LibraryMessageResponseDTO[]>([]);
-  private readonly _chatLoading = signal<boolean>(false);
-  private readonly _activeConversation = signal<LibraryConversationResponseDTO | null>(null);
-
-  // =========================================================================
-  // STATE - Book Detail
-  // =========================================================================
-  private readonly _bookDetail = signal<BookListingResponseDTO | null>(null);
-  private readonly _bookDetailLoading = signal<boolean>(false);
-  private readonly _bookRequesting = signal<boolean>(false);
-
-  // =========================================================================
-  // STATE - Generale
-  // =========================================================================
   private readonly _activeTab = signal<LibraryTab>('compra');
-  private readonly _sellModalOpen = signal<boolean>(false);
+  private readonly _sellModalOpen = signal(false);
 
-  // =========================================================================
-  // PUBLIC SELECTORS
-  // =========================================================================
-  readonly listings = this._listings.asReadonly();
-  readonly listingsLoading = this._listingsLoading.asReadonly();
-  readonly listingsTotalElements = this._listingsTotalElements.asReadonly();
-  readonly listingsHasMore = this._listingsHasMore.asReadonly();
-  readonly filters = this._filters.asReadonly();
-
-  readonly myListings = this._myListings.asReadonly();
-  readonly myListingsLoading = this._myListingsLoading.asReadonly();
-
-  readonly conversations = this._conversations.asReadonly();
-  readonly conversationsLoading = this._conversationsLoading.asReadonly();
-  readonly chatMessages = this._chatMessages.asReadonly();
-  readonly chatLoading = this._chatLoading.asReadonly();
-  readonly activeConversation = this._activeConversation.asReadonly();
+  // ============================================================================
+  // SIGNALS PUBBLICI READONLY
+  // ============================================================================
 
   readonly activeTab = this._activeTab.asReadonly();
   readonly sellModalOpen = this._sellModalOpen.asReadonly();
 
-  readonly bookDetail = this._bookDetail.asReadonly();
-  readonly bookDetailLoading = this._bookDetailLoading.asReadonly();
-  readonly bookRequesting = this._bookRequesting.asReadonly();
+  // ============================================================================
+  // DELEGHE A BookStore (shorthand per i template)
+  // ============================================================================
 
-  // Computed
-  readonly hasListings = computed(() => this._listings().length > 0);
-  readonly hasMyListings = computed(() => this._myListings().length > 0);
-  readonly hasConversations = computed(() => this._conversations().length > 0);
-  readonly unreadMessagesCount = computed(() =>
-    this._conversations().reduce((sum, c) => sum + c.messaggiNonLetti, 0)
-  );
-  readonly isChatOpen = computed(() => this._activeConversation() !== null);
+  readonly availableBooks = this.bookStore.availableBooks;
+  readonly myListings = this.bookStore.myListings;
+  readonly conversations = this.bookStore.conversations;
+  readonly currentConversation = this.bookStore.currentConversation;
+  readonly currentConversationMessages = this.bookStore.currentConversationMessages;
+  readonly isLoading = this.bookStore.isLoading;
+  readonly filters = this.bookStore.filters;
+  readonly hasActiveFilters = this.bookStore.hasActiveFilters;
+  readonly hasMoreAvailable = this.bookStore.hasMoreAvailable;
+  readonly hasMoreListings = this.bookStore.hasMoreListings;
+  readonly bookDetail = this.bookStore.bookDetail;
+  readonly bookDetailLoading = this.bookStore.bookDetailLoading;
+  readonly bookRequesting = this.bookStore.bookRequesting;
 
-  // =========================================================================
-  // ACTIONS - Tab
-  // =========================================================================
+  // ============================================================================
+  // COMPUTED
+  // ============================================================================
+
+  readonly unreadMessagesCount = this.bookStore.unreadConversationsCount;
+  readonly isChatOpen = computed(() => this.bookStore.currentConversation() !== null);
+
+  // ============================================================================
+  // AZIONI — Tab
+  // ============================================================================
+
   setActiveTab(tab: LibraryTab): void {
     this._activeTab.set(tab);
   }
 
-  // =========================================================================
-  // ACTIONS - Compra
-  // =========================================================================
-  async loadListings(reset: boolean = true): Promise<void> {
-    if (this._listingsLoading()) return;
-    this._listingsLoading.set(true);
+  // ============================================================================
+  // AZIONI — Sell Modal
+  // ============================================================================
 
-    try {
-      const page = reset ? 0 : this._listingsCurrentPage() + 1;
-      const result = await firstValueFrom(
-        this.libraryService.getListings(this._filters(), page)
-      );
-
-      if (reset) {
-        this._listings.set(result.content);
-      } else {
-        this._listings.update((prev) => [...prev, ...result.content]);
-      }
-
-      this._listingsCurrentPage.set(result.number);
-      this._listingsTotalElements.set(result.totalElements);
-      this._listingsHasMore.set(!result.last);
-    } catch (error) {
-      this.logger.error('Errore caricamento annunci', error);
-    } finally {
-      this._listingsLoading.set(false);
-    }
-  }
-
-  async updateFilters(filters: Partial<BookListingFilters>): Promise<void> {
-    this._filters.update((prev) => ({ ...prev, ...filters }));
-    await this.loadListings(true);
-  }
-
-  async resetFilters(): Promise<void> {
-    this._filters.set({});
-    await this.loadListings(true);
-  }
-
-  // =========================================================================
-  // ACTIONS - I miei annunci
-  // =========================================================================
-  async loadMyListings(): Promise<void> {
-    if (this._myListingsLoading()) return;
-    this._myListingsLoading.set(true);
-
-    try {
-      const result = await firstValueFrom(this.libraryService.getMyListings());
-      this._myListings.set(result.content);
-    } catch (error) {
-      this.logger.error('Errore caricamento miei annunci', error);
-    } finally {
-      this._myListingsLoading.set(false);
-    }
-  }
-
-  async updateListingStatus(listingId: number, status: BookListingStatus): Promise<void> {
-    try {
-      await firstValueFrom(this.libraryService.updateListingStatus(listingId, status));
-      this._myListings.update((listings) =>
-        listings.map((l) => (l.id === listingId ? { ...l, stato: status, updatedAt: new Date().toISOString() } : l))
-      );
-    } catch (error) {
-      this.logger.error('Errore aggiornamento stato annuncio', error);
-    }
-  }
-
-  async deleteListing(listingId: number): Promise<void> {
-    try {
-      await firstValueFrom(this.libraryService.deleteListing(listingId));
-      this._myListings.update((listings) => listings.filter((l) => l.id !== listingId));
-    } catch (error) {
-      this.logger.error('Errore eliminazione annuncio', error);
-    }
-  }
-
-  // =========================================================================
-  // ACTIONS - Sell Modal
-  // =========================================================================
   openSellModal(): void {
     this._sellModalOpen.set(true);
   }
@@ -185,137 +71,89 @@ export class LibraryStore {
     this._sellModalOpen.set(false);
   }
 
-  async createListing(request: CreaBookListingRequestDTO): Promise<void> {
-    try {
-      const newListing = await firstValueFrom(this.libraryService.createListing(request));
-      this._myListings.update((prev) => [newListing, ...prev]);
-      this._sellModalOpen.set(false);
-    } catch (error) {
-      this.logger.error('Errore creazione annuncio', error);
-    }
+  // ============================================================================
+  // AZIONI — delegate a BookStore
+  // ============================================================================
+
+  loadAvailableBooks(page = 0) {
+    return this.bookStore.loadAvailableBooks(page);
   }
 
-  // =========================================================================
-  // ACTIONS - Conversazioni / Chat
-  // =========================================================================
-  async loadConversations(): Promise<void> {
-    if (this._conversationsLoading()) return;
-    this._conversationsLoading.set(true);
-
-    try {
-      const conversations = await firstValueFrom(this.libraryService.getConversations());
-      this._conversations.set(conversations);
-    } catch (error) {
-      this.logger.error('Errore caricamento conversazioni', error);
-    } finally {
-      this._conversationsLoading.set(false);
-    }
+  loadMoreAvailable() {
+    return this.bookStore.loadMoreAvailable();
   }
 
-  async openConversation(conversation: LibraryConversationResponseDTO): Promise<void> {
-    this._activeConversation.set(conversation);
-    this._chatLoading.set(true);
-
-    try {
-      const messages = await firstValueFrom(
-        this.libraryService.getConversationMessages(conversation.id)
-      );
-      this._chatMessages.set(messages);
-    } catch (error) {
-      this.logger.error('Errore caricamento messaggi', error);
-    } finally {
-      this._chatLoading.set(false);
-    }
+  setFilters(filters: Parameters<BookStore['setFilters']>[0]) {
+    return this.bookStore.setFilters(filters);
   }
 
-  async openConversationById(conversationId: number): Promise<void> {
-    this._chatLoading.set(true);
-
-    try {
-      // Carica la conversazione se non già in lista
-      let conversation = this._conversations().find((c) => c.id === conversationId) ?? null;
-      if (!conversation) {
-        conversation = await firstValueFrom(this.libraryService.getConversationById(conversationId));
-      }
-      this._activeConversation.set(conversation);
-
-      const messages = await firstValueFrom(
-        this.libraryService.getConversationMessages(conversationId)
-      );
-      this._chatMessages.set(messages);
-    } catch (error) {
-      this.logger.error('Errore caricamento conversazione per ID', error);
-    } finally {
-      this._chatLoading.set(false);
-    }
+  clearFilters() {
+    return this.bookStore.clearFilters();
   }
 
-  closeConversation(): void {
-    this._activeConversation.set(null);
-    this._chatMessages.set([]);
+  loadMyListings(page = 0) {
+    return this.bookStore.loadMyListings(page);
   }
 
-  async sendMessage(contenuto: string): Promise<void> {
-    const conversation = this._activeConversation();
-    if (!conversation) return;
-
-    try {
-      const message = await firstValueFrom(
-        this.libraryService.sendMessage(conversation.id, contenuto)
-      );
-      this._chatMessages.update((prev) => [...prev, message]);
-    } catch (error) {
-      this.logger.error('Errore invio messaggio', error);
-    }
+  aggiornaStato(bookId: number, stato: string) {
+    return this.bookStore.aggiornaStato(bookId, stato);
   }
 
-  // =========================================================================
-  // ACTIONS - Book Detail
-  // =========================================================================
-  async loadBookDetail(id: number): Promise<void> {
-    this._bookDetailLoading.set(true);
-    this._bookDetail.set(null);
-
-    try {
-      const book = await firstValueFrom(this.libraryService.getListingById(id));
-      this._bookDetail.set(book);
-    } catch (error) {
-      this.logger.error('Errore caricamento dettaglio libro', error);
-    } finally {
-      this._bookDetailLoading.set(false);
-    }
+  eliminaLibro(bookId: number) {
+    return this.bookStore.eliminaLibro(bookId);
   }
 
-  async requestBook(listingId: number): Promise<boolean> {
-    this._bookRequesting.set(true);
-    try {
-      const updated = await firstValueFrom(this.libraryService.requestListing(listingId));
-      this._bookDetail.set(updated);
-      return true;
-    } catch (error) {
-      this.logger.error('Errore richiesta libro', error);
-      return false;
-    } finally {
-      this._bookRequesting.set(false);
-    }
+  loadConversazioni() {
+    return this.bookStore.loadConversazioni();
   }
 
-  clearBookDetail(): void {
-    this._bookDetail.set(null);
+  openConversazione(bookId: number, convId?: number) {
+    return this.bookStore.openConversazione(bookId, convId);
   }
 
-  // =========================================================================
-  // ACTIONS - Pulizia
-  // =========================================================================
+  closeConversazione() {
+    this.bookStore.closeConversazione();
+  }
+
+  loadBookDetail(bookId: number) {
+    return this.bookStore.loadBookDetail(bookId);
+  }
+
+  clearBookDetail() {
+    this.bookStore.clearBookDetail();
+  }
+
+  requestBook(bookId: number) {
+    return this.bookStore.requestBook(bookId);
+  }
+
+  annullaRichiestaLibro(bookId: number) {
+    return this.bookStore.annullaRichiesta(bookId);
+  }
+
+  inviaMessaggio(bookId: number, contenuto: string, conversationId?: number) {
+    return this.bookStore.inviaMessaggio(bookId, contenuto, conversationId);
+  }
+
+  eliminaMessaggio(messageId: number) {
+    return this.bookStore.eliminaMessaggio(messageId);
+  }
+
+  eliminaConversazione(convId: number) {
+    return this.bookStore.eliminaConversazione(convId);
+  }
+
+  handleIncomingBookMessage(message: BookMessageDTO) {
+    this.bookStore.handleIncomingBookMessage(message);
+  }
+
+  // ============================================================================
+  // UTILITY
+  // ============================================================================
+
   clear(): void {
-    this._listings.set([]);
-    this._myListings.set([]);
-    this._conversations.set([]);
-    this._chatMessages.set([]);
-    this._activeConversation.set(null);
     this._activeTab.set('compra');
-    this._filters.set({});
     this._sellModalOpen.set(false);
-    this._bookDetail.set(null);
+    this.bookStore.clear();
   }
 }
