@@ -34,6 +34,12 @@ public class DirectMessage extends BaseEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "audio_url")
+    private String audioUrl;
+
+    @Column(name = "audio_duration")
+    private Integer audioDuration; // secondi, max 120
+
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private boolean isRead = false;

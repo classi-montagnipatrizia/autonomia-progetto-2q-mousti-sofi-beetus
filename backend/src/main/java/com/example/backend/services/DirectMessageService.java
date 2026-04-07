@@ -54,9 +54,23 @@ public class DirectMessageService {
             throw new InvalidInputException("Non puoi inviare messaggi a te stesso");
         }
 
-        // Verifica che almeno uno tra contenuto e imageUrl sia presente
+        // Verifica che il messaggio abbia contenuto valido
         if (!request.isValid()) {
-            throw new InvalidInputException("Il messaggio deve contenere almeno un testo o un'immagine");
+            throw new InvalidInputException("Il messaggio deve contenere almeno un testo, un'immagine o un audio");
+        }
+
+        // Validazione audio: non combinabile con testo/immagine, max 120 secondi
+        if (request.isAudioMessage()) {
+            if ((request.getContenuto() != null && !request.getContenuto().isBlank())
+                    || (request.getImageUrl() != null && !request.getImageUrl().isBlank())) {
+                throw new InvalidInputException("Un messaggio audio non può contenere testo o immagini");
+            }
+            if (request.getAudioDuration() == null) {
+                throw new InvalidInputException("La durata dell'audio è obbligatoria");
+            }
+            if (request.getAudioDuration() > 120) {
+                throw new InvalidInputException("I messaggi vocali non possono superare 2 minuti");
+            }
         }
 
         // Carica mittente e destinatario
@@ -83,8 +97,10 @@ public class DirectMessageService {
         DirectMessage message = DirectMessage.builder()
                 .sender(sender)
                 .receiver(receiver)
-                .content(request.getContenuto() != null ? request.getContenuto() : "")
-                .imageUrl(request.getImageUrl())
+                .content(request.isAudioMessage() ? null : (request.getContenuto() != null ? request.getContenuto() : ""))
+                .imageUrl(request.isAudioMessage() ? null : request.getImageUrl())
+                .audioUrl(request.getAudioUrl())
+                .audioDuration(request.getAudioDuration())
                 .isRead(false)
                 .isDeletedBySender(false)
                 .isDeletedByReceiver(false)
@@ -92,7 +108,8 @@ public class DirectMessageService {
                 .build();
 
         message = messageRepository.save(message);
-        log.info("Messaggio inviato - ID: {}, hasImage: {}", message.getId(), request.getImageUrl() != null);
+        log.info("Messaggio inviato - ID: {}, hasImage: {}, hasAudio: {}",
+                message.getId(), request.getImageUrl() != null, request.getAudioUrl() != null);
 
         MessageResponseDTO response = messageMapper.toMessaggioResponseDTO(message);
 
@@ -225,10 +242,16 @@ public class DirectMessageService {
 
         // Se è il mittente -> SOFT DELETE (tutti vedranno "Messaggio cancellato")
         if (message.getSender().getId().equals(userId)) {
-            // Se c'è un'immagine, eliminala da Cloudinary
+            // Elimina immagine da Cloudinary se presente
             if (message.getImageUrl() != null && !message.getImageUrl().isBlank()) {
                 imageService.deleteMessageImage(message.getImageUrl());
                 message.setImageUrl(null);
+            }
+            // Elimina audio da Cloudinary se presente
+            if (message.getAudioUrl() != null && !message.getAudioUrl().isBlank()) {
+                imageService.deleteMessageImage(message.getAudioUrl());
+                message.setAudioUrl(null);
+                message.setAudioDuration(null);
             }
             message.setDeletedBySender(true);
             messageRepository.save(message);

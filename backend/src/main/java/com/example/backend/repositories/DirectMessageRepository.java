@@ -199,4 +199,11 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
         """)
     List<DirectMessage> findOldReadMessages(@Param("threshold") java.time.LocalDateTime threshold);
 
+    /**
+     * Trova tutti i messaggi di un utente che hanno file media (immagine o audio).
+     * Usato per cleanup Cloudinary prima dell'eliminazione dell'utente.
+     */
+    @Query("SELECT dm FROM DirectMessage dm WHERE (dm.sender.id = :userId OR dm.receiver.id = :userId) AND (dm.imageUrl IS NOT NULL OR dm.audioUrl IS NOT NULL)")
+    List<DirectMessage> findMediaMessagesByUserId(@Param("userId") Long userId);
+
 }
