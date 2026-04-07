@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -7,16 +7,22 @@ import {
   Image,
   Sparkles,
   Check,
-  AlertTriangle,
+  TriangleAlert,
   Lightbulb,
 } from 'lucide-angular';
+import { firstValueFrom } from 'rxjs';
 
 import { ModalComponent } from '../../../shared/ui/modal/modal-component/modal-component';
 import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
+import { CloudinaryStorageService } from '../../../core/services/cloudinary-storage-service';
+import { AiService } from '../../../core/api/ai-service';
+import { BookService } from '../../../core/api/book-service';
+import { ToastService } from '../../../core/services/toast-service';
 import {
   BookCondition,
-  BookSubject,
-  CreaBookListingRequestDTO,
+  BookResponseDTO,
+  CreaLibroRequestDTO,
+  ModificaLibroRequestDTO,
 } from '../../../models';
 
 /** Stato dell'analisi AI */
@@ -35,19 +41,25 @@ type AiStatus = 'idle' | 'loading' | 'success' | 'error';
   styleUrl: './sell-book-modal.scss',
 })
 export class SellBookModal {
+  private readonly cloudinary = inject(CloudinaryStorageService);
+  private readonly aiService = inject(AiService);
+  private readonly bookService = inject(BookService);
+  private readonly toast = inject(ToastService);
+
   // =========================================================================
   // Inputs / Outputs
   // =========================================================================
   readonly isOpen = input<boolean>(false);
+  readonly editBook = input<BookResponseDTO | null>(null);
   readonly closed = output<void>();
-  readonly submitted = output<CreaBookListingRequestDTO>();
+  readonly submitted = output<BookResponseDTO>();
 
   // Icons
   readonly XIcon = X;
   readonly ImageIcon = Image;
   readonly SparklesIcon = Sparkles;
   readonly CheckIcon = Check;
-  readonly AlertTriangleIcon = AlertTriangle;
+  readonly AlertTriangleIcon = TriangleAlert;
   readonly LightbulbIcon = Lightbulb;
 
   // =========================================================================
@@ -57,6 +69,8 @@ export class SellBookModal {
   readonly backPhoto = signal<string | null>(null);
   readonly uploadingFront = signal(false);
   readonly uploadingBack = signal(false);
+  readonly uploadProgressFront = signal(0);
+  readonly uploadProgressBack = signal(0);
 
   readonly hasPhotos = computed(() => !!this.frontPhoto());
 
@@ -65,6 +79,7 @@ export class SellBookModal {
   // =========================================================================
   readonly aiStatus = signal<AiStatus>('idle');
   readonly aiGenerated = computed(() => this.aiStatus() === 'success');
+  readonly isEditMode = computed(() => !!this.editBook());
 
   // =========================================================================
   // Form fields
@@ -88,43 +103,54 @@ export class SellBookModal {
     { value: '3', label: '3° Anno' },
     { value: '4', label: '4° Anno' },
     { value: '5', label: '5° Anno' },
-    { value: '0', label: 'Tutti gli anni' },
   ];
 
   readonly materieOptions = [
-    { value: BookSubject.MATEMATICA, label: 'Matematica' },
-    { value: BookSubject.ITALIANO, label: 'Italiano' },
-    { value: BookSubject.INGLESE, label: 'Inglese' },
-    { value: BookSubject.STORIA, label: 'Storia' },
-    { value: BookSubject.FISICA, label: 'Fisica' },
-    { value: BookSubject.INFORMATICA, label: 'Informatica' },
-    { value: BookSubject.ALTRO, label: 'Altro' },
+    { value: 'Matematica', label: 'Matematica' },
+    { value: 'Italiano', label: 'Italiano' },
+    { value: 'Inglese', label: 'Inglese' },
+    { value: 'Storia', label: 'Storia' },
+    { value: 'Fisica', label: 'Fisica' },
+    { value: 'Informatica', label: 'Informatica' },
+    { value: 'Altro', label: 'Altro' },
   ];
 
   readonly condizioneOptions = [
-    { value: BookCondition.COME_NUOVO, label: 'Come nuovo' },
-    { value: BookCondition.BUONE_CONDIZIONI, label: 'Buone condizioni' },
-    { value: BookCondition.USATO, label: 'Usato' },
+    { value: BookCondition.OTTIMO, label: 'Ottimo' },
+    { value: BookCondition.BUONO, label: 'Buono' },
+    { value: BookCondition.ACCETTABILE, label: 'Accettabile' },
   ];
 
   // Validazione
-  readonly isFormValid = computed(() => {
-    return (
-      this.titolo().trim().length > 0 &&
-      this.autore().trim().length > 0 &&
-      this.anno() !== '' &&
-      this.materia() !== '' &&
-      this.condizione() !== '' &&
-      this.prezzo() != null &&
-      this.prezzo()! > 0 &&
-      this.frontPhoto() != null
-    );
-  });
+  readonly isFormValid = computed(() =>
+    this.titolo().trim().length > 0 &&
+    this.autore().trim().length > 0 &&
+    this.anno() !== '' &&
+    this.materia() !== '' &&
+    this.condizione() !== '' &&
+    this.prezzo() != null &&
+    this.prezzo()! > 0 &&
+    this.frontPhoto() != null
+  );
 
   readonly descrizioneLength = computed(() => this.descrizione().length);
 
+  constructor() {
+    effect(() => {
+      const isOpen = this.isOpen();
+      const book = this.editBook();
+      if (!isOpen) return;
+
+      if (book) {
+        this.populateFormFromBook(book);
+      } else {
+        this.resetForm();
+      }
+    });
+  }
+
   // =========================================================================
-  // Photo actions
+  // Photo actions — upload reale su Cloudinary
   // =========================================================================
   triggerFrontUpload(): void {
     const input = document.createElement('input');
@@ -132,7 +158,7 @@ export class SellBookModal {
     input.accept = 'image/png,image/jpeg';
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) this.simulateUpload(file, 'front');
+      if (file) this.uploadPhoto(file, 'front');
     };
     input.click();
   }
@@ -143,67 +169,87 @@ export class SellBookModal {
     input.accept = 'image/png,image/jpeg';
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) this.simulateUpload(file, 'back');
+      if (file) this.uploadPhoto(file, 'back');
     };
     input.click();
   }
 
-  private simulateUpload(file: File, side: 'front' | 'back'): void {
-    if (side === 'front') this.uploadingFront.set(true);
-    else this.uploadingBack.set(true);
+  private uploadPhoto(file: File, side: 'front' | 'back'): void {
+    if (side === 'front') {
+      this.uploadingFront.set(true);
+      this.uploadProgressFront.set(0);
+    } else {
+      this.uploadingBack.set(true);
+      this.uploadProgressBack.set(0);
+    }
 
-    // Simula upload con URL locale
-    const reader = new FileReader();
-    reader.onload = () => {
-      setTimeout(() => {
-        const url = reader.result as string;
+    this.cloudinary.uploadImage(file, 'message', (progress) => {
+      if (side === 'front') this.uploadProgressFront.set(progress);
+      else this.uploadProgressBack.set(progress);
+    }).subscribe({
+      next: (response) => {
+        const url = response.secureUrl;
         if (side === 'front') {
           this.frontPhoto.set(url);
           this.uploadingFront.set(false);
+          // Reset AI se cambia la foto fronte
+          if (this.aiStatus() !== 'idle') this.aiStatus.set('idle');
         } else {
           this.backPhoto.set(url);
           this.uploadingBack.set(false);
         }
-      }, 800);
-    };
-    reader.readAsDataURL(file);
+      },
+      error: (err) => {
+        this.toast.error('Errore durante il caricamento della foto');
+        if (side === 'front') this.uploadingFront.set(false);
+        else this.uploadingBack.set(false);
+      },
+    });
   }
 
   removeFrontPhoto(): void {
-    this.frontPhoto.set(null);
-    // Se rimuoviamo la foto front, resetta AI
-    if (this.aiStatus() !== 'idle') {
-      this.aiStatus.set('idle');
+    const url = this.frontPhoto();
+    if (url) {
+      // Cleanup Cloudinary in background (best effort)
+      this.bookService.deleteImages(url).subscribe();
     }
+    this.frontPhoto.set(null);
+    if (this.aiStatus() !== 'idle') this.aiStatus.set('idle');
   }
 
   removeBackPhoto(): void {
+    const url = this.backPhoto();
+    if (url) {
+      this.bookService.deleteImages(url).subscribe();
+    }
     this.backPhoto.set(null);
   }
 
   // =========================================================================
-  // AI generation
+  // AI — analisi reale con Gemini
   // =========================================================================
   generateWithAI(): void {
-    if (!this.hasPhotos() || this.aiStatus() === 'loading') return;
+    const front = this.frontPhoto();
+    if (!front || this.aiStatus() === 'loading') return;
 
     this.aiStatus.set('loading');
 
-    // Simula risposta AI dopo 2 secondi
-    setTimeout(() => {
-      // Mock: compila i campi come generati dall'AI
-      this.titolo.set('Matematica Blu 2.0 - Volume 3');
-      this.autore.set('Bergamini, Barozzi, Trifone');
-      this.isbn.set('9788808537010');
-      this.anno.set('3');
-      this.materia.set(BookSubject.MATEMATICA);
-      this.condizione.set(BookCondition.COME_NUOVO);
-      this.prezzo.set(15);
-      this.descrizione.set(
-        'Libro in ottime condizioni, usato per un solo anno scolastico. Nessuna sottolineatura o appunti. Copertina integra, senza pieghe o strappi.'
-      );
-      this.aiStatus.set('success');
-    }, 2000);
+    this.aiService.analizzaLibro(front, this.backPhoto() ?? undefined).subscribe({
+      next: (result) => {
+        if (result.titolo) this.titolo.set(result.titolo);
+        if (result.autore) this.autore.set(result.autore);
+        if (result.isbn) this.isbn.set(result.isbn);
+        if (result.annoScolastico) this.anno.set(result.annoScolastico);
+        if (result.materia) this.materia.set(result.materia);
+        if (result.condizione) this.condizione.set(result.condizione);
+        if (result.prezzo != null) this.prezzo.set(result.prezzo);
+        if (result.descrizione) this.descrizione.set(result.descrizione);
+        this.aiStatus.set('success');
+      },
+      error: () => {
+        this.aiStatus.set('error');
+      },
+    });
   }
 
   retryAI(): void {
@@ -214,35 +260,72 @@ export class SellBookModal {
   // Form actions
   // =========================================================================
   onClose(): void {
+    if (this.isEditMode()) {
+      this.resetForm();
+      this.closed.emit();
+      return;
+    }
+
+    // Cleanup immagini già caricate se si annulla
+    const front = this.frontPhoto();
+    const back = this.backPhoto();
+    if (front) {
+      this.bookService.deleteImages(front, back ?? undefined).subscribe();
+    }
     this.resetForm();
     this.closed.emit();
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (!this.isFormValid() || this.submitting()) return;
 
     this.submitting.set(true);
+    try {
+      if (this.isEditMode()) {
+        const editing = this.editBook();
+        if (!editing) return;
 
-    const request: CreaBookListingRequestDTO = {
-      titolo: this.titolo().trim(),
-      autore: this.autore().trim(),
-      isbn: this.isbn().trim() || undefined,
-      anno: parseInt(this.anno()),
-      materia: this.materia() as BookSubject,
-      condizione: this.condizione() as BookCondition,
-      prezzo: this.prezzo()!,
-      descrizione: this.descrizione().trim() || undefined,
-      imageUrl: this.frontPhoto() || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400',
-      imageUrlRetro: this.backPhoto() || undefined,
-    };
+        const request: ModificaLibroRequestDTO = {
+          titolo: this.titolo().trim(),
+          autore: this.autore().trim(),
+          isbn: this.isbn().trim() || undefined,
+          annoScolastico: this.anno(),
+          materia: this.materia(),
+          condizione: this.condizione() as BookCondition,
+          prezzo: this.prezzo()!,
+          descrizione: this.descrizione().trim() || undefined,
+          frontImageUrl: this.frontPhoto()!,
+          backImageUrl: this.backPhoto() ?? undefined,
+        };
 
-    this.submitted.emit(request);
+        const updated = await firstValueFrom(this.bookService.modificaLibro(editing.id, request));
+        this.toast.success('Annuncio aggiornato con successo!');
+        this.submitted.emit(updated);
+      } else {
+        const request: CreaLibroRequestDTO = {
+          titolo: this.titolo().trim(),
+          autore: this.autore().trim(),
+          isbn: this.isbn().trim() || undefined,
+          annoScolastico: this.anno(),
+          materia: this.materia(),
+          condizione: this.condizione() as BookCondition,
+          prezzo: this.prezzo()!,
+          descrizione: this.descrizione().trim() || undefined,
+          frontImageUrl: this.frontPhoto()!,
+          backImageUrl: this.backPhoto() ?? undefined,
+        };
 
-    // Il parent chiuderà il modal dopo il submit
-    setTimeout(() => {
-      this.submitting.set(false);
+        const created = await firstValueFrom(this.bookService.creaLibro(request));
+        this.toast.success('Annuncio pubblicato con successo!');
+        this.submitted.emit(created);
+      }
+
       this.resetForm();
-    }, 500);
+    } catch {
+      this.toast.error(this.isEditMode() ? 'Errore durante la modifica. Riprova.' : 'Errore durante la pubblicazione. Riprova.');
+    } finally {
+      this.submitting.set(false);
+    }
   }
 
   private resetForm(): void {
@@ -250,6 +333,8 @@ export class SellBookModal {
     this.backPhoto.set(null);
     this.uploadingFront.set(false);
     this.uploadingBack.set(false);
+    this.uploadProgressFront.set(0);
+    this.uploadProgressBack.set(0);
     this.aiStatus.set('idle');
     this.titolo.set('');
     this.autore.set('');
@@ -259,6 +344,25 @@ export class SellBookModal {
     this.condizione.set('');
     this.prezzo.set(null);
     this.descrizione.set('');
+    this.submitting.set(false);
+  }
+
+  private populateFormFromBook(book: BookResponseDTO): void {
+    this.frontPhoto.set(book.frontImageUrl ?? null);
+    this.backPhoto.set(book.backImageUrl ?? null);
+    this.uploadingFront.set(false);
+    this.uploadingBack.set(false);
+    this.uploadProgressFront.set(0);
+    this.uploadProgressBack.set(0);
+    this.aiStatus.set('idle');
+    this.titolo.set(book.titolo ?? '');
+    this.autore.set(book.autore ?? '');
+    this.isbn.set(book.isbn ?? '');
+    this.anno.set(book.annoScolastico ?? '');
+    this.materia.set(book.materia ?? '');
+    this.condizione.set(book.condizione ?? '');
+    this.prezzo.set(book.prezzo ?? null);
+    this.descrizione.set(book.descrizione ?? '');
     this.submitting.set(false);
   }
 }

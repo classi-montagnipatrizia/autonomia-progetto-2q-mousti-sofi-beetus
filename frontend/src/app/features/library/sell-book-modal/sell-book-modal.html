@@ -6,7 +6,9 @@
 >
   <!-- Custom Header -->
   <div modal-header class="flex items-center justify-between w-full">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Vendi un libro</h2>
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+      {{ isEditMode() ? 'Modifica annuncio' : 'Vendi un libro' }}
+    </h2>
   </div>
 
   <!-- Body -->
@@ -392,10 +394,10 @@
     >
       @if (submitting()) {
         <app-spinner size="sm"></app-spinner>
-        Pubblicazione...
+        {{ isEditMode() ? 'Salvataggio...' : 'Pubblicazione...' }}
       } @else {
         <lucide-icon [img]="CheckIcon" [size]="16"></lucide-icon>
-        Pubblica annuncio
+        {{ isEditMode() ? 'Salva modifiche' : 'Pubblica annuncio' }}
       }
     </button>
   </div>
