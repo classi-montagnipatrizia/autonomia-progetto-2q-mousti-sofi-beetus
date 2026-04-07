@@ -2,6 +2,14 @@
   display: block;
 }
 
+main {
+  max-width: 1100px;
+}
+
+header {
+  backdrop-filter: saturate(130%) blur(6px);
+}
+
 /* Line clamp for book titles */
 .line-clamp-1 {
   display: -webkit-box;

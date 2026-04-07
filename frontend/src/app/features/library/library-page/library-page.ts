@@ -1,7 +1,8 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   LucideAngularModule,
   ArrowLeft,
@@ -12,31 +13,29 @@ import {
   Pencil,
   Trash2,
   Info,
-  ChevronLeft,
-  Send,
-  ExternalLink,
   BookOpen,
   MessageCircle,
-  Tag,
-  Check,
-  Image,
-  Sparkles,
+  Users,
+  Lightbulb,
 } from 'lucide-angular';
 
 import { LibraryStore, LibraryTab } from '../../../core/stores/library-store';
+import { AuthStore } from '../../../core/stores/auth-store';
+import { ToastService } from '../../../core/services/toast-service';
+import { WebsocketService } from '../../../core/services/websocket-service';
+import { DialogService } from '../../../core/services/dialog-service';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
 import { ButtonComponent } from '../../../shared/ui/button/button-component/button-component';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
-import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
 import { SellBookModal } from '../sell-book-modal/sell-book-modal';
+import { BookCardComponent } from '../../../shared/components/book-card/book-card-component/book-card-component';
+import { AiChatbot } from '../ai-chatbot/ai-chatbot';
 import {
+  BookResponseDTO,
+  BookSummaryDTO,
   BookCondition,
-  BookListingResponseDTO,
-  BookListingStatus,
-  BookSubject,
-  CreaBookListingRequestDTO,
-  LibraryConversationResponseDTO,
-  LibraryMessageResponseDTO,
+  BookStatus,
+  BookConversationDTO,
 } from '../../../models';
 
 @Component({
@@ -48,15 +47,23 @@ import {
     SkeletonComponent,
     ButtonComponent,
     AvatarComponent,
-    SpinnerComponent,
     SellBookModal,
+    BookCardComponent,
+    AiChatbot,
   ],
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss',
 })
-export class LibraryPage implements OnInit {
-  private readonly router = inject(Router);
+export class LibraryPage implements OnInit, OnDestroy {
+  readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly authStore = inject(AuthStore);
   readonly store = inject(LibraryStore);
+  private readonly toast = inject(ToastService);
+  private readonly websocketService = inject(WebsocketService);
+  private readonly dialogService = inject(DialogService);
+
+  private wsBookMessagesSub?: Subscription;
 
   // Icons
   readonly ArrowLeftIcon = ArrowLeft;
@@ -67,24 +74,16 @@ export class LibraryPage implements OnInit {
   readonly PencilIcon = Pencil;
   readonly Trash2Icon = Trash2;
   readonly InfoIcon = Info;
-  readonly ChevronLeftIcon = ChevronLeft;
-  readonly SendIcon = Send;
-  readonly ExternalLinkIcon = ExternalLink;
   readonly BookOpenIcon = BookOpen;
   readonly MessageCircleIcon = MessageCircle;
-  readonly TagIcon = Tag;
-  readonly CheckIcon = Check;
-  readonly ImageIcon = Image;
-  readonly SparklesIcon = Sparkles;
+  readonly UsersIcon = Users;
+  readonly LightbulbIcon = Lightbulb;
 
   // Local UI state
   readonly searchQuery = signal('');
   readonly showMobileFilters = signal(false);
-  readonly chatInput = signal('');
-
-  // Sell modal form state
-  readonly sellForm = signal<Partial<CreaBookListingRequestDTO>>({});
-  readonly sellFormSubmitting = signal(false);
+  readonly showChatbot = signal(false);
+  readonly editingListing = signal<BookResponseDTO | null>(null);
 
   // Filter selections
   readonly filterAnno = signal<string>('');
@@ -95,8 +94,7 @@ export class LibraryPage implements OnInit {
 
   // Enums for template
   readonly BookCondition = BookCondition;
-  readonly BookListingStatus = BookListingStatus;
-  readonly BookSubject = BookSubject;
+  readonly BookStatus = BookStatus;
 
   // Filter options
   readonly anniOptions = [
@@ -110,20 +108,20 @@ export class LibraryPage implements OnInit {
 
   readonly materieOptions = [
     { value: '', label: 'Tutte le materie' },
-    { value: BookSubject.MATEMATICA, label: 'Matematica' },
-    { value: BookSubject.ITALIANO, label: 'Italiano' },
-    { value: BookSubject.INGLESE, label: 'Inglese' },
-    { value: BookSubject.STORIA, label: 'Storia' },
-    { value: BookSubject.FISICA, label: 'Fisica' },
-    { value: BookSubject.INFORMATICA, label: 'Informatica' },
-    { value: BookSubject.ALTRO, label: 'Altro' },
+    { value: 'Matematica', label: 'Matematica' },
+    { value: 'Italiano', label: 'Italiano' },
+    { value: 'Inglese', label: 'Inglese' },
+    { value: 'Storia', label: 'Storia' },
+    { value: 'Fisica', label: 'Fisica' },
+    { value: 'Informatica', label: 'Informatica' },
+    { value: 'Altro', label: 'Altro' },
   ];
 
   readonly condizioneOptions = [
     { value: '', label: 'Tutte le condizioni' },
-    { value: BookCondition.COME_NUOVO, label: 'Come nuovo' },
-    { value: BookCondition.BUONE_CONDIZIONI, label: 'Buone condizioni' },
-    { value: BookCondition.USATO, label: 'Usato' },
+    { value: BookCondition.OTTIMO, label: 'Ottimo' },
+    { value: BookCondition.BUONO, label: 'Buono' },
+    { value: BookCondition.ACCETTABILE, label: 'Accettabile' },
   ];
 
   readonly prezzoOptions = [
@@ -141,26 +139,59 @@ export class LibraryPage implements OnInit {
   ];
 
   readonly statusOptions = [
-    { value: BookListingStatus.DISPONIBILE, label: 'Disponibile' },
-    { value: BookListingStatus.RICHIESTO, label: 'Richiesto' },
-    { value: BookListingStatus.VENDUTO, label: 'Venduto' },
+    { value: BookStatus.DISPONIBILE, label: 'Disponibile' },
+    { value: BookStatus.VENDUTO, label: 'Venduto' },
   ];
 
   // Computed
+  readonly sortedAvailableBooks = computed(() => {
+    const books = [...this.store.availableBooks()];
+    const order = this.sortOrder();
+
+    if (order === 'prezzo_asc') {
+      return books.sort((a, b) => a.prezzo - b.prezzo);
+    }
+
+    if (order === 'prezzo_desc') {
+      return books.sort((a, b) => b.prezzo - a.prezzo);
+    }
+
+    return books.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  });
+
   readonly showListingsEmpty = computed(
-    () => !this.store.listingsLoading() && !this.store.hasListings()
+    () => !this.store.isLoading() && this.store.availableBooks().length === 0
   );
   readonly showMyListingsEmpty = computed(
-    () => !this.store.myListingsLoading() && !this.store.hasMyListings()
+    () => !this.store.isLoading() && this.store.myListings().length === 0
   );
   readonly showConversationsEmpty = computed(
-    () => !this.store.conversationsLoading() && !this.store.hasConversations()
+    () => !this.store.isLoading() && this.store.conversations().length === 0
   );
 
   ngOnInit(): void {
-    this.store.loadListings();
+    this.store.loadAvailableBooks();
     this.store.loadMyListings();
-    this.store.loadConversations();
+    this.store.loadConversazioni();
+
+    // Legge il tab dal query param (es. dalla notifica push BOOK_REQUEST → ?tab=miei)
+    const tab = this.route.snapshot.queryParamMap.get('tab') as LibraryTab | null;
+    if (tab && ['compra', 'miei', 'messaggi'].includes(tab)) {
+      this.store.setActiveTab(tab);
+    }
+
+    // Sottoscrizione WebSocket per aggiornare la lista conversazioni in real-time
+    this.wsBookMessagesSub = this.websocketService.bookMessages$.subscribe({
+      next: (message) => {
+        this.store.handleIncomingBookMessage(message);
+      },
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.wsBookMessagesSub?.unsubscribe();
   }
 
   // =========================================================================
@@ -169,6 +200,7 @@ export class LibraryPage implements OnInit {
   switchTab(tab: LibraryTab): void {
     this.store.setActiveTab(tab);
   }
+  
 
   // =========================================================================
   // Navigazione
@@ -183,43 +215,45 @@ export class LibraryPage implements OnInit {
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery.set(value);
-    this.store.updateFilters({ search: value || undefined });
+    const current = this.store.filters();
+    this.store.setFilters({ ...current, q: value || undefined });
   }
 
   onFilterAnnoChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.filterAnno.set(value);
-    this.store.updateFilters({ anno: value ? parseInt(value) : undefined });
+    const current = this.store.filters();
+    this.store.setFilters({ ...current, anno: value || undefined });
   }
 
   onFilterMateriaChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.filterMateria.set(value);
-    this.store.updateFilters({ materia: (value as BookSubject) || undefined });
+    const current = this.store.filters();
+    this.store.setFilters({ ...current, materia: value || undefined });
   }
 
   onFilterCondizioneChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.filterCondizione.set(value);
-    this.store.updateFilters({ condizione: (value as BookCondition) || undefined });
+    const current = this.store.filters();
+    this.store.setFilters({ ...current, condizione: value || undefined });
   }
 
   onFilterPrezzoChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.filterPrezzo.set(value);
-    let prezzoMin: number | undefined;
     let prezzoMax: number | undefined;
     if (value === '0-10') { prezzoMax = 10; }
-    else if (value === '10-20') { prezzoMin = 10; prezzoMax = 20; }
-    else if (value === '20-30') { prezzoMin = 20; prezzoMax = 30; }
-    else if (value === '30+') { prezzoMin = 30; }
-    this.store.updateFilters({ prezzoMin, prezzoMax });
+    else if (value === '10-20') { prezzoMax = 20; }
+    else if (value === '20-30') { prezzoMax = 30; }
+    const current = this.store.filters();
+    this.store.setFilters({ ...current, prezzoMax });
   }
 
   onSortChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.sortOrder.set(value);
-    this.store.updateFilters({ sort: value as 'recenti' | 'prezzo_asc' | 'prezzo_desc' });
+    this.sortOrder.set((event.target as HTMLSelectElement).value);
+    // Sort handled client-side or via reload — store doesn't have sort param yet
   }
 
   toggleMobileFilters(): void {
@@ -237,92 +271,88 @@ export class LibraryPage implements OnInit {
     this.filterCondizione.set('');
     this.filterPrezzo.set('');
     this.sortOrder.set('recenti');
-    this.store.resetFilters();
+    this.store.clearFilters();
   }
 
   // =========================================================================
   // I miei annunci
   // =========================================================================
-  onStatusChange(event: Event, listing: BookListingResponseDTO): void {
-    const value = (event.target as HTMLSelectElement).value as BookListingStatus;
-    this.store.updateListingStatus(listing.id, value);
+  onStatusChange(event: Event, listing: BookResponseDTO): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.store.aggiornaStato(listing.id, value);
   }
 
-  onDeleteListing(listing: BookListingResponseDTO): void {
-    this.store.deleteListing(listing.id);
+  async onDeleteListing(listing: BookResponseDTO): Promise<void> {
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina annuncio',
+      message: `Sei sicuro di voler eliminare l'annuncio "${listing.titolo}"? Questa azione non può essere annullata.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+    if (!confirmed) return;
+    this.store.eliminaLibro(listing.id);
   }
 
   // =========================================================================
   // Sell modal
   // =========================================================================
   openSellModal(): void {
-    this.sellForm.set({});
+    this.editingListing.set(null);
+    this.store.openSellModal();
+  }
+
+  openEditModal(listing: BookResponseDTO): void {
+    this.editingListing.set(listing);
     this.store.openSellModal();
   }
 
   closeSellModal(): void {
+    this.editingListing.set(null);
     this.store.closeSellModal();
   }
 
-  updateSellForm(field: keyof CreaBookListingRequestDTO, value: any): void {
-    this.sellForm.update((prev) => ({ ...prev, [field]: value }));
+  async onSellBookSubmitted(_book: BookResponseDTO): Promise<void> {
+    await this.store.loadMyListings();
+    await this.store.loadAvailableBooks();
+    this.editingListing.set(null);
+    this.store.closeSellModal();
   }
 
-  async onSellBookSubmitted(request: CreaBookListingRequestDTO): Promise<void> {
-    this.sellFormSubmitting.set(true);
+  // =========================================================================
+  // Richiesta libro dalla card
+  // =========================================================================
+  async onBookRequested(book: BookSummaryDTO): Promise<void> {
     try {
-      await this.store.createListing(request);
-    } finally {
-      this.sellFormSubmitting.set(false);
-    }
-  }
-
-  async submitSellForm(): Promise<void> {
-    const form = this.sellForm();
-    if (!form.titolo || !form.autore || !form.anno || !form.materia || !form.condizione || form.prezzo == null) {
-      return;
-    }
-    this.sellFormSubmitting.set(true);
-    try {
-      await this.store.createListing({
-        titolo: form.titolo,
-        autore: form.autore,
-        isbn: form.isbn,
-        anno: form.anno,
-        materia: form.materia,
-        condizione: form.condizione,
-        prezzo: form.prezzo,
-        descrizione: form.descrizione,
-        imageUrl: form.imageUrl || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400',
-        imageUrlRetro: form.imageUrlRetro,
-      });
-    } finally {
-      this.sellFormSubmitting.set(false);
+      await this.store.requestBook(book.id);
+      this.toast.success('Richiesta inviata al venditore!');
+    } catch {
+      this.toast.error('Errore durante la richiesta. Riprova.');
     }
   }
 
   // =========================================================================
   // Chat / Messaggi
   // =========================================================================
-  openConversation(conversation: LibraryConversationResponseDTO): void {
-    this.store.openConversation(conversation);
+  openConversation(conv: BookConversationDTO): void {
+    this.router.navigate(['/library', 'conversation', conv.libro.id], {
+      queryParams: { convId: conv.id },
+    });
   }
 
-  closeChat(): void {
-    this.store.closeConversation();
-  }
-
-  sendMessage(): void {
-    const msg = this.chatInput().trim();
-    if (!msg) return;
-    this.store.sendMessage(msg);
-    this.chatInput.set('');
-  }
-
-  onChatKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
+  async deleteConversation(event: Event, convId: number): Promise<void> {
+    event.stopPropagation();
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina conversazione',
+      message: 'Sei sicuro di voler eliminare questa conversazione? Questa azione non può essere annullata.',
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+    if (!confirmed) return;
+    try {
+      await this.store.eliminaConversazione(convId);
+      this.toast.success('Conversazione eliminata');
+    } catch {
+      this.toast.error('Errore durante l\'eliminazione della conversazione');
     }
   }
 
@@ -331,65 +361,40 @@ export class LibraryPage implements OnInit {
   // =========================================================================
   getConditionLabel(condizione: BookCondition): string {
     const map: Record<BookCondition, string> = {
-      [BookCondition.COME_NUOVO]: 'Come nuovo',
-      [BookCondition.BUONE_CONDIZIONI]: 'Buone condizioni',
-      [BookCondition.USATO]: 'Usato',
+      [BookCondition.OTTIMO]: 'Ottimo',
+      [BookCondition.BUONO]: 'Buono',
+      [BookCondition.ACCETTABILE]: 'Accettabile',
     };
-    return map[condizione] || condizione;
+    return map[condizione] ?? condizione;
   }
 
   getConditionColor(condizione: BookCondition): string {
     const map: Record<BookCondition, string> = {
-      [BookCondition.COME_NUOVO]: 'bg-success-500',
-      [BookCondition.BUONE_CONDIZIONI]: 'bg-warning-500',
-      [BookCondition.USATO]: 'bg-orange-500',
+      [BookCondition.OTTIMO]: 'bg-emerald-500',
+      [BookCondition.BUONO]: 'bg-blue-500',
+      [BookCondition.ACCETTABILE]: 'bg-amber-500',
     };
-    return map[condizione] || 'bg-gray-500';
+    return map[condizione] ?? 'bg-gray-500';
   }
 
-  getAnnoLabel(anno: number): string {
-    if (anno === 0) return 'Tutti gli anni';
-    return `${anno}° Anno`;
-  }
-
-  getSubjectLabel(materia: BookSubject): string {
-    const map: Record<BookSubject, string> = {
-      [BookSubject.MATEMATICA]: 'Matematica',
-      [BookSubject.ITALIANO]: 'Italiano',
-      [BookSubject.INGLESE]: 'Inglese',
-      [BookSubject.STORIA]: 'Storia',
-      [BookSubject.FISICA]: 'Fisica',
-      [BookSubject.INFORMATICA]: 'Informatica',
-      [BookSubject.ALTRO]: 'Altro',
+  getStatusColor(stato: BookStatus): string {
+    const map: Record<BookStatus, string> = {
+      [BookStatus.DISPONIBILE]: 'bg-success-500',
+      [BookStatus.VENDUTO]: 'bg-gray-400',
     };
-    return map[materia] || materia;
+    return map[stato] ?? 'bg-gray-500';
   }
 
-  getStatusColor(stato: BookListingStatus): string {
-    const map: Record<BookListingStatus, string> = {
-      [BookListingStatus.DISPONIBILE]: 'bg-success-500',
-      [BookListingStatus.RICHIESTO]: 'bg-warning-500',
-      [BookListingStatus.VENDUTO]: 'bg-gray-400',
+  getStatusSelectClasses(stato: BookStatus): string {
+    const map: Record<BookStatus, string> = {
+      [BookStatus.DISPONIBILE]: 'bg-success-50 border-success-200 text-success-700',
+      [BookStatus.VENDUTO]: 'bg-gray-100 border-gray-200 text-gray-500',
     };
-    return map[stato] || 'bg-gray-500';
+    return map[stato] ?? '';
   }
 
-  getStatusSelectClasses(stato: BookListingStatus): string {
-    const map: Record<BookListingStatus, string> = {
-      [BookListingStatus.DISPONIBILE]: 'bg-success-50 border-success-200 text-success-700',
-      [BookListingStatus.RICHIESTO]: 'bg-warning-50 border-warning-200 text-warning-700',
-      [BookListingStatus.VENDUTO]: 'bg-gray-100 border-gray-200 text-gray-500',
-    };
-    return map[stato] || '';
-  }
-
-  getInitial(name: string): string {
-    return name.charAt(0).toUpperCase();
-  }
-
-  isMyMessage(message: LibraryMessageResponseDTO): boolean {
-    // In un sistema reale, confronterebbe con l'utente corrente
-    return message.id % 2 === 0;
+  isMyMessage(mittentId: number): boolean {
+    return this.authStore.userId() === mittentId;
   }
 
   formatTime(dateStr: string): string {
@@ -398,7 +403,11 @@ export class LibraryPage implements OnInit {
   }
 
   formatRelativeTime(dateStr: string): string {
+    if (!dateStr) return '';
+
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return '';
+
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -409,6 +418,7 @@ export class LibraryPage implements OnInit {
       const days = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
       return days[date.getDay()];
     }
+
     return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
   }
 

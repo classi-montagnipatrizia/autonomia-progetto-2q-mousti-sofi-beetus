@@ -25,7 +25,7 @@
        ============================================ -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- Titolo e sottotitolo -->
+    <!-- Sottotitolo -->
     <div class="mb-6">
       <p class="text-gray-500 dark:text-gray-400 text-sm">Compra e vendi libri scolastici usati</p>
     </div>
@@ -43,8 +43,7 @@
         [class.dark:text-white]="store.activeTab() === 'compra'"
         [class.shadow-sm]="store.activeTab() === 'compra'"
         [class.text-gray-500]="store.activeTab() !== 'compra'"
-        [class.dark:text-gray-400]="store.activeTab() !== 'compra'"
-        [class.hover:text-gray-700]="store.activeTab() !== 'compra'">
+        [class.dark:text-gray-400]="store.activeTab() !== 'compra'">
         Compra
       </button>
       <button type="button"
@@ -56,8 +55,7 @@
         [class.dark:text-white]="store.activeTab() === 'miei'"
         [class.shadow-sm]="store.activeTab() === 'miei'"
         [class.text-gray-500]="store.activeTab() !== 'miei'"
-        [class.dark:text-gray-400]="store.activeTab() !== 'miei'"
-        [class.hover:text-gray-700]="store.activeTab() !== 'miei'">
+        [class.dark:text-gray-400]="store.activeTab() !== 'miei'">
         I miei annunci
       </button>
       <button type="button"
@@ -69,8 +67,7 @@
         [class.dark:text-white]="store.activeTab() === 'messaggi'"
         [class.shadow-sm]="store.activeTab() === 'messaggi'"
         [class.text-gray-500]="store.activeTab() !== 'messaggi'"
-        [class.dark:text-gray-400]="store.activeTab() !== 'messaggi'"
-        [class.hover:text-gray-700]="store.activeTab() !== 'messaggi'">
+        [class.dark:text-gray-400]="store.activeTab() !== 'messaggi'">
         Messaggi
         @if (store.unreadMessagesCount() > 0) {
           <span class="absolute -top-1 -right-1 w-5 h-5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
@@ -84,7 +81,7 @@
          SEZIONE: COMPRA
          ============================================ -->
     @if (store.activeTab() === 'compra') {
-      <section class="animate-fade-in">
+      <section>
 
         <!-- Filtri -->
         <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 mb-6 shadow-sm border border-border-light dark:border-border-dark">
@@ -131,10 +128,10 @@
           </div>
         </div>
 
-        <!-- Risultati e conteggio -->
+        <!-- Risultati e ordinamento -->
         <div class="flex items-center justify-between mb-4">
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            <span class="font-medium text-gray-700 dark:text-gray-200">{{ store.listingsTotalElements() }}</span> libri disponibili
+            <span class="font-medium text-gray-700 dark:text-gray-200">{{ sortedAvailableBooks().length }}</span> libri disponibili
           </p>
           <select [value]="sortOrder()" (change)="onSortChange($event)" class="text-sm text-gray-500 dark:text-gray-400 bg-transparent border-none focus:outline-none cursor-pointer">
             @for (opt of sortOptions; track opt.value) {
@@ -144,7 +141,7 @@
         </div>
 
         <!-- Skeleton Loading -->
-        @if (store.listingsLoading()) {
+        @if (store.isLoading()) {
           <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             @for (i of [1, 2, 3, 4]; track i) {
               <div class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-border-light dark:border-border-dark">
@@ -178,43 +175,23 @@
         }
 
         <!-- Griglia libri -->
-        @if (!store.listingsLoading() && store.hasListings()) {
+        @if (!store.isLoading() && sortedAvailableBooks().length > 0) {
           <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-            @for (book of store.listings(); track book.id) {
-              <article class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-border-light dark:border-border-dark hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all cursor-pointer group">
-                <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                  <img [src]="book.imageUrl" [alt]="book.titolo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <span class="absolute top-3 left-3 px-2.5 py-1 text-white text-xs font-medium rounded-full shadow-sm"
-                    [ngClass]="getConditionColor(book.condizione)">
-                    {{ getConditionLabel(book.condizione) }}
-                  </span>
-                </div>
-                <div class="p-3 sm:p-4">
-                  <h3 class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                    {{ book.titolo }}
-                  </h3>
-                  <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2">{{ book.autore }}</p>
-                  <div class="flex items-center gap-1.5 flex-wrap text-xs text-gray-400 dark:text-gray-500 mb-3">
-                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">{{ getAnnoLabel(book.anno) }}</span>
-                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full">{{ getSubjectLabel(book.materia) }}</span>
-                  </div>
-                  <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <span class="text-lg font-bold text-primary-600 dark:text-primary-400">€{{ book.prezzo }}</span>
-                    <div class="flex items-center gap-1.5">
-                      <app-avatar [name]="book.venditore.nomeCompleto" [src]="book.venditore.profilePictureUrl" size="xs" />
-                      <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">&#64;{{ book.venditore.username }}</span>
-                    </div>
-                  </div>
-                </div>
-              </article>
+            @for (book of sortedAvailableBooks(); track book.id) {
+              <app-book-card-component
+                [book]="book"
+                [clickable]="true"
+                (clicked)="router.navigate(['/library', book.id])"
+                (requested)="onBookRequested($event)"
+              />
             }
           </div>
         }
 
         <!-- Carica altri -->
-        @if (store.listingsHasMore() && !store.listingsLoading()) {
+        @if (store.hasMoreAvailable() && !store.isLoading()) {
           <div class="mt-6 text-center">
-            <app-button variant="outline" (clicked)="store.loadListings(false)">Carica altri libri</app-button>
+            <app-button variant="outline" (clicked)="store.loadMoreAvailable()">Carica altri libri</app-button>
           </div>
         }
       </section>
@@ -225,23 +202,22 @@
          SEZIONE: I MIEI ANNUNCI
          ============================================ -->
     @if (store.activeTab() === 'miei') {
-      <section class="animate-fade-in">
+      <section>
 
         <!-- Info stati -->
-        <div class="bg-info-50 dark:bg-info-900/20 border border-info-100 dark:border-info-800 rounded-xl p-4 mb-6">
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-6">
           <div class="flex items-start gap-3">
-            <lucide-icon [img]="InfoIcon" [size]="20" class="text-info-500 mt-0.5 shrink-0" />
-            <p class="text-sm text-info-800 dark:text-info-200">
+            <lucide-icon [img]="InfoIcon" [size]="20" class="text-blue-500 mt-0.5 shrink-0" />
+            <p class="text-sm text-blue-800 dark:text-blue-200">
               Gestisci i tuoi annunci cambiando lo stato:
-              <span class="inline-flex items-center gap-1 font-semibold text-success-700 dark:text-success-400"><span class="w-2 h-2 bg-success-500 rounded-full"></span>Disponibile</span> →
-              <span class="inline-flex items-center gap-1 font-semibold text-warning-700 dark:text-warning-400"><span class="w-2 h-2 bg-warning-500 rounded-full"></span>Richiesto</span> →
+              <span class="inline-flex items-center gap-1 font-semibold text-green-700 dark:text-green-400"><span class="w-2 h-2 bg-green-500 rounded-full"></span>Disponibile</span> →
               <span class="inline-flex items-center gap-1 font-semibold text-gray-500 dark:text-gray-400"><span class="w-2 h-2 bg-gray-400 rounded-full"></span>Venduto</span>
             </p>
           </div>
         </div>
 
         <!-- Skeleton Loading -->
-        @if (store.myListingsLoading()) {
+        @if (store.isLoading()) {
           <div class="space-y-3">
             @for (i of [1, 2, 3]; track i) {
               <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark p-4 flex gap-4">
@@ -270,20 +246,19 @@
         }
 
         <!-- Lista miei annunci -->
-        @if (!store.myListingsLoading() && store.hasMyListings()) {
+        @if (!store.isLoading() && store.myListings().length > 0) {
           <div class="space-y-3">
             @for (listing of store.myListings(); track listing.id) {
               <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm transition-shadow hover:shadow-md"
                 [ngClass]="{
-                  'border border-border-light dark:border-border-dark': listing.stato !== BookListingStatus.RICHIESTO && listing.stato !== BookListingStatus.VENDUTO,
-                  'border-2 border-warning-200 dark:border-warning-700': listing.stato === BookListingStatus.RICHIESTO,
-                  'border border-gray-200 dark:border-gray-700 opacity-60': listing.stato === BookListingStatus.VENDUTO
+                  'border border-border-light dark:border-border-dark': listing.stato !== BookStatus.VENDUTO,
+                  'border border-gray-200 dark:border-gray-700 opacity-60': listing.stato === BookStatus.VENDUTO
                 }">
                 <div class="p-4 flex gap-4">
                   <!-- Immagine -->
                   <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0 relative">
-                    <img [src]="listing.imageUrl" [alt]="listing.titolo" class="w-full h-full object-cover" />
-                    @if (listing.stato === BookListingStatus.VENDUTO) {
+                    <img [src]="listing.frontImageUrl" [alt]="listing.titolo" class="w-full h-full object-cover" />
+                    @if (listing.stato === BookStatus.VENDUTO) {
                       <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span class="text-white font-bold text-xs tracking-wider uppercase">Venduto</span>
                       </div>
@@ -295,34 +270,27 @@
                     <div class="flex items-start justify-between gap-2 mb-1">
                       <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-1 text-sm sm:text-base">{{ listing.titolo }}</h3>
                       <span class="text-lg font-bold shrink-0"
-                        [ngClass]="listing.stato === BookListingStatus.VENDUTO ? 'text-gray-400 line-through' : 'text-primary-600 dark:text-primary-400'">
+                        [ngClass]="listing.stato === BookStatus.VENDUTO ? 'text-gray-400 line-through' : 'text-primary-600 dark:text-primary-400'">
                         €{{ listing.prezzo }}
                       </span>
                     </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ listing.autore }} · {{ getAnnoLabel(listing.anno) }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ listing.autore }}@if (listing.annoScolastico) { · {{ listing.annoScolastico }} }</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Pubblicato il {{ formatDate(listing.createdAt) }}</p>
 
-                    <!-- Richiedente (se stato RICHIESTO) -->
-                    @if (listing.stato === BookListingStatus.RICHIESTO && listing.richiedente) {
-                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-100 dark:border-warning-800">
-                        <app-avatar [name]="listing.richiedente.nomeCompleto" [src]="listing.richiedente.profilePictureUrl" size="xs" />
-                        <p class="text-xs text-warning-800 dark:text-warning-200">Richiesto da <span class="font-semibold">&#64;{{ listing.richiedente.username }}</span></p>
-                        <button type="button" class="ml-auto text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 font-medium">Contatta</button>
-                      </div>
-                    }
-
-                    <!-- Acquirente (se stato VENDUTO) -->
-                    @if (listing.stato === BookListingStatus.VENDUTO && listing.acquirente) {
-                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <app-avatar [name]="listing.acquirente.nomeCompleto" [src]="listing.acquirente.profilePictureUrl" size="xs" />
-                        <p class="text-xs text-gray-600 dark:text-gray-300">Venduto a <span class="font-semibold">&#64;{{ listing.acquirente.username }}</span></p>
-                        <lucide-icon [img]="CheckIcon" [size]="16" class="text-success-500 ml-auto" />
+                    <!-- Richieste pendenti -->
+                    @if (listing.richiesteCount > 0 && listing.stato !== BookStatus.VENDUTO) {
+                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
+                        <lucide-icon [img]="UsersIcon" [size]="16" class="text-amber-600 dark:text-amber-400 shrink-0" />
+                        <p class="text-xs text-amber-800 dark:text-amber-200">
+                          <span class="font-semibold">{{ listing.richiesteCount }}</span>
+                          {{ listing.richiesteCount === 1 ? 'acquirente interessato' : 'acquirenti interessati' }}
+                        </p>
                       </div>
                     }
 
                     <!-- Azioni -->
                     <div class="flex items-center justify-between">
-                      @if (listing.stato !== BookListingStatus.VENDUTO) {
+                      @if (listing.stato !== BookStatus.VENDUTO) {
                         <div class="flex items-center gap-2">
                           <span class="w-2.5 h-2.5 rounded-full" [ngClass]="getStatusColor(listing.stato)"></span>
                           <select
@@ -343,12 +311,18 @@
                       }
 
                       <div class="flex gap-1">
-                        @if (listing.stato !== BookListingStatus.VENDUTO) {
-                          <button type="button" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Modifica">
+                        @if (listing.stato !== BookStatus.VENDUTO) {
+                          <button
+                            type="button"
+                            (click)="openEditModal(listing)"
+                            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            title="Modifica"
+                            aria-label="Modifica annuncio"
+                          >
                             <lucide-icon [img]="PencilIcon" [size]="16" />
                           </button>
                         }
-                        <button type="button" (click)="onDeleteListing(listing)" class="p-2 rounded-lg hover:bg-error-50 dark:hover:bg-error-900/20 text-gray-400 hover:text-error-500 transition-colors" title="Elimina">
+                        <button type="button" (click)="onDeleteListing(listing)" class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors" title="Elimina">
                           <lucide-icon [img]="Trash2Icon" [size]="16" />
                         </button>
                       </div>
@@ -367,10 +341,10 @@
          SEZIONE: MESSAGGI LIBRERIA
          ============================================ -->
     @if (store.activeTab() === 'messaggi') {
-      <section class="animate-fade-in">
+      <section>
 
         <!-- Skeleton Loading -->
-        @if (store.conversationsLoading()) {
+        @if (store.isLoading()) {
           <div class="space-y-2">
             @for (i of [1, 2, 3]; track i) {
               <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark p-4 flex gap-3">
@@ -397,30 +371,34 @@
         }
 
         <!-- Lista conversazioni -->
-        @if (!store.conversationsLoading() && store.hasConversations() && !store.isChatOpen()) {
+        @if (!store.isLoading() && store.conversations().length > 0) {
           <div class="space-y-2">
             @for (conv of store.conversations(); track conv.id) {
               <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark hover:shadow-md transition-shadow cursor-pointer"
                 (click)="openConversation(conv)">
                 <div class="p-4 flex gap-3">
                   <div class="w-14 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
-                    <img [src]="conv.annuncio.imageUrl" [alt]="conv.annuncio.titolo" class="w-full h-full object-cover" />
+                    @if (conv.libro.frontImageUrl) {
+                      <img [src]="conv.libro.frontImageUrl" [alt]="conv.libro.titolo" class="w-full h-full object-cover" />
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center">
+                        <lucide-icon [img]="BookOpenIcon" [size]="24" class="text-gray-400" />
+                      </div>
+                    }
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between mb-0.5">
-                      <h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate">{{ conv.annuncio.titolo }}</h3>
-                      <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-2">{{ formatRelativeTime(conv.ultimaAttivita) }}</span>
+                      <h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate pr-2">{{ conv.libro.titolo }}</h3>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ formatRelativeTime(conv.ultimaAttivita ?? '') }}</span>
                     </div>
                     <div class="flex items-center gap-1.5 mb-1.5">
                       <app-avatar [name]="conv.altroUtente.nomeCompleto" [src]="conv.altroUtente.profilePictureUrl" size="xs" />
                       <span class="text-xs text-gray-500 dark:text-gray-400">{{ conv.altroUtente.nomeCompleto }}</span>
-                      <span class="text-xs text-gray-300 dark:text-gray-600">·</span>
-                      <span class="text-xs text-gray-400 dark:text-gray-500">{{ conv.ruolo === 'VENDITORE' ? 'Acquirente' : 'Venditore' }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                       <p class="text-sm truncate"
                         [ngClass]="conv.messaggiNonLetti > 0 ? 'text-gray-600 dark:text-gray-200 font-medium' : 'text-gray-500 dark:text-gray-400'">
-                        {{ conv.ultimoMessaggio }}
+                        {{ conv.ultimoMessaggio?.contenuto || 'Nessun messaggio' }}
                       </p>
                       @if (conv.messaggiNonLetti > 0) {
                         <span class="w-5 h-5 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0 ml-2">
@@ -429,96 +407,22 @@
                       }
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    (click)="deleteConversation($event, conv.id)"
+                    class="self-start p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                    aria-label="Elimina conversazione"
+                    title="Elimina conversazione"
+                  >
+                    <lucide-icon [img]="Trash2Icon" [size]="14" />
+                  </button>
                 </div>
               </div>
             }
           </div>
         }
 
-        <!-- Chat aperta -->
-        @if (store.isChatOpen()) {
-          <div class="animate-fade-in">
-
-            <!-- Header chat -->
-            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark mb-3">
-              <div class="p-4 flex items-center gap-3">
-                <button type="button" (click)="closeChat()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
-                  <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
-                </button>
-                <div class="w-10 h-14 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
-                  <img [src]="store.activeConversation()!.annuncio.imageUrl" alt="" class="w-full h-full object-cover" />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate">{{ store.activeConversation()!.annuncio.titolo }}</h3>
-                  <div class="flex items-center gap-1.5">
-                    @if (store.activeConversation()!.altroUtente.isOnline) {
-                      <span class="w-2 h-2 bg-success-500 rounded-full"></span>
-                    }
-                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ store.activeConversation()!.altroUtente.nomeCompleto }}</span>
-                    @if (store.activeConversation()!.altroUtente.isOnline) {
-                      <span class="text-xs text-success-600 dark:text-success-400">· Online</span>
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Area messaggi -->
-            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark mb-3">
-              <div class="p-4 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
-
-                <!-- Data separatore -->
-                <div class="flex items-center justify-center">
-                  <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-xs rounded-full">Oggi</span>
-                </div>
-
-                @if (store.chatLoading()) {
-                  <div class="flex justify-center py-8">
-                    <app-spinner size="lg" />
-                  </div>
-                }
-
-                @for (message of store.chatMessages(); track message.id) {
-                  @if (isMyMessage(message)) {
-                    <!-- Messaggio inviato -->
-                    <div class="flex gap-3 justify-end">
-                      <div class="bg-primary-500 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-xs sm:max-w-md">
-                        <p class="text-sm">{{ message.contenuto }}</p>
-                        <span class="text-xs text-primary-200 mt-1 block text-right">{{ formatTime(message.createdAt) }}</span>
-                      </div>
-                    </div>
-                  } @else {
-                    <!-- Messaggio ricevuto -->
-                    <div class="flex gap-3">
-                      <app-avatar [name]="message.mittente.nomeCompleto" [src]="message.mittente.profilePictureUrl" size="sm" />
-                      <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-4 py-3 max-w-xs sm:max-w-md">
-                        <p class="text-gray-800 dark:text-gray-200 text-sm">{{ message.contenuto }}</p>
-                        <span class="text-xs text-gray-400 dark:text-gray-500 mt-1 block">{{ formatTime(message.createdAt) }}</span>
-                      </div>
-                    </div>
-                  }
-                }
-              </div>
-            </div>
-
-            <!-- Input messaggio -->
-            <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark">
-              <div class="p-3 flex items-center gap-3">
-                <input
-                  type="text"
-                  [value]="chatInput()"
-                  (input)="chatInput.set($any($event.target).value)"
-                  (keydown)="onChatKeydown($event)"
-                  placeholder="Scrivi un messaggio..."
-                  class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                />
-                <button type="button" (click)="sendMessage()" class="p-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-colors shrink-0">
-                  <lucide-icon [img]="SendIcon" [size]="18" />
-                </button>
-              </div>
-            </div>
-          </div>
-        }
       </section>
     }
 
@@ -531,7 +435,7 @@
   @if (showMobileFilters()) {
     <div class="fixed inset-0 z-50">
       <div class="absolute inset-0 bg-black/50" (click)="toggleMobileFilters()"></div>
-      <div class="absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark rounded-t-2xl p-6 space-y-4 animate-slide-up">
+      <div class="absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark rounded-t-2xl p-6 space-y-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtri</h3>
           <button type="button" (click)="toggleMobileFilters()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -590,8 +494,28 @@
        ============================================ -->
   <app-sell-book-modal
     [isOpen]="store.sellModalOpen()"
+    [editBook]="editingListing()"
     (closed)="closeSellModal()"
     (submitted)="onSellBookSubmitted($event)"
   />
+
+
+  <!-- ============================================
+       FLOATING: Chiedi all'AI
+       ============================================ -->
+  <button type="button"
+    (click)="showChatbot.set(true)"
+    class="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-full font-medium text-sm shadow-lg shadow-primary-500/30 transition-all hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95">
+    <lucide-icon [img]="LightbulbIcon" [size]="20" />
+    <span class="hidden sm:inline">Chiedi all'AI</span>
+  </button>
+
+
+  <!-- ============================================
+       CHATBOT DRAWER
+       ============================================ -->
+  @if (showChatbot()) {
+    <app-ai-chatbot (closed)="showChatbot.set(false)" />
+  }
 
 </div>
