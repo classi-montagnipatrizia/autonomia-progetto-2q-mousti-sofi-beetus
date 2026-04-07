@@ -312,6 +312,102 @@
             </div>
           }
 
+          <!-- Notifications Section -->
+          @if (activeSection() === 'notifications') {
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Notifiche push
+              </h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Ricevi notifiche anche quando non sei nell'app — per messaggi, like, commenti e molto altro.
+              </p>
+
+              <!-- iOS non installata come PWA -->
+              @if (pushStatus() === 'ios-not-installed') {
+                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                  <div class="flex gap-3">
+                    <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 class="text-sm font-medium text-amber-800 dark:text-amber-300">Installa beetUs su iPhone</h4>
+                      <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                        Per ricevere notifiche su iPhone, aggiungi beetUs alla schermata Home:<br>
+                        tasto <strong>Condividi</strong> → <strong>Aggiungi a schermata Home</strong>, poi torna qui.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Browser non supporta push -->
+              @if (pushStatus() === 'not-supported') {
+                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <div class="flex gap-3">
+                    <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-400 flex-shrink-0 mt-0.5" />
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      Il tuo browser non supporta le notifiche push. Prova con Chrome o Safari aggiornato.
+                    </p>
+                  </div>
+                </div>
+              }
+
+              <!-- Service worker non attivo (es. dev mode) -->
+              @if (pushStatus() === 'sw-disabled') {
+                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <div class="flex gap-3">
+                    <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-400 flex-shrink-0 mt-0.5" />
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      Le notifiche push sono disponibili solo nella build di produzione. Esegui <code class="bg-gray-100 dark:bg-gray-600 px-1 rounded">ng build</code> e servi l'app per testarle.
+                    </p>
+                  </div>
+                </div>
+              }
+
+              <!-- Permesso negato dall'utente -->
+              @if (pushStatus() === 'denied') {
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <div class="flex gap-3">
+                    <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 class="text-sm font-medium text-red-800 dark:text-red-300">Notifiche bloccate</h4>
+                      <p class="text-sm text-red-700 dark:text-red-400 mt-1">
+                        Hai bloccato le notifiche per questo sito. Abilitale nelle impostazioni del browser, poi ricarica la pagina.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Caso normale: toggle -->
+              @if (pushStatus() === 'normal') {
+                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">Notifiche push</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                      {{ isPushSubscribed() ? 'Attive su questo dispositivo' : 'Non attive su questo dispositivo' }}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="togglePushNotifications()"
+                    [disabled]="isTogglingPush()"
+                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class.bg-primary-600]="isPushSubscribed()"
+                    [class.bg-gray-200]="!isPushSubscribed()"
+                    [class.dark:bg-gray-600]="!isPushSubscribed()"
+                    [attr.aria-checked]="isPushSubscribed()"
+                    role="switch"
+                  >
+                    <span
+                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                      [class.translate-x-5]="isPushSubscribed()"
+                      [class.translate-x-0]="!isPushSubscribed()"
+                    ></span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
           <!-- Account Section -->
           @if (activeSection() === 'account') {
             <div>

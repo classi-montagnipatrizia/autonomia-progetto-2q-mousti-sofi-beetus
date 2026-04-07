@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Bell,
 } from 'lucide-angular';
 import { Subject, takeUntil, finalize, Observable } from 'rxjs';
 
@@ -29,11 +30,13 @@ import { ToastService } from '../../../core/services/toast-service';
 import { DialogService } from '../../../core/services/dialog-service';
 import { CloudinaryStorageService } from '../../../core/services/cloudinary-storage-service';
 import { LoggerService } from '../../../core/services/logger.service';
+import { PushNotificationService } from '../../../core/services/push-notification-service';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { ButtonComponent } from '../../../shared/ui/button/button-component/button-component';
 import { AggiornaProfiloRequestDTO, CambiaPasswordRequestDTO, DisattivaAccountRequestDTO } from '../../../models';
 
-type SettingsSection = 'profile' | 'password' | 'theme' | 'account';
+type SettingsSection = 'profile' | 'password' | 'theme' | 'notifications' | 'account';
+type PushStatus = 'ios-not-installed' | 'not-supported' | 'sw-disabled' | 'denied' | 'normal';
 type ThemeMode = Theme | 'system';
 
 @Component({
@@ -60,6 +63,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   private readonly cloudinaryService = inject(CloudinaryStorageService);
   private readonly destroy$ = new Subject<void>();
   private readonly logger = inject(LoggerService);
+  private readonly pushService = inject(PushNotificationService);
 
   // Icone
   readonly ArrowLeftIcon = ArrowLeft;
@@ -76,6 +80,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   readonly SunIcon = Sun;
   readonly MoonIcon = Moon;
   readonly MonitorIcon = Monitor;
+  readonly BellIcon = Bell;
 
   // State
   readonly activeSection = signal<SettingsSection>('profile');
@@ -102,6 +107,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // Theme
   readonly currentTheme = signal<ThemeMode>('light');
+
+  // Push notifications
+  readonly isPushSubscribed = signal(this.pushService.isSubscribed);
+  readonly isTogglingPush = signal(false);
+
+  readonly pushStatus = computed<PushStatus>(() => {
+    if (this.pushService.isIosNotInstalled) return 'ios-not-installed';
+    if (!this.pushService.isSupported) return 'not-supported';
+    if (!this.pushService.isSwEnabled) return 'sw-disabled';
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') return 'denied';
+    return 'normal';
+  });
 
   // Deactivate form
   readonly deactivatePassword = signal('');
@@ -135,6 +152,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'profile', label: 'Profilo', icon: User },
     { id: 'password', label: 'Password', icon: Lock },
     { id: 'theme', label: 'Tema', icon: Palette },
+    { id: 'notifications', label: 'Notifiche', icon: Bell },
     { id: 'account', label: 'Account', icon: Power },
   ];
 
@@ -469,6 +487,43 @@ export class SettingsComponent implements OnInit, OnDestroy {
       case 'deactivate':
         this.showDeactivatePassword.update(v => !v);
         break;
+    }
+  }
+
+  /**
+   * Attiva/disattiva notifiche push
+   */
+  togglePushNotifications(): void {
+    if (this.isTogglingPush() || this.pushStatus() !== 'normal') return;
+
+    this.isTogglingPush.set(true);
+
+    if (this.isPushSubscribed()) {
+      this.pushService.unsubscribe()
+        .pipe(takeUntil(this.destroy$), finalize(() => this.isTogglingPush.set(false)))
+        .subscribe({
+          next: () => {
+            this.isPushSubscribed.set(false);
+            this.toastService.success('Notifiche push disattivate');
+          },
+          error: () => this.toastService.error('Errore durante la disattivazione'),
+        });
+    } else {
+      this.pushService.requestPermissionAndSubscribe()
+        .pipe(takeUntil(this.destroy$), finalize(() => this.isTogglingPush.set(false)))
+        .subscribe({
+          next: () => {
+            this.isPushSubscribed.set(true);
+            this.toastService.success('Notifiche push attivate');
+          },
+          error: (err) => {
+            if (err?.name === 'NotAllowedError') {
+              this.toastService.error('Permesso negato. Abilita le notifiche nelle impostazioni del browser.');
+            } else {
+              this.toastService.error('Errore durante l\'attivazione');
+            }
+          },
+        });
     }
   }
 
