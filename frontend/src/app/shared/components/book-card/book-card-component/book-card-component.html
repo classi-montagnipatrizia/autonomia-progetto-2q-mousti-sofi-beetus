@@ -1,0 +1,90 @@
+<article
+  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col transition-shadow hover:shadow-md"
+  [class.cursor-pointer]="clickable()"
+  (click)="onCardClick()"
+  (keyup.enter)="onCardClick()"
+  [attr.tabindex]="clickable() ? 0 : null"
+  [attr.role]="clickable() ? 'button' : null"
+  [attr.aria-label]="book().titolo"
+>
+  <!-- Copertina -->
+  <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+    <img
+      [src]="book().frontImageUrl"
+      [alt]="book().titolo"
+      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      loading="lazy"
+    />
+
+    <!-- Overlay stato (solo se non disponibile) -->
+    @if (statusLabel()) {
+      <div class="absolute inset-0 bg-black/55 flex items-center justify-center">
+        <span class="text-white font-bold text-base tracking-widest uppercase">
+          {{ statusLabel() }}
+        </span>
+      </div>
+    }
+
+    <!-- Badge condizione -->
+    <span
+      class="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
+      [ngClass]="conditionClasses()"
+    >
+      {{ conditionLabel() }}
+    </span>
+  </div>
+
+  <!-- Info -->
+  <div class="flex flex-col flex-1 p-3 gap-1.5">
+    <!-- Titolo e autore -->
+    <div class="min-w-0">
+      <p class="font-semibold text-gray-900 dark:text-white text-sm leading-snug line-clamp-2">
+        {{ book().titolo }}
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+        {{ book().autore }}
+      </p>
+    </div>
+
+    <!-- Materia e anno -->
+    @if (book().materia || book().annoScolastico) {
+      <div class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
+        @if (book().materia) {
+          <span class="flex items-center gap-0.5">
+            <lucide-icon [img]="BookOpenIcon" [size]="11" />
+            {{ book().materia }}
+          </span>
+        }
+        @if (book().materia && book().annoScolastico) {
+          <span>·</span>
+        }
+        @if (book().annoScolastico) {
+          <span>{{ book().annoScolastico }}</span>
+        }
+      </div>
+    }
+
+    <!-- Venditore -->
+    <p class="text-xs text-gray-400 dark:text-gray-500 truncate">
+      di {{ book().venditore.nomeCompleto }}
+    </p>
+
+    <!-- Footer: prezzo + bottone Richiedi -->
+    <div class="flex items-center justify-between mt-auto pt-1.5 border-t border-gray-100 dark:border-gray-800">
+      <span class="text-base font-bold text-primary-600 dark:text-primary-400">
+        €{{ book().prezzo | number:'1.0-2' }}
+      </span>
+
+      @if (isAvailable() && clickable()) {
+        <button
+          type="button"
+          class="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white transition-colors cursor-pointer"
+          (click)="onRequest($event)"
+          [attr.aria-label]="'Richiedi ' + book().titolo"
+        >
+          Richiedi
+        </button>
+      }
+    </div>
+  </div>
+</article>
