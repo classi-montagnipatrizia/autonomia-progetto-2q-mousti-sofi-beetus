@@ -88,13 +88,18 @@ export class UserService {
     searchTerm: string,
     page: number = 0,
     size: number = 20,
-    sort: string = 'username'
+    sort: string = 'username',
+    allClasses: boolean = false
   ): Observable<PageResponse<UserSummaryDTO>> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('q', searchTerm)
       .set('page', page.toString())
       .set('size', size.toString())
       .set('sort', sort);
+
+    if (allClasses) {
+      params = params.set('allClasses', 'true');
+    }
 
     return this.http.get<PageResponse<UserSummaryDTO>>(`${this.baseUrl}/search`, { params });
   }

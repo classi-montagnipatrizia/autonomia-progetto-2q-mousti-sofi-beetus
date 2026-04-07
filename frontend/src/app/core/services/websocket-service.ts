@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Subject, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { TokenService } from '../auth/services/token-service';
@@ -10,7 +10,10 @@ import {
   NotificationResponseDTO,
   MessageResponseDTO,
   PostResponseDTO,
-  CommentResponseDTO
+  CommentResponseDTO,
+  GroupMessageDTO,
+  GroupTypingEvent,
+  BookMessageDTO,
 } from '../../models';
 
 @Injectable({
@@ -55,8 +58,26 @@ export class WebsocketService implements OnDestroy {
   public readonly commentsCount$ = this.commentsCountSubject.asObservable();
   public readonly userPresence$ = this.userPresenceSubject.asObservable();
 
+  // Subject per i messaggi libreria real-time
+  private readonly bookMessagesSubject = new Subject<BookMessageDTO>();
+  public readonly bookMessages$ = this.bookMessagesSubject.asObservable();
+
+  // Subjects per i messaggi di gruppo real-time
+  private readonly groupMessagesSubject = new Subject<GroupMessageDTO>();
+  public readonly groupMessages$ = this.groupMessagesSubject.asObservable();
+
+  // Subject per typing indicators nei gruppi
+  private readonly groupTypingSubject = new Subject<GroupTypingEvent & { groupId: number }>();
+  public readonly groupTyping$ = this.groupTypingSubject.asObservable();
+
   // Mappa per tenere traccia delle sottoscrizioni ai commenti per post
-  private commentSubscriptions = new Map<number, StompSubscription>();
+  private readonly commentSubscriptions = new Map<number, StompSubscription>();
+
+  // Mappa per tenere traccia delle sottoscrizioni ai gruppi
+  private readonly groupSubscriptions = new Map<number, StompSubscription>();
+
+  // Mappa per le sottoscrizioni typing dei gruppi
+  private readonly groupTypingSubscriptions = new Map<number, StompSubscription>();
 
   /**
    * Connette al WebSocket server
@@ -143,6 +164,14 @@ export class WebsocketService implements OnDestroy {
     this.commentSubscriptions.forEach((sub) => sub.unsubscribe());
     this.commentSubscriptions.clear();
 
+    // Cancella tutte le sottoscrizioni ai gruppi
+    this.groupSubscriptions.forEach((sub) => sub.unsubscribe());
+    this.groupSubscriptions.clear();
+
+    // Cancella tutte le sottoscrizioni typing dei gruppi
+    this.groupTypingSubscriptions.forEach((sub) => sub.unsubscribe());
+    this.groupTypingSubscriptions.clear();
+
     if (this.client) {
       this.client.deactivate();
       this.client = null;
@@ -200,14 +229,16 @@ export class WebsocketService implements OnDestroy {
     // Calcola delay con exponential backoff
     const delay = Math.min(
       WEBSOCKET_CONFIG.RECONNECT_DELAY_BASE *
-      Math.pow(WEBSOCKET_CONFIG.RECONNECT_BACKOFF_MULTIPLIER, this.reconnectAttempts),
-      WEBSOCKET_CONFIG.RECONNECT_DELAY_MAX
+        Math.pow(WEBSOCKET_CONFIG.RECONNECT_BACKOFF_MULTIPLIER, this.reconnectAttempts),
+      WEBSOCKET_CONFIG.RECONNECT_DELAY_MAX,
     );
 
     this.reconnectAttempts++;
-    this.logger.info(`[WebSocket] Tentativo riconnessione ${this.reconnectAttempts}/${WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS} tra ${delay}ms`);
+    this.logger.info(
+      `[WebSocket] Tentativo riconnessione ${this.reconnectAttempts}/${WEBSOCKET_CONFIG.MAX_RECONNECT_ATTEMPTS} tra ${delay}ms`,
+    );
 
-    this.reconnectTimeoutId = window.setTimeout(() => {
+    this.reconnectTimeoutId = globalThis.setTimeout(() => {
       this.connect();
     }, delay);
   }
@@ -218,7 +249,7 @@ export class WebsocketService implements OnDestroy {
   private subscribeToChannel<T>(
     destination: string,
     subject: Subject<T>,
-    parser?: (data: unknown) => T
+    parser?: (data: unknown) => T,
   ): void {
     if (!this.client) return;
 
@@ -246,6 +277,9 @@ export class WebsocketService implements OnDestroy {
 
     // Sottoscrizione ai messaggi diretti
     this.subscribeToChannel('/user/queue/messages', this.messagesSubject);
+
+    // Sottoscrizione ai messaggi libreria
+    this.subscribeToChannel('/user/queue/book-messages', this.bookMessagesSubject);
 
     // Sottoscrizione agli indicatori di digitazione
     this.subscribeToChannel('/user/queue/typing', this.typingSubject);
@@ -354,7 +388,7 @@ export class WebsocketService implements OnDestroy {
         } catch (error) {
           this.logger.error(`[WebSocket] Errore parsing update commenti post ${postId}`, error);
         }
-      }
+      },
     );
 
     this.commentSubscriptions.set(postId, subscription);
@@ -373,6 +407,69 @@ export class WebsocketService implements OnDestroy {
       this.commentSubscriptions.delete(postId);
       this.logger.debug(`[WebSocket] Cancellata sottoscrizione commenti post ${postId}`);
     }
+  }
+
+  /**
+   * Sottoscrive ai messaggi real-time di un gruppo.
+   * Deve essere chiamato all'apertura della chat di gruppo.
+   * I messaggi arrivano su groupMessages$.
+   *
+   * @param groupId ID del gruppo
+   */
+  subscribeToGroup(groupId: number): void {
+    if (!this.client?.connected) {
+      this.logger.warn('[WebSocket] Non connesso, impossibile sottoscrivere al gruppo');
+      return;
+    }
+
+    if (this.groupSubscriptions.has(groupId)) {
+      this.logger.debug(`[WebSocket] Già sottoscritto al gruppo ${groupId}`);
+      return;
+    }
+
+    const subscription = this.client.subscribe(`/topic/group.${groupId}`, (message: IMessage) => {
+      try {
+        const dto = JSON.parse(message.body) as GroupMessageDTO;
+        this.groupMessagesSubject.next(dto);
+      } catch (error) {
+        this.logger.error(`[WebSocket] Errore parsing messaggio gruppo ${groupId}`, error);
+      }
+    });
+
+    this.groupSubscriptions.set(groupId, subscription);
+
+    // Sottoscrizione typing per il gruppo
+    const typingSub = this.client.subscribe(`/topic/group.${groupId}.typing`, (message: IMessage) => {
+      try {
+        const event = JSON.parse(message.body) as GroupTypingEvent;
+        this.groupTypingSubject.next({ ...event, groupId });
+      } catch (error) {
+        this.logger.error(`[WebSocket] Errore parsing typing gruppo ${groupId}`, error);
+      }
+    });
+    this.groupTypingSubscriptions.set(groupId, typingSub);
+
+    this.logger.debug(`[WebSocket] Sottoscritto al gruppo ${groupId}`);
+  }
+
+  /**
+   * Cancella la sottoscrizione ai messaggi di un gruppo.
+   * Deve essere chiamato alla chiusura della chat di gruppo.
+   *
+   * @param groupId ID del gruppo
+   */
+  unsubscribeFromGroup(groupId: number): void {
+    const subscription = this.groupSubscriptions.get(groupId);
+    if (subscription) {
+      subscription.unsubscribe();
+      this.groupSubscriptions.delete(groupId);
+    }
+    const typingSub = this.groupTypingSubscriptions.get(groupId);
+    if (typingSub) {
+      typingSub.unsubscribe();
+      this.groupTypingSubscriptions.delete(groupId);
+    }
+    this.logger.debug(`[WebSocket] Cancellata sottoscrizione gruppo ${groupId}`);
   }
 
   /**

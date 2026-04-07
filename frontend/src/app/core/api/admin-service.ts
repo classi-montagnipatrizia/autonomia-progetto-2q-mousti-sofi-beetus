@@ -165,6 +165,47 @@ export class AdminService {
   }
 
   // ============================================================================
+  // MODERAZIONE LIBRI E GRUPPI
+  // ============================================================================
+
+  /**
+   * Lista tutti i libri (per moderazione admin)
+   */
+  getAllBooks(page = 0, size = 20): Observable<PageResponse<AdminBookDTO>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PageResponse<AdminBookDTO>>(`${this.baseUrl}/books`, { params });
+  }
+
+  /**
+   * Lista tutti i gruppi (per moderazione admin)
+   */
+  getAllGroups(page = 0, size = 20): Observable<PageResponse<AdminGroupDTO>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PageResponse<AdminGroupDTO>>(`${this.baseUrl}/groups`, { params });
+  }
+
+  /**
+   * Elimina un annuncio libro come amministratore
+   */
+  deleteBook(bookId: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/books/${bookId}`);
+  }
+
+  /**
+   * Elimina tutti gli annunci libro di un utente
+   */
+  deleteAllUserBooks(userId: number): Observable<DeleteCountResponse> {
+    return this.http.delete<DeleteCountResponse>(`${this.baseUrl}/users/${userId}/books`);
+  }
+
+  /**
+   * Elimina un gruppo come amministratore
+   */
+  deleteGroup(groupId: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/groups/${groupId}`);
+  }
+
+  // ============================================================================
   // STATISTICHE E MONITORING
   // ============================================================================
 
@@ -416,6 +457,7 @@ export type RateLimitType =
   | 'POST_CREATION'
   | 'LIKE'
   | 'MESSAGE'
+  | 'AI'
   | 'API_GENERAL'
   | 'WEBSOCKET';
 
@@ -430,4 +472,32 @@ export interface AdminUserDTO {
   profilePictureUrl: string | null;
   isAdmin: boolean;
   isActive: boolean;
+}
+
+/**
+ * DTO libro per pagina admin
+ */
+export interface AdminBookDTO {
+  id: number;
+  titolo: string;
+  autore: string;
+  prezzo: number;
+  condizione: string;
+  stato: string;
+  annoScolastico: string;
+  materia: string;
+  frontImageUrl: string;
+  venditore: { id: number; username: string; nomeCompleto: string; profilePictureUrl: string | null };
+  createdAt: string;
+}
+
+/**
+ * DTO gruppo per pagina admin
+ */
+export interface AdminGroupDTO {
+  id: number;
+  name: string;
+  description: string | null;
+  profilePictureUrl: string | null;
+  memberCount: number;
 }

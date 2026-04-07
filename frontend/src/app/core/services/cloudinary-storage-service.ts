@@ -44,6 +44,7 @@ export class CloudinaryStorageService {
   private readonly uploadPreset = environment.cloudinary.uploadPreset;
   private readonly baseFolder = environment.cloudinary.folder;
   private readonly uploadUrl = `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`;
+  private readonly audioUploadUrl = `https://api.cloudinary.com/v1_1/${this.cloudName}/video/upload`;
   private readonly apiUrl = environment.apiUrl;
 
   /**
@@ -275,6 +276,77 @@ export class CloudinaryStorageService {
         if (xhr.readyState !== XMLHttpRequest.DONE) {
           xhr.abort();
         }
+      };
+    });
+  }
+
+  /**
+   * Upload di un file audio su Cloudinary.
+   * Cloudinary gestisce l'audio tramite l'endpoint /video/upload.
+   *
+   * @param blob Blob audio registrato dalla MediaRecorder API
+   * @param onProgress Callback progresso upload (opzionale)
+   * @returns Observable con l'URL pubblico dell'audio
+   */
+  uploadAudio(blob: Blob, onProgress?: (progress: number) => void): Observable<string> {
+    const file = new File([blob], `audio_${Date.now()}.webm`, { type: blob.type || 'audio/webm' });
+
+    if (file.size > 10 * 1024 * 1024) {
+      return throwError(() => new UploadValidationError('Il file audio supera il limite di 10MB'));
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', this.uploadPreset);
+    formData.append('folder', `${this.baseFolder}/audio`);
+    formData.append('resource_type', 'video');
+
+    return this.performAudioUpload(formData, onProgress).pipe(
+      catchError((error) => {
+        this.logger.error('Errore upload audio', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  private performAudioUpload(
+    formData: FormData,
+    onProgress?: (progress: number) => void
+  ): Observable<string> {
+    return new Observable<string>((observer) => {
+      const xhr = new XMLHttpRequest();
+
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            observer.next(response.secure_url as string);
+            observer.complete();
+          } catch {
+            observer.error(new Error('Errore parsing risposta Cloudinary audio'));
+          }
+        } else {
+          observer.error(new Error(`Errore upload audio: ${xhr.status} ${xhr.statusText}`));
+        }
+      });
+
+      xhr.addEventListener('error', () => observer.error(new Error('Errore di rete upload audio')));
+      xhr.addEventListener('timeout', () => observer.error(new Error('Timeout upload audio')));
+
+      xhr.open('POST', this.audioUploadUrl);
+      xhr.timeout = 60000;
+      xhr.send(formData);
+
+      return () => {
+        if (xhr.readyState !== XMLHttpRequest.DONE) xhr.abort();
       };
     });
   }

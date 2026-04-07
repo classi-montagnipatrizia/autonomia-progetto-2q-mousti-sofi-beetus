@@ -16,6 +16,7 @@ import {
 } from '../../../models';
 import { TokenService } from './token-service';
 import { AuthStore } from '../../stores/auth-store';
+import { AiChatbotStore } from '../../stores/ai-chatbot-store';
 import { WebsocketService } from '../../services/websocket-service';
 import { LoggerService } from '../../services/logger.service';
 
@@ -27,6 +28,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly tokenService = inject(TokenService);
   private readonly authStore = inject(AuthStore);
+  private readonly aiChatbotStore = inject(AiChatbotStore);
   private readonly websocketService = inject(WebsocketService);
   private readonly logger = inject(LoggerService);
 
@@ -265,8 +267,9 @@ export class AuthService {
     // Rimuove i token
     this.tokenService.clearTokens();
 
-    // Pulisce lo store
+    // Pulisce gli store
     this.authStore.clearUser();
+    this.aiChatbotStore.clear();
 
     // Naviga alla pagina di login
     this.router.navigate(['/auth/login']);
