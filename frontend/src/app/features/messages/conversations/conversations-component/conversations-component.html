@@ -2,16 +2,35 @@
 <div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
 
   <!-- Header - uguale per mobile e desktop, con pulsante back -->
-  <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-    <button
-      type="button"
-      (click)="goBack()"
-      class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-      aria-label="Torna alla home"
-    >
-      <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
-    </button>
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Messaggi</h1>
+  <header class="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center gap-3 mb-3">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+        aria-label="Torna alla home"
+      >
+        <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+      </button>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white">Messaggi</h1>
+    </div>
+    <!-- Tab bar: Chat | Gruppi -->
+    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+      <button
+        type="button"
+        class="flex-1 py-2 px-4 text-sm font-medium rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm transition-all"
+      >Chat</button>
+      <button
+        type="button"
+        (click)="tabChanged.emit('gruppi')"
+        class="flex-1 py-2 px-4 text-sm font-medium rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all relative"
+      >
+        Gruppi
+        @if (groupStore.totalUnread() > 0) {
+          <span class="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{{ groupStore.totalUnread() }}</span>
+        }
+      </button>
+    </div>
   </header>
 
   <!-- Search bar -->
@@ -151,7 +170,7 @@
                 </div>
                 <p
                   class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
-                  [innerHTML]="highlightText(message.contenuto, searchQuery())"
+                  [innerHTML]="highlightText(message.contenuto ?? '', searchQuery())"
                 ></p>
               </div>
             </button>

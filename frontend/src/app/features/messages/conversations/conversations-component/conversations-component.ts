@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { MessageService } from '../../../../core/api/message-service';
 import { OnlineUsersStore } from '../../../../core/stores/online-users-store';
 import { TypingStore } from '../../../../core/stores/typing-store';
 import { AuthStore } from '../../../../core/stores/auth-store';
+import { GroupStore } from '../../../../core/stores/group-store';
 import { ConversationResponseDTO, MessageResponseDTO } from '../../../../models';
 import { ConversationItemComponent } from '../../../../shared/components/conversation-item/conversation-item-component/conversation-item-component';
 import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-component/skeleton-component';
@@ -45,9 +46,13 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   private readonly onlineUsersStore = inject(OnlineUsersStore);
   private readonly typingStore = inject(TypingStore);
   private readonly authStore = inject(AuthStore);
+  readonly groupStore = inject(GroupStore);
   private readonly router = inject(Router);
   private readonly subscriptions: Subscription[] = [];
   private readonly searchSubject = new Subject<string>();
+
+  // Output per switch tab
+  readonly tabChanged = output<'chat' | 'gruppi'>();
 
   // Icone
   readonly ArrowLeftIcon = ArrowLeft;
@@ -268,6 +273,11 @@ export class ConversationsComponent implements OnInit, OnDestroy {
 
     if (lastMsg.isHiddenByCurrentUser) {
       return 'Hai nascosto questo messaggio';
+    }
+
+    // Messaggio vocale
+    if (lastMsg.audioUrl) {
+      return '🎤 Messaggio vocale';
     }
 
     // Se c'è solo un'immagine senza testo
