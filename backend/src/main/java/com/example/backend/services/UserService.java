@@ -188,31 +188,31 @@ public class UserService {
      * @throws InvalidInputException se il termine di ricerca è vuoto
      */
     @Transactional(readOnly = true)
-    public Page<UserSummaryDTO> cercaUtenti(String searchTerm, Long currentUserId, Pageable pageable) {
-        log.debug("Ricerca utenti - Termine: {}, Utente: {}", searchTerm, currentUserId);
+    public Page<UserSummaryDTO> cercaUtenti(String searchTerm, Long currentUserId, boolean allClasses, Pageable pageable) {
+        log.debug("Ricerca utenti - Termine: {}, Utente: {}, AllClasses: {}", searchTerm, currentUserId, allClasses);
 
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             throw new InvalidInputException("Il termine di ricerca non può essere vuoto");
         }
 
-        // Recupera la classe dell'utente corrente
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(ENTITY_USER, FIELD_ID, currentUserId));
-
-        String classroom = currentUser.getClassroom();
-
         Page<User> users;
-        if (classroom != null && !classroom.isEmpty()) {
-            // Filtra per classe
-            users = userRepository.searchUsersByClassroom(searchTerm.trim(), classroom, pageable);
-        } else {
-            // Fallback: se l'utente non ha classe, cerca tutti (per retrocompatibilità)
+        if (allClasses) {
+            // Gruppi cross-class: cerca tutti gli utenti senza filtro classe
             users = userRepository.searchUsers(searchTerm.trim(), pageable);
+        } else {
+            // Chat normale: filtra per stessa classe
+            User currentUser = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new ResourceNotFoundException(ENTITY_USER, FIELD_ID, currentUserId));
+            String classroom = currentUser.getClassroom();
+            if (classroom != null && !classroom.isEmpty()) {
+                users = userRepository.searchUsersByClassroom(searchTerm.trim(), classroom, pageable);
+            } else {
+                users = userRepository.searchUsers(searchTerm.trim(), pageable);
+            }
         }
 
-        log.debug("Trovati {} utenti con termine '{}' nella classe '{}'", users.getTotalElements(), searchTerm, classroom);
+        log.debug("Trovati {} utenti con termine '{}'", users.getTotalElements(), searchTerm);
 
-        // Ottimizzazione: carica tutti gli utenti online in una singola query
         Set<Long> onlineUserIds = userMapper.getOnlineUserIds();
         return users.map(user -> userMapper.toUtenteSummaryDTO(user, onlineUserIds));
     }

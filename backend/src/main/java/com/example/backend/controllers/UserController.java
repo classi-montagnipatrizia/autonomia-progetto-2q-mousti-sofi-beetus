@@ -152,13 +152,14 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<Page<UserSummaryDTO>> cercaUtenti(
             @RequestParam("q") String searchTerm,
+            @RequestParam(value = "allClasses", defaultValue = "false") boolean allClasses,
             @CurrentUser User user,
             @PageableDefault(size = 20, sort = "username", direction = Sort.Direction.ASC)
             Pageable pageable) {
 
-        log.debug("GET /api/users/search?q={} - Classe: {}", searchTerm, user.getClassroom());
+        log.debug("GET /api/users/search?q={}&allClasses={} - Classe: {}", searchTerm, allClasses, user.getClassroom());
 
-        Page<UserSummaryDTO> users = userService.cercaUtenti(searchTerm, user.getId(), pageable);
+        Page<UserSummaryDTO> users = userService.cercaUtenti(searchTerm, user.getId(), allClasses, pageable);
 
         return ResponseEntity.ok(users);
     }
