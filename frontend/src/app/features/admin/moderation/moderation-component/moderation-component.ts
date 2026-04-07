@@ -16,10 +16,12 @@ import {
   Loader2,
   Eye,
   Clock,
+  BookOpen,
+  UsersRound,
 } from 'lucide-angular';
 import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { AdminService } from '../../../../core/api/admin-service';
+import { AdminService, AdminBookDTO, AdminGroupDTO } from '../../../../core/api/admin-service';
 import { PostService } from '../../../../core/api/post-service';
 import { ToastService } from '../../../../core/services/toast-service';
 import { DialogService } from '../../../../core/services/dialog-service';
@@ -28,7 +30,7 @@ import { AvatarComponent } from '../../../../shared/ui/avatar/avatar-component/a
 import { PostResponseDTO, PageResponse } from '../../../../models';
 import { TimeAgoComponent } from '../../../../shared/components/time-ago/time-ago-component/time-ago-component';
 
-type ContentTab = 'posts' | 'comments';
+type ContentTab = 'posts' | 'comments' | 'books' | 'groups';
 
 @Component({
   selector: 'app-moderation-component',
@@ -66,12 +68,16 @@ export class ModerationComponent implements OnInit, OnDestroy {
   readonly LoaderIcon = Loader2;
   readonly EyeIcon = Eye;
   readonly ClockIcon = Clock;
+  readonly BookOpenIcon = BookOpen;
+  readonly UsersRoundIcon = UsersRound;
 
   // State
   readonly activeTab = signal<ContentTab>('posts');
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
   readonly posts = signal<PostResponseDTO[]>([]);
+  readonly books = signal<AdminBookDTO[]>([]);
+  readonly groups = signal<AdminGroupDTO[]>([]);
   readonly searchQuery = signal('');
   readonly processingId = signal<number | null>(null);
 
@@ -83,6 +89,15 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
   // Computed
   readonly hasPosts = computed(() => this.posts().length > 0);
+  readonly hasBooks = computed(() => this.books().length > 0);
+  readonly hasGroups = computed(() => this.groups().length > 0);
+  readonly hasContent = computed(() => {
+    const tab = this.activeTab();
+    if (tab === 'posts') return this.hasPosts();
+    if (tab === 'books') return this.hasBooks();
+    if (tab === 'groups') return this.hasGroups();
+    return false;
+  });
   readonly isFirstPage = computed(() => this.currentPage() === 0);
   readonly isLastPage = computed(() => this.currentPage() >= this.totalPages() - 1);
 
@@ -90,6 +105,8 @@ export class ModerationComponent implements OnInit, OnDestroy {
   readonly tabs: { id: ContentTab; label: string; icon: typeof FileText }[] = [
     { id: 'posts', label: 'Post', icon: FileText },
     { id: 'comments', label: 'Commenti', icon: MessageSquare },
+    { id: 'books', label: 'Annunci', icon: BookOpen },
+    { id: 'groups', label: 'Gruppi', icon: UsersRound },
   ];
 
   ngOnInit(): void {
@@ -126,10 +143,17 @@ export class ModerationComponent implements OnInit, OnDestroy {
    * Carica contenuti in base al tab attivo
    */
   loadContent(): void {
-    if (this.activeTab() === 'posts') {
-      this.loadPosts();
+    switch (this.activeTab()) {
+      case 'posts':
+        this.loadPosts();
+        break;
+      case 'books':
+        this.loadBooks();
+        break;
+      case 'groups':
+        this.loadGroups();
+        break;
     }
-    // In futuro: loadComments()
   }
 
   /**
@@ -259,6 +283,128 @@ export class ModerationComponent implements OnInit, OnDestroy {
           // Rimuovi tutti i post di questo utente dalla lista
           this.posts.update(posts => posts.filter(p => p.autore.id !== post.autore.id));
           this.loadContent(); // Ricarica per aggiornare i conteggi
+        },
+        error: () => {
+          this.toastService.error('Errore durante l\'eliminazione');
+        }
+      });
+  }
+
+  // =========================================================================
+  // ANNUNCI LIBRO
+  // =========================================================================
+
+  /**
+   * Carica lista libri
+   */
+  loadBooks(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+
+    this.adminService.getAllBooks(this.currentPage(), this.pageSize)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading.set(false))
+      )
+      .subscribe({
+        next: (response) => {
+          this.books.set(response.content);
+          this.totalPages.set(response.totalPages);
+          this.totalElements.set(response.totalElements);
+        },
+        error: () => {
+          this.hasError.set(true);
+          this.toastService.error('Errore nel caricamento degli annunci');
+        }
+      });
+  }
+
+  /**
+   * Elimina annuncio libro come admin
+   */
+  async deleteBook(book: AdminBookDTO): Promise<void> {
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina annuncio',
+      message: `Sei sicuro di voler eliminare l'annuncio "${book.titolo}" di "${book.venditore.username}"? L'azione non può essere annullata.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+
+    if (!confirmed) return;
+
+    this.processingId.set(book.id);
+
+    this.adminService.deleteBook(book.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.processingId.set(null))
+      )
+      .subscribe({
+        next: () => {
+          this.toastService.success('Annuncio eliminato');
+          this.books.update(books => books.filter(b => b.id !== book.id));
+          this.totalElements.update(n => n - 1);
+        },
+        error: () => {
+          this.toastService.error('Errore durante l\'eliminazione');
+        }
+      });
+  }
+
+  // =========================================================================
+  // GRUPPI
+  // =========================================================================
+
+  /**
+   * Carica lista gruppi
+   */
+  loadGroups(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+
+    this.adminService.getAllGroups(this.currentPage(), this.pageSize)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading.set(false))
+      )
+      .subscribe({
+        next: (response) => {
+          this.groups.set(response.content);
+          this.totalPages.set(response.totalPages);
+          this.totalElements.set(response.totalElements);
+        },
+        error: () => {
+          this.hasError.set(true);
+          this.toastService.error('Errore nel caricamento dei gruppi');
+        }
+      });
+  }
+
+  /**
+   * Elimina gruppo come admin
+   */
+  async deleteGroup(group: AdminGroupDTO): Promise<void> {
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina gruppo',
+      message: `Sei sicuro di voler eliminare il gruppo "${group.name}"? Tutti i messaggi e membri verranno rimossi. L'azione non può essere annullata.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+
+    if (!confirmed) return;
+
+    this.processingId.set(group.id);
+
+    this.adminService.deleteGroup(group.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.processingId.set(null))
+      )
+      .subscribe({
+        next: () => {
+          this.toastService.success('Gruppo eliminato');
+          this.groups.update(groups => groups.filter(g => g.id !== group.id));
+          this.totalElements.update(n => n - 1);
         },
         error: () => {
           this.toastService.error('Errore durante l\'eliminazione');

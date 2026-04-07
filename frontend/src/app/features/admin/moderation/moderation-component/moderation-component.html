@@ -22,6 +22,23 @@
   <!-- Content -->
   <main class="max-w-6xl mx-auto px-4 py-6">
 
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+      @for (tab of tabs; track tab.id) {
+        <button
+          type="button"
+          (click)="setTab(tab.id)"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center"
+          [class]="activeTab() === tab.id
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        >
+          <lucide-icon [img]="tab.icon" [size]="16" />
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
     <!-- Search bar -->
     <div class="mb-6">
       <div class="relative">
@@ -43,12 +60,12 @@
     <!-- Stats -->
     @if (totalElements() > 0) {
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        {{ totalElements() }} post trovati
+        {{ totalElements() }} {{ activeTab() === 'posts' ? 'post' : activeTab() === 'books' ? 'annunci' : activeTab() === 'groups' ? 'gruppi' : 'elementi' }} trovati
       </p>
     }
 
     <!-- Loading state -->
-    @if (isLoading() && !hasPosts()) {
+    @if (isLoading() && !hasContent()) {
       <div class="space-y-4">
         @for (i of [1, 2, 3, 4, 5]; track i) {
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
@@ -82,7 +99,7 @@
     }
 
     <!-- Empty state -->
-    @if (!isLoading() && !hasError() && !hasPosts()) {
+    @if (!isLoading() && !hasError() && !hasContent()) {
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
         <lucide-icon [img]="FileTextIcon" [size]="48" class="text-gray-300 dark:text-gray-600 mx-auto mb-4" />
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -99,7 +116,7 @@
     }
 
     <!-- Posts list -->
-    @if (hasPosts() && !hasError()) {
+    @if (activeTab() === 'posts' && hasPosts() && !hasError()) {
       <div class="space-y-4">
         @for (post of posts(); track post.id) {
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
@@ -210,6 +227,148 @@
               class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Pagina successiva"
             >
+              <lucide-icon [img]="ChevronRightIcon" [size]="20" />
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Books list -->
+    @if (activeTab() === 'books' && hasBooks() && !hasError()) {
+      <div class="space-y-4">
+        @for (book of books(); track book.id) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <img
+                  [src]="book.frontImageUrl"
+                  alt="Copertina"
+                  class="w-12 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                />
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white text-sm">{{ book.titolo }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ book.autore }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Venditore: {{ book.venditore.username }}
+                  </p>
+                </div>
+              </div>
+              <span class="text-xs text-gray-400 dark:text-gray-500">#{{ book.id }}</span>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
+              <span class="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400">{{ book.prezzo | currency:'EUR' }}</span>
+              <span>{{ book.condizione }}</span>
+              <span>{{ book.materia }}</span>
+              <span>{{ book.annoScolastico }}</span>
+              <span class="px-2 py-0.5 rounded-full"
+                [class]="book.stato === 'DISPONIBILE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : book.stato === 'VENDUTO' ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'"
+              >{{ book.stato }}</span>
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+              @if (processingId() === book.id) {
+                <div class="flex items-center gap-2 px-3 py-1.5">
+                  <lucide-icon [img]="LoaderIcon" [size]="16" class="text-gray-400 animate-spin" />
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  (click)="deleteBook(book)"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <lucide-icon [img]="Trash2Icon" [size]="16" />
+                  Elimina annuncio
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="flex items-center justify-between mt-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Pagina {{ currentPage() + 1 }} di {{ totalPages() }}
+          </p>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="previousPage()" [disabled]="isFirstPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
+            </button>
+            <button type="button" (click)="nextPage()" [disabled]="isLastPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <lucide-icon [img]="ChevronRightIcon" [size]="20" />
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Groups list -->
+    @if (activeTab() === 'groups' && hasGroups() && !hasError()) {
+      <div class="space-y-4">
+        @for (group of groups(); track group.id) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-3">
+                @if (group.profilePictureUrl) {
+                  <img
+                    [src]="group.profilePictureUrl"
+                    alt="Foto gruppo"
+                    class="w-10 h-10 rounded-full object-cover"
+                  />
+                } @else {
+                  <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <lucide-icon [img]="UsersRoundIcon" [size]="20" class="text-primary-600 dark:text-primary-400" />
+                  </div>
+                }
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white text-sm">{{ group.name }}</p>
+                  @if (group.description) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{{ group.description }}</p>
+                  }
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ group.memberCount }} membri</p>
+                </div>
+              </div>
+              <span class="text-xs text-gray-400 dark:text-gray-500">#{{ group.id }}</span>
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+              @if (processingId() === group.id) {
+                <div class="flex items-center gap-2 px-3 py-1.5">
+                  <lucide-icon [img]="LoaderIcon" [size]="16" class="text-gray-400 animate-spin" />
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  (click)="deleteGroup(group)"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <lucide-icon [img]="Trash2Icon" [size]="16" />
+                  Elimina gruppo
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="flex items-center justify-between mt-6">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Pagina {{ currentPage() + 1 }} di {{ totalPages() }}
+          </p>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="previousPage()" [disabled]="isFirstPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
+            </button>
+            <button type="button" (click)="nextPage()" [disabled]="isLastPage() || isLoading()"
+              class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               <lucide-icon [img]="ChevronRightIcon" [size]="20" />
             </button>
           </div>
