@@ -8,6 +8,9 @@ import {
   AtSign,
   Mail,
   FileText,
+  BookOpen,
+  MessageSquare,
+  Users,
   LucideIconData,
 } from 'lucide-angular';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
@@ -30,6 +33,9 @@ export class NotificationItemComponent {
   readonly AtSignIcon = AtSign;
   readonly MailIcon = Mail;
   readonly FileTextIcon = FileText;
+  readonly BookOpenIcon = BookOpen;
+  readonly MessageSquareIcon = MessageSquare;
+  readonly UsersIcon = Users;
 
   /**
    * ID della notifica
@@ -101,6 +107,9 @@ export class NotificationItemComponent {
       [NotificationType.MENTION]: this.AtSignIcon,
       [NotificationType.DIRECT_MESSAGE]: this.MailIcon,
       [NotificationType.NEW_POST]: this.FileTextIcon,
+      [NotificationType.BOOK_REQUEST]: this.BookOpenIcon,
+      [NotificationType.BOOK_MESSAGE]: this.MessageSquareIcon,
+      [NotificationType.GROUP_MESSAGE]: this.UsersIcon,
     };
     return iconMap[this.tipo()];
   });
@@ -115,6 +124,9 @@ export class NotificationItemComponent {
       [NotificationType.MENTION]: 'text-info-500',
       [NotificationType.DIRECT_MESSAGE]: 'text-success-500',
       [NotificationType.NEW_POST]: 'text-warning-500',
+      [NotificationType.BOOK_REQUEST]: 'text-amber-500',
+      [NotificationType.BOOK_MESSAGE]: 'text-teal-500',
+      [NotificationType.GROUP_MESSAGE]: 'text-indigo-500',
     };
     return colorMap[this.tipo()];
   });

@@ -16,6 +16,8 @@ import {
   Database,
   Gauge,
   ScrollText,
+  BookOpen,
+  UsersRound,
 } from 'lucide-angular';
 import { Subject, takeUntil, finalize } from 'rxjs';
 
@@ -107,6 +109,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         icon: Heart,
         color: 'red' as const,
         description: 'Like assegnati',
+      },
+      {
+        label: 'Annunci libri',
+        value: data['totalBooks'] ?? 0,
+        icon: BookOpen,
+        color: 'green' as const,
+        description: 'Libri in vendita',
+      },
+      {
+        label: 'Gruppi',
+        value: data['totalGroups'] ?? 0,
+        icon: UsersRound,
+        color: 'purple' as const,
+        description: 'Gruppi creati',
       },
       {
         label: 'Amministratori',
