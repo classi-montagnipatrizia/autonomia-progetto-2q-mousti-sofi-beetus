@@ -1,0 +1,65 @@
+<div class="flex items-center gap-2.5 min-w-[180px] max-w-[260px]">
+  <!-- Icona mic -->
+  <div
+    class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
+    [ngClass]="iconBgClass()"
+  >
+    <lucide-icon [img]="MicIcon" [size]="16" [ngClass]="iconClass()" />
+  </div>
+
+  <!-- Corpo player -->
+  <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+    <!-- Barra di scorrimento -->
+    <div class="relative flex items-center h-3">
+      <!-- Track -->
+      <div
+        class="absolute inset-0 my-auto h-1 rounded-full"
+        [ngClass]="trackClass()"
+      ></div>
+
+      <!-- Fill -->
+      <div
+        class="absolute left-0 my-auto h-1 rounded-full transition-all duration-100 pointer-events-none"
+        [ngClass]="progressBarClass()"
+        [style.width.%]="progressPercent()"
+      ></div>
+
+      <!-- Range input (invisible ma cliccabile) -->
+      <input
+        type="range"
+        min="0"
+        max="100"
+        [value]="progressPercent()"
+        (input)="onSeek($event)"
+        class="absolute inset-0 w-full opacity-0 cursor-pointer"
+        aria-label="Avanzamento audio"
+      />
+    </div>
+
+    <!-- Tempo rimasto -->
+    <span class="text-xs font-mono" [ngClass]="textClass()">
+      {{ timeLabel() }}
+    </span>
+  </div>
+
+  <!-- Pulsante play/pause -->
+  <button
+    type="button"
+    class="flex items-center justify-center w-8 h-8 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+    [ngClass]="iconBgClass()"
+    (click)="togglePlay()"
+    [disabled]="isLoading()"
+    [attr.aria-label]="isPlaying() ? 'Pausa' : 'Riproduci'"
+  >
+    @if (isLoading()) {
+      <span
+        class="inline-block w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin"
+        [ngClass]="iconClass()"
+      ></span>
+    } @else if (isPlaying()) {
+      <lucide-icon [img]="PauseIcon" [size]="15" [ngClass]="iconClass()" />
+    } @else {
+      <lucide-icon [img]="PlayIcon" [size]="15" [ngClass]="iconClass()" />
+    }
+  </button>
+</div>
