@@ -6,7 +6,14 @@ import com.example.backend.events.DeleteMentionsEvent;
 import com.example.backend.exception.AdminProtectionException;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.dtos.response.BookSummaryDTO;
+import com.example.backend.dtos.response.GroupSummaryDTO;
+import com.example.backend.mappers.BookMapper;
+import com.example.backend.mappers.GroupMapper;
 import com.example.backend.models.*;
+import com.example.backend.models.Book;
+import com.example.backend.models.BookConversation;
+import com.example.backend.models.Group;
 import com.example.backend.repositories.*;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,12 +51,24 @@ public class AdminService {
     private final HiddenPostRepository hiddenPostRepository;
     private final HiddenCommentRepository hiddenCommentRepository;
     private final MentionRepository mentionRepository;
+    private final BookRepository bookRepository;
+    private final BookConversationRepository bookConversationRepository;
+    private final BookMessageRepository bookMessageRepository;
+    private final BookRequestRepository bookRequestRepository;
+    private final GroupRepository groupRepository;
+    private final GroupMembershipRepository groupMembershipRepository;
+    private final GroupMessageRepository groupMessageRepository;
+    private final BookMapper bookMapper;
+    private final GroupMapper groupMapper;
+    private final ImageService imageService;
     private final ApplicationEventPublisher eventPublisher;
     private final EntityManager entityManager;
 
     private static final String TARGET_TYPE_USER = "USER";
     private static final String TARGET_TYPE_POST = "POST";
     private static final String TARGET_TYPE_COMMENT = "COMMENT";
+    private static final String TARGET_TYPE_BOOK = "BOOK";
+    private static final String TARGET_TYPE_GROUP = "GROUP";
     private static final String USER_NOT_FOUND_MESSAGE = "Utente non trovato";
 
     /**
@@ -174,6 +193,32 @@ public class AdminService {
             // 2.6 Audit log: NON eliminiamo ma settiamo a NULL il riferimento
             auditLogRepository.nullifyTargetUser(userId);
             log.debug("Nullificati riferimenti audit log per utente {}", userId);
+
+            // --- FASE 2b: Eliminare contenuti libreria e gruppi ---
+
+            // 2b.1 Conversazioni libro (messaggi + conversazioni dove è buyer o seller)
+            eliminaTutteConversazioniLibro(userId);
+
+            // 2b.2 Richieste libro come buyer
+            bookRequestRepository.deleteByBuyerId(userId);
+            log.debug("Eliminate richieste libro dell'utente {}", userId);
+
+            // 2b.3 Libri (richieste + conversazioni + messaggi dei libri dell'utente)
+            eliminaTuttiLibri(userId);
+
+            // 2b.4 Messaggi gruppo (cleanup Cloudinary prima)
+            cleanupGroupSenderMediaFiles(userId);
+            groupMessageRepository.deleteBySenderId(userId);
+            log.debug("Eliminati messaggi gruppo dell'utente {}", userId);
+
+            // 2b.5 Membership gruppi
+            groupMembershipRepository.deleteByUserId(userId);
+            log.debug("Eliminate membership gruppi dell'utente {}", userId);
+
+            // 2b.6 Gruppi creati dall'utente (elimina messaggi, membership, poi il gruppo)
+            eliminaTuttiGruppiCreati(userId);
+
+            entityManager.flush();
 
             // --- FASE 3: Eliminare contenuti principali dell'utente ---
             // ORDINE CRITICO per rispettare vincoli FK:
@@ -535,6 +580,10 @@ public class AdminService {
             long totaleLikes = likeRepository.count();
             long totaleMessaggi = messageRepository.count();
 
+            // Conta libri e gruppi
+            long totaleLibri = bookRepository.count();
+            long totaleGruppi = groupRepository.count();
+
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalUsers", totaleUtenti);
             stats.put("activeUsers", utentiAttivi);
@@ -544,6 +593,8 @@ public class AdminService {
             stats.put("totalComments", totaleCommenti);
             stats.put("totalLikes", totaleLikes);
             stats.put("totalMessages", totaleMessaggi);
+            stats.put("totalBooks", totaleLibri);
+            stats.put("totalGroups", totaleGruppi);
 
             auditService.logAzioneAdmin(
                     admin,
@@ -637,7 +688,144 @@ public class AdminService {
 
     }
 
-    // Metodi privati helper
+    // =========================================================================
+    // LISTE PER MODERAZIONE
+    // =========================================================================
+
+    /**
+     * Lista tutti i libri con paginazione (per moderazione admin).
+     */
+    @Transactional(readOnly = true)
+    public Page<BookSummaryDTO> getTuttiLibri(Pageable pageable) {
+        return bookRepository.findAllWithSeller(pageable)
+                .map(bookMapper::toBookSummaryDTO);
+    }
+
+    /**
+     * Lista tutti i gruppi con paginazione (per moderazione admin).
+     */
+    @Transactional(readOnly = true)
+    public Page<GroupSummaryDTO> getTuttiGruppi(Pageable pageable) {
+        return groupRepository.findAllWithAdmin(pageable)
+                .map(group -> GroupSummaryDTO.builder()
+                        .id(group.getId())
+                        .name(group.getName())
+                        .description(group.getDescription())
+                        .profilePictureUrl(group.getProfilePictureUrl())
+                        .memberCount((int) groupMembershipRepository.countByGroup(group))
+                        .unreadCount(0)
+                        .isAdmin(true)
+                        .build());
+    }
+
+    // =========================================================================
+    // GESTIONE LIBRI
+    // =========================================================================
+
+    /**
+     * Elimina un annuncio libro specifico (admin).
+     * Elimina: richieste, messaggi conversazione, conversazioni, poi il libro.
+     */
+    @Transactional
+    public void eliminaAnnuncio(Long adminId, Long bookId, HttpServletRequest request) {
+        log.info("Admin {} elimina annuncio libro {}", adminId, bookId);
+        User admin = userRepository.getReferenceById(adminId);
+        Book book = bookRepository.findByIdWithDetails(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Libro", "id", bookId));
+
+        String bookTitle = book.getTitle();
+        String sellerUsername = book.getSeller().getUsername();
+
+        // Elimina richieste del libro
+        bookRequestRepository.deleteByBookId(bookId);
+
+        // Elimina messaggi e conversazioni del libro
+        List<Long> convIds = bookConversationRepository.findIdsByBookId(bookId);
+        for (Long convId : convIds) {
+            bookMessageRepository.deleteByConversationId(convId);
+        }
+        convIds.forEach(convId -> bookConversationRepository.deleteById(convId));
+
+        // Elimina il libro
+        bookRepository.delete(book);
+        entityManager.flush();
+
+        auditService.logAzioneAdmin(
+                admin,
+                AzioneAdmin.ELIMINA_ANNUNCIO,
+                "Eliminazione annuncio \"" + bookTitle + "\" di " + sellerUsername,
+                TARGET_TYPE_BOOK,
+                bookId,
+                book.getSeller(),
+                request);
+
+        log.info("Annuncio libro {} eliminato", bookId);
+    }
+
+    /**
+     * Elimina tutti gli annunci libro di un utente (admin).
+     */
+    @Transactional
+    public int eliminaTuttiAnnunciUtente(Long adminId, Long targetUserId, HttpServletRequest request) {
+        log.info("Admin {} elimina tutti gli annunci dell'utente {}", adminId, targetUserId);
+        User admin = userRepository.getReferenceById(adminId);
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utente", "id", targetUserId));
+
+        int count = eliminaTuttiLibri(targetUserId);
+
+        auditService.logAzioneAdmin(
+                admin,
+                AzioneAdmin.ELIMINA_TUTTI_ANNUNCI,
+                "Eliminazione di " + count + " annunci di " + target.getUsername(),
+                TARGET_TYPE_USER,
+                targetUserId,
+                target,
+                request);
+
+        log.info("Eliminati {} annunci dell'utente {}", count, target.getUsername());
+        return count;
+    }
+
+    // =========================================================================
+    // GESTIONE GRUPPI
+    // =========================================================================
+
+    /**
+     * Elimina un gruppo (admin). Elimina messaggi, membership, poi il gruppo.
+     */
+    @Transactional
+    public void eliminaGruppo(Long adminId, Long groupId, HttpServletRequest request) {
+        log.info("Admin {} elimina gruppo {}", adminId, groupId);
+        User admin = userRepository.getReferenceById(adminId);
+        Group group = groupRepository.findByIdWithAdmin(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Gruppo", "id", groupId));
+
+        String groupName = group.getName();
+
+        // Cleanup file Cloudinary prima di eliminare i messaggi
+        cleanupGroupMediaFiles(group);
+
+        groupMessageRepository.deleteByGroup(group);
+        groupMembershipRepository.deleteByGroup(group);
+        groupRepository.delete(group);
+        entityManager.flush();
+
+        auditService.logAzioneAdmin(
+                admin,
+                AzioneAdmin.ELIMINA_GRUPPO,
+                "Eliminazione gruppo \"" + groupName + "\"",
+                TARGET_TYPE_GROUP,
+                groupId,
+                group.getAdmin(),
+                request);
+
+        log.info("Gruppo {} eliminato", groupId);
+    }
+
+    // =========================================================================
+    // METODI PRIVATI HELPER
+    // =========================================================================
 
     /**
      * Elimina tutti i post di un utente.
@@ -757,8 +945,14 @@ public class AdminService {
      * 
      */
     private void eliminaTuttiMessaggi(Long userId) {
+        // Cleanup file Cloudinary (immagini e audio) prima di eliminare i messaggi
+        List<DirectMessage> mediaMessages = messageRepository.findMediaMessagesByUserId(userId);
+        for (DirectMessage msg : mediaMessages) {
+            if (msg.getImageUrl() != null) imageService.deleteMessageImage(msg.getImageUrl());
+            if (msg.getAudioUrl() != null) imageService.deleteMessageImage(msg.getAudioUrl());
+        }
         int count = messageRepository.deleteByUserId(userId);
-        log.debug("Eliminati {} messaggi dell'utente {}", count, userId);
+        log.debug("Eliminati {} messaggi dell'utente {} ({} con file media)", count, userId, mediaMessages.size());
     }
 
     /**
@@ -769,5 +963,88 @@ public class AdminService {
     private void eliminaTutteNotifiche(Long userId) {
         notificationRepository.deleteByUserId(userId);
         log.debug("Eliminate tutte le notifiche dell'utente {}", userId);
+    }
+
+    /**
+     * Elimina tutti i libri di un utente con le relative conversazioni, messaggi e richieste.
+     */
+    private int eliminaTuttiLibri(Long userId) {
+        List<Book> books = bookRepository.findBySellerId(userId);
+        int count = books.size();
+        if (count == 0) return 0;
+
+        for (Book book : books) {
+            // Elimina richieste del libro
+            bookRequestRepository.deleteByBookId(book.getId());
+
+            // Elimina messaggi e conversazioni del libro
+            List<Long> convIds = bookConversationRepository.findIdsByBookId(book.getId());
+            for (Long convId : convIds) {
+                bookMessageRepository.deleteByConversationId(convId);
+            }
+            convIds.forEach(convId -> bookConversationRepository.deleteById(convId));
+        }
+
+        bookRepository.deleteAll(books);
+        entityManager.flush();
+
+        log.debug("Eliminati {} libri dell'utente {}", count, userId);
+        return count;
+    }
+
+    /**
+     * Elimina tutte le conversazioni libro dove l'utente è buyer o seller.
+     * (Messaggi vengono eliminati prima delle conversazioni per FK.)
+     */
+    private void eliminaTutteConversazioniLibro(Long userId) {
+        List<BookConversation> conversations = bookConversationRepository.findByUserId(userId);
+        for (BookConversation conv : conversations) {
+            bookMessageRepository.deleteByConversationId(conv.getId());
+        }
+        bookConversationRepository.deleteAll(conversations);
+        log.debug("Eliminate {} conversazioni libro dell'utente {}", conversations.size(), userId);
+    }
+
+    /**
+     * Elimina tutti i gruppi creati dall'utente (come admin del gruppo).
+     * Elimina messaggi, membership, poi il gruppo.
+     */
+    /**
+     * Elimina da Cloudinary tutti i file media (immagini e audio) dei messaggi di un gruppo.
+     */
+    private void cleanupGroupMediaFiles(Group group) {
+        List<GroupMessage> mediaMessages = groupMessageRepository.findMediaMessagesByGroup(group);
+        for (GroupMessage msg : mediaMessages) {
+            if (msg.getImageUrl() != null) imageService.deleteMessageImage(msg.getImageUrl());
+            if (msg.getAudioUrl() != null) imageService.deleteMessageImage(msg.getAudioUrl());
+        }
+        if (!mediaMessages.isEmpty()) {
+            log.debug("Cleanup Cloudinary: eliminati {} file media del gruppo {}", mediaMessages.size(), group.getId());
+        }
+    }
+
+    /**
+     * Elimina da Cloudinary tutti i file media dei messaggi gruppo inviati da un utente.
+     */
+    private void cleanupGroupSenderMediaFiles(Long senderId) {
+        List<GroupMessage> mediaMessages = groupMessageRepository.findMediaMessagesBySenderId(senderId);
+        for (GroupMessage msg : mediaMessages) {
+            if (msg.getImageUrl() != null) imageService.deleteMessageImage(msg.getImageUrl());
+            if (msg.getAudioUrl() != null) imageService.deleteMessageImage(msg.getAudioUrl());
+        }
+        if (!mediaMessages.isEmpty()) {
+            log.debug("Cleanup Cloudinary: eliminati {} file media dei messaggi gruppo del sender {}", mediaMessages.size(), senderId);
+        }
+    }
+
+    private void eliminaTuttiGruppiCreati(Long userId) {
+        List<Group> groups = groupRepository.findByAdminId(userId);
+        for (Group group : groups) {
+            cleanupGroupMediaFiles(group);
+            groupMessageRepository.deleteByGroup(group);
+            groupMembershipRepository.deleteByGroup(group);
+            groupRepository.delete(group);
+        }
+        log.debug("Eliminati {} gruppi creati dall'utente {}", groups.size(), userId);
     }
 }

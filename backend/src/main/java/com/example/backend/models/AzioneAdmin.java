@@ -17,6 +17,13 @@ public enum AzioneAdmin {
     ELIMINA_TUTTI_POST,
     ELIMINA_TUTTI_COMMENTI,
 
+    // Gestione libri
+    ELIMINA_ANNUNCIO,
+    ELIMINA_TUTTI_ANNUNCI,
+
+    // Gestione gruppi
+    ELIMINA_GRUPPO,
+
     // Sistema
     PULIZIA_DATABASE,
     RESET_PASSWORD_UTENTE,

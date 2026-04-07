@@ -3,6 +3,8 @@ package com.example.backend.controllers;
 import com.example.backend.config.CurrentUser;
 import com.example.backend.dto.AuditLogDTO;
 import com.example.backend.dtos.response.AdminUserListDTO;
+import com.example.backend.dtos.response.BookSummaryDTO;
+import com.example.backend.dtos.response.GroupSummaryDTO;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.models.AdminAuditLog;
 import com.example.backend.models.AzioneAdmin;
@@ -180,6 +182,95 @@ public class AdminController {
         adminService.eliminaCommento(admin.getId(), commentId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Commento eliminato con successo"));
+    }
+
+    /**
+     * GET /api/admin/books
+     * Lista tutti i libri con paginazione (per moderazione)
+     */
+    @GetMapping("/books")
+    public ResponseEntity<Page<BookSummaryDTO>> getTuttiLibri(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            @CurrentUser User admin) {
+
+        log.debug("GET /api/admin/books - Admin: {}", admin.getUsername());
+        validateAdminUser(admin);
+
+        return ResponseEntity.ok(adminService.getTuttiLibri(pageable));
+    }
+
+    /**
+     * GET /api/admin/groups
+     * Lista tutti i gruppi (per moderazione)
+     */
+    @GetMapping("/groups")
+    public ResponseEntity<Page<GroupSummaryDTO>> getTuttiGruppi(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            @CurrentUser User admin) {
+
+        log.debug("GET /api/admin/groups - Admin: {}", admin.getUsername());
+        validateAdminUser(admin);
+
+        return ResponseEntity.ok(adminService.getTuttiGruppi(pageable));
+    }
+
+    /**
+     * DELETE /api/admin/books/{bookId}
+     * Elimina un annuncio libro
+     */
+    @DeleteMapping("/books/{bookId}")
+    public ResponseEntity<Map<String, String>> eliminaAnnuncio(
+            @PathVariable Long bookId,
+            @CurrentUser User admin,
+            HttpServletRequest request) {
+
+        log.debug("DELETE /api/admin/books/{} - Admin: {}", bookId, admin.getUsername());
+
+        validateAdminUser(admin);
+        adminService.eliminaAnnuncio(admin.getId(), bookId, request);
+
+        return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Annuncio eliminato con successo"));
+    }
+
+    /**
+     * DELETE /api/admin/users/{userId}/books
+     * Elimina tutti gli annunci libro di un utente
+     */
+    @DeleteMapping("/users/{userId}/books")
+    public ResponseEntity<Map<String, Object>> eliminaTuttiAnnunciUtente(
+            @PathVariable Long userId,
+            @CurrentUser User admin,
+            HttpServletRequest request) {
+
+        log.debug("DELETE /api/admin/users/{}/books - Admin: {}", userId, admin.getUsername());
+
+        validateAdminUser(admin);
+        int count = adminService.eliminaTuttiAnnunciUtente(admin.getId(), userId, request);
+
+        return ResponseEntity.ok(Map.of(
+                MESSAGE_KEY, "Annunci eliminati con successo",
+                "deletedCount", count
+        ));
+    }
+
+    /**
+     * DELETE /api/admin/groups/{groupId}
+     * Elimina un gruppo
+     */
+    @DeleteMapping("/groups/{groupId}")
+    public ResponseEntity<Map<String, String>> eliminaGruppo(
+            @PathVariable Long groupId,
+            @CurrentUser User admin,
+            HttpServletRequest request) {
+
+        log.debug("DELETE /api/admin/groups/{} - Admin: {}", groupId, admin.getUsername());
+
+        validateAdminUser(admin);
+        adminService.eliminaGruppo(admin.getId(), groupId, request);
+
+        return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Gruppo eliminato con successo"));
     }
 
     /**
