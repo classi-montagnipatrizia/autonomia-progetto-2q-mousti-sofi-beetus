@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { LucideAngularModule, Bell, Search, Settings, LogOut, User, Shield, X, Menu } from 'lucide-angular';
+import { LucideAngularModule, Bell, Search, Settings, LogOut, User, Shield, X, Menu, BookOpen, MessageSquare } from 'lucide-angular';
 
 import { AuthStore } from '../../../core/stores/auth-store';
 import { NotificationStore } from '../../../core/stores/notification-store';
@@ -46,6 +46,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly ShieldIcon = Shield;
   readonly XIcon = X;
   readonly MenuIcon = Menu;
+  readonly BookOpenIcon = BookOpen;
+  readonly MessageSquareIcon = MessageSquare;
 
   // ========== STATE ==========
 

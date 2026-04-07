@@ -22,7 +22,7 @@
 
       <!-- Azioni a destra -->
       <div class="flex items-center gap-2">
-        
+
         <!-- Icona ricerca mobile -->
         <button
           type="button"
@@ -32,6 +32,26 @@
         >
           <lucide-icon [img]="SearchIcon" [size]="22"></lucide-icon>
         </button>
+
+        <!-- Libreria -->
+        <a
+          routerLink="/library"
+          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          aria-label="Libreria"
+          title="Libreria libri usati"
+        >
+          <lucide-icon [img]="BookOpenIcon" [size]="22"></lucide-icon>
+        </a>
+
+        <!-- Messaggi -->
+        <a
+          routerLink="/messages"
+          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          aria-label="Messaggi"
+          title="Messaggi"
+        >
+          <lucide-icon [img]="MessageSquareIcon" [size]="22"></lucide-icon>
+        </a>
 
         <!-- Notifiche -->
         <div class="relative">
