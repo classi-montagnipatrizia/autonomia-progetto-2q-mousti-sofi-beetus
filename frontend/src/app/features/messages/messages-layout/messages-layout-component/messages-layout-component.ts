@@ -1,40 +1,27 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { ConversationsComponent } from '../../conversations/conversations-component/conversations-component';
+import { GroupList } from '../../group-list/group-list';
+import { GroupStore } from '../../../../core/stores/group-store';
 
-/**
- * Layout principale per la sezione messaggi.
- * 
- * Desktop (lg+): Layout a 2 colonne
- * - Sinistra: Lista conversazioni (sempre visibile)
- * - Destra: Chat attiva o placeholder
- * 
- * Mobile (< lg): 
- * - Mostra solo lista conversazioni O chat (non entrambi)
- * - La navigazione avviene tramite route
- */
 @Component({
   selector: 'app-messages-layout-component',
-  imports: [ CommonModule,
-      RouterOutlet,
-      ConversationsComponent,],
+  imports: [CommonModule, RouterOutlet, ConversationsComponent, GroupList],
   templateUrl: './messages-layout-component.html',
   styleUrl: './messages-layout-component.scss',
 })
 export class MessagesLayoutComponent implements OnInit, OnDestroy {
-private readonly router = inject(Router);
+  private readonly router = inject(Router);
+  readonly groupStore = inject(GroupStore);
   private routerSub?: Subscription;
 
-  // Signal per tracciare se c'è una chat aperta
   readonly hasChatOpen = signal(false);
+  readonly activeTab = signal<'chat' | 'gruppi'>('chat');
 
   ngOnInit(): void {
-    // Controlla lo stato iniziale
     this.checkChatOpen();
-
-    // Sottoscrivi ai cambiamenti di navigazione
     this.routerSub = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => this.checkChatOpen());
@@ -44,10 +31,26 @@ private readonly router = inject(Router);
     this.routerSub?.unsubscribe();
   }
 
-  private checkChatOpen(): void {
-    // Controlla se siamo su /messages/:userId
+  switchTab(tab: 'chat' | 'gruppi'): void {
+    this.activeTab.set(tab);
     const url = this.router.url;
-    const match = url.match(/\/messages\/(\d+)/);
+    // Se si cambia tab mentre una chat è aperta, torna alla lista messaggi
+    const isDmOpen = /\/messages\/\d+/.test(url) && !url.includes('/messages/group/');
+    const isGroupOpen = url.includes('/messages/group/');
+    if ((tab === 'gruppi' && isDmOpen) || (tab === 'chat' && isGroupOpen)) {
+      this.router.navigate(['/messages']);
+    }
+  }
+
+  private checkChatOpen(): void {
+    const url = this.router.url;
+    // Rileva sia /messages/:userId che /messages/group/:groupId
+    const match = /\/messages\/(\d+)/.exec(url) || /\/messages\/group\/(\d+)/.exec(url);
     this.hasChatOpen.set(!!match);
+
+    // Auto-switch tab in base alla route
+    if (url.includes('/messages/group/')) {
+      this.activeTab.set('gruppi');
+    }
   }
 }

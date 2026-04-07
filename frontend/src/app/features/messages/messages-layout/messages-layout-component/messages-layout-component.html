@@ -2,9 +2,13 @@
 
       <!-- Desktop: Layout a 2 colonne -->
       <div class="hidden lg:flex w-full h-full overflow-hidden">
-        <!-- Sidebar conversazioni -->
-        <aside class="w-80 xl:w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 h-full overflow-hidden">
-          <app-conversations-component />
+        <!-- Sidebar -->
+        <aside class="w-80 xl:w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 h-full overflow-hidden flex flex-col">
+          @if (activeTab() === 'chat') {
+            <app-conversations-component (tabChanged)="switchTab($event)" />
+          } @else {
+            <app-group-list (tabChanged)="switchTab($event)" />
+          }
         </aside>
 
         <!-- Area chat -->
@@ -36,8 +40,11 @@
           <!-- Chat a schermo intero su mobile -->
           <router-outlet />
         } @else {
-          <!-- Lista conversazioni -->
-          <app-conversations-component />
+          @if (activeTab() === 'chat') {
+            <app-conversations-component (tabChanged)="switchTab($event)" />
+          } @else {
+            <app-group-list (tabChanged)="switchTab($event)" />
+          }
         }
       </div>
 
