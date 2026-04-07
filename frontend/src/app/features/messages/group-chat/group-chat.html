@@ -1,1 +1,313 @@
-<p>group-chat works!</p>
+<div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+
+  @if (groupStore.currentGroup(); as group) {
+    <!-- Header -->
+    <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors lg:hidden"
+        aria-label="Torna alla lista gruppi"
+      >
+        <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+      </button>
+
+      @if (group.profilePictureUrl) {
+        <img [src]="group.profilePictureUrl" [alt]="group.name" class="w-10 h-10 rounded-xl object-cover shrink-0" />
+      } @else {
+        <div
+          class="w-10 h-10 bg-gradient-to-br rounded-xl flex items-center justify-center text-white font-semibold text-sm shrink-0"
+          [class]="getGroupAvatarGradient(group.id)"
+        >{{ getGroupInitials(group.name) }}</div>
+      }
+
+      <div class="flex-1 min-w-0">
+        <h2 class="font-semibold text-gray-900 dark:text-white truncate">{{ group.name }}</h2>
+        @if (typingText()) {
+          <p class="text-sm text-primary-500 truncate">{{ typingText() }}</p>
+        } @else {
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ group.memberCount }} membri</p>
+        }
+      </div>
+
+      <button
+        type="button"
+        (click)="showInfoPanel.set(true)"
+        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+        title="Info gruppo"
+      >
+        <lucide-icon [img]="InfoIcon" [size]="20" />
+      </button>
+    </header>
+
+    <!-- Messaggi -->
+    <div
+      #messagesContainer
+      class="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900"
+      (scroll)="onScroll()"
+    >
+      @if (groupStore.isLoading() && groupStore.messages().length > 0) {
+        <div class="flex justify-center py-2">
+          <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-500 rounded-full animate-spin"></div>
+        </div>
+      }
+
+      @if (groupStore.isLoading() && groupStore.messages().length === 0) {
+        <div class="space-y-4">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div [class]="i % 2 === 0 ? 'flex justify-end' : 'flex justify-start'">
+              <div class="h-14 rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse" [style.width]="i % 2 === 0 ? '180px' : '220px'"></div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (!groupStore.isLoading() && groupStore.messages().length === 0) {
+        <div class="flex flex-col items-center justify-center h-full text-center">
+          <p class="text-gray-500 dark:text-gray-400">Nessun messaggio. Inizia la conversazione!</p>
+        </div>
+      }
+
+      @for (message of groupStore.messages(); track message.id) {
+        @if (message.senderId === currentUserId()) {
+          <!-- Mio messaggio (destra) -->
+          <div class="flex w-full justify-end group/msg">
+            <div class="flex flex-col items-end">
+              @if (message.isDeletedBySender) {
+                <div class="max-w-xs sm:max-w-sm md:max-w-md rounded-2xl rounded-br-sm bg-primary-500/30 px-4 py-2">
+                  <p class="text-sm italic text-gray-500 dark:text-gray-400">Messaggio cancellato</p>
+                </div>
+              } @else {
+                <div class="flex items-center gap-1">
+                  <!-- Bottone elimina (visibile su hover) -->
+                  <button
+                    type="button"
+                    (click)="deleteMessage(message.id)"
+                    [disabled]="isDeleting(message.id)"
+                    class="opacity-0 group-hover/msg:opacity-100 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-red-500 transition-all disabled:opacity-50"
+                    title="Elimina messaggio"
+                  >
+                    <lucide-icon [img]="TrashIcon" [size]="14" />
+                  </button>
+                  <div class="max-w-xs sm:max-w-sm md:max-w-md rounded-2xl rounded-br-sm overflow-hidden bg-primary-500 text-white">
+                    @if (message.audioUrl) {
+                      <div class="px-3 py-2">
+                        <app-audio-player-component
+                          [audioUrl]="message.audioUrl"
+                          [duration]="message.audioDuration ?? 0"
+                          [isMine]="true"
+                        />
+                      </div>
+                    } @else if (message.imageUrl) {
+                      <img
+                        [src]="message.imageUrl"
+                        alt="Immagine"
+                        class="w-full h-auto cursor-pointer"
+                        (click)="openImageViewer(message.imageUrl)"
+                        loading="lazy"
+                      />
+                      @if (message.content) {
+                        <p class="text-sm whitespace-pre-wrap break-words px-4 py-2">{{ message.content }}</p>
+                      }
+                    } @else {
+                      <p class="text-sm whitespace-pre-wrap break-words px-4 py-2">{{ message.content }}</p>
+                    }
+                  </div>
+                </div>
+              }
+              <div class="text-xs mt-1 text-gray-500 dark:text-gray-400">
+                <app-time-ago [date]="message.createdAt" />
+              </div>
+            </div>
+          </div>
+        } @else {
+          <!-- Messaggio altrui (sinistra) -->
+          <div class="flex gap-2 w-full justify-start">
+            @if (message.senderProfilePictureUrl) {
+              <img
+                [src]="message.senderProfilePictureUrl"
+                [alt]="message.senderFullName"
+                class="w-8 h-8 rounded-full object-cover shrink-0 mt-1"
+              />
+            } @else {
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 mt-1"
+                [class]="getSenderColor(message.senderId)"
+              >{{ getSenderInitials(message.senderFullName) }}</div>
+            }
+
+            <div class="flex flex-col items-start">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium px-1">{{ message.senderFullName }}</p>
+              @if (message.isDeletedBySender) {
+                <div class="max-w-xs sm:max-w-sm md:max-w-md rounded-2xl rounded-bl-sm bg-gray-200/50 dark:bg-gray-700/50 px-4 py-2">
+                  <p class="text-sm italic text-gray-500 dark:text-gray-400">Messaggio cancellato</p>
+                </div>
+              } @else {
+                <div class="max-w-xs sm:max-w-sm md:max-w-md rounded-2xl rounded-bl-sm overflow-hidden bg-gray-200 dark:bg-gray-700 text-text-light dark:text-text-dark">
+                  @if (message.audioUrl) {
+                    <div class="px-3 py-2">
+                      <app-audio-player-component
+                        [audioUrl]="message.audioUrl"
+                        [duration]="message.audioDuration ?? 0"
+                        [isMine]="false"
+                      />
+                    </div>
+                  } @else if (message.imageUrl) {
+                    <img
+                      [src]="message.imageUrl"
+                      alt="Immagine"
+                      class="w-full h-auto cursor-pointer"
+                      (click)="openImageViewer(message.imageUrl)"
+                      loading="lazy"
+                    />
+                    @if (message.content) {
+                      <p class="text-sm whitespace-pre-wrap break-words px-4 py-2">{{ message.content }}</p>
+                    }
+                  } @else {
+                    <p class="text-sm whitespace-pre-wrap break-words px-4 py-2">{{ message.content }}</p>
+                  }
+                </div>
+              }
+              <div class="text-xs mt-1 text-gray-500 dark:text-gray-400 px-1">
+                <app-time-ago [date]="message.createdAt" />
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Typing indicator -->
+      @if (typingText()) {
+        <div class="flex items-center gap-2 px-2 py-1">
+          <div class="flex gap-1">
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+            <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+          </div>
+          <span class="text-xs text-gray-500 dark:text-gray-400 italic">{{ typingText() }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Input area -->
+    <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+      <!-- Audio recorder -->
+      @if (showRecorder()) {
+        <app-audio-recorder-component
+          (recorded)="onAudioRecorded($event)"
+          (cancelled)="showRecorder.set(false)"
+        />
+      }
+
+      <!-- Preview immagine -->
+      @if (!showRecorder() && imagePreviewUrl()) {
+        <div class="relative inline-block mb-3">
+          <img [src]="imagePreviewUrl()" alt="Preview" class="h-20 w-auto rounded-lg object-cover" />
+          @if (isUploadingImage()) {
+            <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+              <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }
+          <button
+            type="button"
+            (click)="clearImagePreview()"
+            class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors"
+            aria-label="Rimuovi immagine"
+          >
+            <lucide-icon [img]="XIcon" [size]="14" />
+          </button>
+        </div>
+      }
+
+      @if (!showRecorder()) {
+        <div class="flex items-end gap-3">
+          <!-- Hidden image input -->
+          <input
+            #imageInputRef
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onImageSelected($event)"
+            class="hidden"
+          />
+
+          <!-- Image button -->
+          <button
+            type="button"
+            (click)="openImagePicker()"
+            [disabled]="isSending() || isUploadingImage()"
+            class="flex-shrink-0 w-10 h-10 rounded-full text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+            aria-label="Allega immagine"
+          >
+            <lucide-icon [img]="ImageIcon" [size]="20" />
+          </button>
+
+          <!-- Mic button -->
+          <button
+            type="button"
+            (click)="showRecorder.set(true)"
+            [disabled]="isSending() || isUploadingImage()"
+            class="flex-shrink-0 w-10 h-10 rounded-full text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+            aria-label="Registra messaggio vocale"
+          >
+            <lucide-icon [img]="MicIcon" [size]="20" />
+          </button>
+
+          <!-- Text input -->
+          <div class="flex-1 relative">
+            <input
+              type="text"
+              [value]="messageText()"
+              (input)="onMessageInput($any($event.target).value)"
+              (keydown.enter)="sendMessage()"
+              placeholder="Scrivi al gruppo..."
+              class="w-full px-4 py-3 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors"
+              [disabled]="isSending()"
+            />
+          </div>
+
+          <!-- Send button -->
+          <button
+            type="button"
+            (click)="sendMessage()"
+            [disabled]="!canSend()"
+            class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
+            aria-label="Invia messaggio"
+          >
+            <lucide-icon [img]="SendIcon" [size]="20" />
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Info panel overlay -->
+    @if (showInfoPanel()) {
+      <app-group-info-panel (closed)="showInfoPanel.set(false)" />
+    }
+  } @else if (groupStore.isLoading()) {
+    <div class="flex items-center justify-center h-full">
+      <div class="w-8 h-8 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
+    </div>
+  }
+</div>
+
+<!-- Image Viewer Overlay -->
+@if (imageViewerUrl()) {
+  <div
+    class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+    (click)="closeImageViewer()"
+  >
+    <button
+      type="button"
+      class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+      aria-label="Chiudi"
+    >
+      <lucide-icon [img]="XIcon" [size]="24" />
+    </button>
+    <img
+      [src]="imageViewerUrl()"
+      alt="Immagine ingrandita"
+      class="max-w-full max-h-full object-contain"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}
