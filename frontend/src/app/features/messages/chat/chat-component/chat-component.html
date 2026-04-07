@@ -117,21 +117,32 @@
                     [class.dark:text-text-dark]="message.mittente.id !== currentUserId()"
                     [class.rounded-bl-sm]="message.mittente.id !== currentUserId()"
                   >
-                    <!-- Immagine allegata -->
-                    @if (message.imageUrl) {
-                      <div [class.mb-3]="message.contenuto">
-                        <img
-                          [src]="message.imageUrl"
-                          alt="Immagine allegato"
-                          class="w-full h-auto"
-                          loading="lazy"
+                    <!-- Messaggio vocale -->
+                    @if (message.audioUrl) {
+                      <div class="px-3 py-2">
+                        <app-audio-player-component
+                          [audioUrl]="message.audioUrl"
+                          [duration]="message.audioDuration ?? 0"
+                          [isMine]="message.mittente.id === currentUserId()"
                         />
                       </div>
-                    }
+                    } @else {
+                      <!-- Immagine allegata -->
+                      @if (message.imageUrl) {
+                        <div [class.mb-3]="message.contenuto">
+                          <img
+                            [src]="message.imageUrl"
+                            alt="Immagine allegato"
+                            class="w-full h-auto"
+                            loading="lazy"
+                          />
+                        </div>
+                      }
 
-                    <!-- Contenuto testuale  -->
-                    @if (message.contenuto) {
-                      <p class="text-sm whitespace-pre-wrap break-words px-4" [class.py-2]="!message.imageUrl" [class.pb-2]="message.imageUrl" [innerHTML]="getHighlightedContent(message)"></p>
+                      <!-- Contenuto testuale  -->
+                      @if (message.contenuto) {
+                        <p class="text-sm whitespace-pre-wrap break-words px-4" [class.py-2]="!message.imageUrl" [class.pb-2]="message.imageUrl" [innerHTML]="getHighlightedContent(message)"></p>
+                      }
                     }
                   </div>
                 </div>
@@ -208,8 +219,16 @@
 
   <!-- Input area - altezza fissa, sempre in basso -->
   <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+    <!-- Audio recorder -->
+    @if (showRecorder()) {
+      <app-audio-recorder-component
+        (recorded)="sendAudioMessage($event)"
+        (cancelled)="showRecorder.set(false)"
+      />
+    }
+
     <!-- Preview immagine -->
-    @if (imagePreviewUrl()) {
+    @if (!showRecorder() && imagePreviewUrl()) {
       <div class="relative inline-block mb-3">
         <img
           [src]="imagePreviewUrl()"
@@ -232,6 +251,7 @@
       </div>
     }
 
+    @if (!showRecorder()) {
     <div class="flex items-end gap-3">
       <!-- Image picker (hidden input) -->
       <input
@@ -251,6 +271,17 @@
         aria-label="Allega immagine"
       >
         <lucide-icon [img]="ImageIcon" [size]="20" />
+      </button>
+
+      <!-- Mic button -->
+      <button
+        type="button"
+        (click)="showRecorder.set(true)"
+        [disabled]="isSending() || isUploadingImage()"
+        class="flex-shrink-0 w-10 h-10 rounded-full text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+        aria-label="Registra messaggio vocale"
+      >
+        <lucide-icon [img]="MicIcon" [size]="20" />
       </button>
 
       <!-- Text input -->
@@ -277,6 +308,7 @@
         <lucide-icon [img]="SendIcon" [size]="20" />
       </button>
     </div>
+    }
   </div>
 </div>
 

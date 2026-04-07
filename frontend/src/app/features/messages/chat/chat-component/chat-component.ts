@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, vie
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ArrowLeft, Send, Image, Trash, EyeOff, X, Eye } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, Send, Image, Trash, EyeOff, X, Eye, Mic } from 'lucide-angular';
 import { Subscription, interval, Subject } from 'rxjs';
 import { switchMap, startWith, takeUntil, finalize } from 'rxjs/operators';
 import { MessageService } from '../../../../core/api/message-service';
@@ -17,6 +17,8 @@ import { DropdownComponent } from '../../../../shared/ui/dropdown/dropdown-compo
 import { CloudinaryStorageService } from '../../../../core/services/cloudinary-storage-service';
 import { ToastService } from '../../../../core/services/toast-service';
 import { TimeAgoComponent } from '../../../../shared/components/time-ago/time-ago-component/time-ago-component';
+import { AudioRecorderComponent } from '../../../../shared/components/audio-recorder/audio-recorder-component/audio-recorder-component';
+import { AudioPlayerComponent } from '../../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../core/config/app.config';
 
 /**
@@ -35,6 +37,8 @@ import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../cor
     SkeletonComponent,
     DropdownComponent,
     TimeAgoComponent,
+    AudioRecorderComponent,
+    AudioPlayerComponent,
   ],
   templateUrl: './chat-component.html',
   styleUrl: './chat-component.scss',
@@ -80,6 +84,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   readonly EyeOffIcon = EyeOff;
   readonly XIcon = X;
   readonly EyeIcon = Eye;
+  readonly MicIcon = Mic;
 
   // Stato
   readonly otherUser = signal<UserSummaryDTO | null>(null);
@@ -96,6 +101,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   readonly pendingImageUrl = signal<string | null>(null);
   readonly isUploadingImage = signal(false);
   readonly imageViewerUrl = signal<string | null>(null);
+  readonly showRecorder = signal(false);
 
   // ID messaggio evidenziato dalla ricerca e termine da evidenziare
   readonly highlightedMessageId = signal<number | null>(null);
@@ -400,6 +406,32 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.messages.update(msgs => [...msgs, newMessage]);
           this.messageText.set('');
           this.clearImagePreview();
+          this.scrollToBottom();
+        }
+        this.isSending.set(false);
+      },
+      error: () => {
+        this.isSending.set(false);
+      },
+    });
+  }
+
+  sendAudioMessage(event: { audioUrl: string; duration: number }): void {
+    const user = this.otherUser();
+    if (!user) return;
+
+    this.showRecorder.set(false);
+    this.isSending.set(true);
+    const targetUserId = user.id;
+
+    this.messageService.sendMessage({
+      destinatarioId: targetUserId,
+      audioUrl: event.audioUrl,
+      audioDuration: event.duration,
+    }).subscribe({
+      next: (newMessage) => {
+        if (this.currentOtherUserId === targetUserId) {
+          this.messages.update(msgs => [...msgs, newMessage]);
           this.scrollToBottom();
         }
         this.isSending.set(false);
