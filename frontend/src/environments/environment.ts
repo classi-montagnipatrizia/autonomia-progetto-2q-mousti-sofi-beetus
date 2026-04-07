@@ -35,6 +35,9 @@ export const environment = {
 
   // Cache
   httpCacheTimeout: 5 * 60 * 1000, // Cache HTTP 5 minuti
+
+  // Push Notifications (VAPID)
+  vapidPublicKey: 'BNq3Z1o6L2WRWHQzxC074_BykE4ZWCsqiAbDzQBo5X_a1nn-EQgne-6yvd6D_ziiDedf7v_bf0XgMEMG6k4_jSs',
 };
 
 export type Environment = typeof environment;
