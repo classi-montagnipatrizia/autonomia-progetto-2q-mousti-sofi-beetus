@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebSearch",
+      "Bash(./mvnw.cmd:*)",
+      "Bash(grep -n \"from '.*models'\" \"C:\\\\Users\\\\Utente\\\\OneDrive\\\\Desktop\\\\beetUs\\\\autonomia-progetto-2q-mousti-sofi-beetus\\\\frontend\\\\src\\\\app\\\\features\\\\library\\\\library-page\\\\library-page.ts\")"
     ],
     "deny": [],
     "ask": []
