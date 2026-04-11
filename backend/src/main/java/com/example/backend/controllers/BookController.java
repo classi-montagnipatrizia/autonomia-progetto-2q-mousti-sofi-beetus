@@ -4,7 +4,6 @@ import com.example.backend.config.CurrentUser;
 import com.example.backend.dtos.request.AggiornaStatoLibroRequestDTO;
 import com.example.backend.dtos.request.CreaLibroRequestDTO;
 import com.example.backend.dtos.request.ModificaLibroRequestDTO;
-import com.example.backend.dtos.response.BookRequestDTO;
 import com.example.backend.dtos.response.BookResponseDTO;
 import com.example.backend.dtos.response.BookSummaryDTO;
 import com.example.backend.models.User;
@@ -111,50 +110,6 @@ public class BookController {
         log.debug("PATCH /api/books/{}/stato - Username: {}, stato: {}", bookId, user.getUsername(), request.getStato());
         BookResponseDTO book = bookService.aggiornaStato(bookId, user.getId(), request);
         return ResponseEntity.ok(book);
-    }
-
-    @PostMapping("/{bookId}/richiedi")
-    public ResponseEntity<BookResponseDTO> richiediLibro(
-            @PathVariable Long bookId,
-            @CurrentUser User user) {
-        log.debug("POST /api/books/{}/richiedi - Username: {}", bookId, user.getUsername());
-        BookResponseDTO book = bookService.richiediLibro(bookId, user.getId());
-        return ResponseEntity.ok(book);
-    }
-
-    @DeleteMapping("/{bookId}/richiedi")
-    public ResponseEntity<BookResponseDTO> annullaRichiesta(
-            @PathVariable Long bookId,
-            @CurrentUser User user) {
-        log.debug("DELETE /api/books/{}/richiedi - Username: {}", bookId, user.getUsername());
-        BookResponseDTO book = bookService.annullaRichiesta(bookId, user.getId());
-        return ResponseEntity.ok(book);
-    }
-
-    @GetMapping("/{bookId}/richieste")
-    public ResponseEntity<List<BookRequestDTO>> getRichieste(
-            @PathVariable Long bookId,
-            @CurrentUser User user) {
-        log.debug("GET /api/books/{}/richieste - Username: {}", bookId, user.getUsername());
-        return ResponseEntity.ok(bookService.getRichiesteLibro(bookId, user.getId()));
-    }
-
-    @PostMapping("/{bookId}/richieste/{requestId}/accetta")
-    public ResponseEntity<BookResponseDTO> accettaRichiesta(
-            @PathVariable Long bookId,
-            @PathVariable Long requestId,
-            @CurrentUser User user) {
-        log.debug("POST /api/books/{}/richieste/{}/accetta - Username: {}", bookId, requestId, user.getUsername());
-        return ResponseEntity.ok(bookService.accettaRichiesta(bookId, requestId, user.getId()));
-    }
-
-    @PostMapping("/{bookId}/richieste/{requestId}/rifiuta")
-    public ResponseEntity<BookResponseDTO> rifiutaRichiesta(
-            @PathVariable Long bookId,
-            @PathVariable Long requestId,
-            @CurrentUser User user) {
-        log.debug("POST /api/books/{}/richieste/{}/rifiuta - Username: {}", bookId, requestId, user.getUsername());
-        return ResponseEntity.ok(bookService.rifiutaRichiesta(bookId, requestId, user.getId()));
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.example.backend.repositories;
 
 import com.example.backend.models.Book;
+import com.example.backend.models.BookCondition;
 import com.example.backend.models.BookStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,7 +54,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("searchTerm") String searchTerm,
             @Param("schoolYear") String schoolYear,
             @Param("subject") String subject,
-            @Param("condition") String condition,
+            @Param("condition") BookCondition condition,
             @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable);
 

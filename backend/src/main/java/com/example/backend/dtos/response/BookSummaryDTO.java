@@ -1,7 +1,6 @@
 package com.example.backend.dtos.response;
 
 import com.example.backend.models.BookCondition;
-import com.example.backend.models.BookRequestStatus;
 import com.example.backend.models.BookStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +25,5 @@ public class BookSummaryDTO {
     private String materia;
     private String frontImageUrl;
     private UserSummaryDTO venditore;
-    private Integer richiesteCount;
-    private BookRequestStatus miaRichiesta;
     private LocalDateTime createdAt;
 }
