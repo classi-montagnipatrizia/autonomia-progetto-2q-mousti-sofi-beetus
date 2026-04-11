@@ -54,7 +54,6 @@ public class AdminService {
     private final BookRepository bookRepository;
     private final BookConversationRepository bookConversationRepository;
     private final BookMessageRepository bookMessageRepository;
-    private final BookRequestRepository bookRequestRepository;
     private final GroupRepository groupRepository;
     private final GroupMembershipRepository groupMembershipRepository;
     private final GroupMessageRepository groupMessageRepository;
@@ -199,11 +198,7 @@ public class AdminService {
             // 2b.1 Conversazioni libro (messaggi + conversazioni dove è buyer o seller)
             eliminaTutteConversazioniLibro(userId);
 
-            // 2b.2 Richieste libro come buyer
-            bookRequestRepository.deleteByBuyerId(userId);
-            log.debug("Eliminate richieste libro dell'utente {}", userId);
-
-            // 2b.3 Libri (richieste + conversazioni + messaggi dei libri dell'utente)
+            // 2b.3 Libri (conversazioni + messaggi dei libri dell'utente)
             eliminaTuttiLibri(userId);
 
             // 2b.4 Messaggi gruppo (cleanup Cloudinary prima)
@@ -736,9 +731,6 @@ public class AdminService {
         String bookTitle = book.getTitle();
         String sellerUsername = book.getSeller().getUsername();
 
-        // Elimina richieste del libro
-        bookRequestRepository.deleteByBookId(bookId);
-
         // Elimina messaggi e conversazioni del libro
         List<Long> convIds = bookConversationRepository.findIdsByBookId(bookId);
         for (Long convId : convIds) {
@@ -974,9 +966,6 @@ public class AdminService {
         if (count == 0) return 0;
 
         for (Book book : books) {
-            // Elimina richieste del libro
-            bookRequestRepository.deleteByBookId(book.getId());
-
             // Elimina messaggi e conversazioni del libro
             List<Long> convIds = bookConversationRepository.findIdsByBookId(book.getId());
             for (Long convId : convIds) {
