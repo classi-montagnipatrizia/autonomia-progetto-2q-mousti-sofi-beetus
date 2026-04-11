@@ -344,8 +344,14 @@ public class NotificationService {
         // Carica il fullName subito mentre la sessione è attiva
         String authorFullName = author.getFullName();
 
-        // Trova tutti gli utenti attivi TRANNE l'autore
-        List<User> allUsers = userRepository.findByIsActiveTrue();
+        // Trova solo i compagni di classe dell'autore (isolamento per classe)
+        // Se l'autore non ha una classe impostata, non inviare notifiche
+        String classroom = author.getClassroom();
+        if (classroom == null || classroom.isBlank()) {
+            log.warn("Autore {} non ha una classe impostata, notifiche new post non inviate", authorId);
+            return;
+        }
+        List<User> allUsers = userRepository.findByIsActiveTrueAndClassroom(classroom);
 
         // Crea tutte le notifiche in memoria
         List<Notification> notifications = allUsers.stream()
@@ -572,41 +578,6 @@ public class NotificationService {
     // ── NOTIFICHE VERSIONE 2 ──────────────────────────────────────────────────
 
     /**
-     * Notifica al venditore che qualcuno ha richiesto il suo libro.
-     */
-    @Transactional
-    public void creaNotificaRichiestaLibro(Long sellerId, Long buyerId, Long bookId) {
-        log.debug("Notifica richiesta libro - Venditore: {}, Acquirente: {}, Libro: {}",
-                sellerId, buyerId, bookId);
-
-        Book book = bookRepository.findById(bookId).orElse(null);
-        if (book == null) return;
-
-        String actionUrl = "/library?tab=miei";
-        if (isNotificaDuplicataRecente(sellerId, buyerId, NotificationType.BOOK_REQUEST, actionUrl)) {
-            log.debug("Notifica BOOK_REQUEST duplicata, skip");
-            return;
-        }
-
-        User receiver = userRepository.getReferenceById(sellerId);
-        User buyer = userRepository.getReferenceById(buyerId);
-
-        Notification notification = Notification.builder()
-                .user(receiver)
-                .type(NotificationType.BOOK_REQUEST)
-                .triggeredByUser(buyer)
-                .content(String.format("%s ha richiesto il tuo libro \"%s\"", buyer.getFullName(), book.getTitle()))
-                .actionUrl(actionUrl)
-                .isRead(false)
-                .build();
-
-        notificationRepository.save(notification);
-        publishNotificationEvent(receiver.getUsername(), notification);
-        pushNotificationService.sendToUser(sellerId, "beetUs", notification.getContent(), notification.getActionUrl());
-        log.info("Notifica BOOK_REQUEST creata - Venditore: {}", sellerId);
-    }
-
-    /**
      * Notifica al destinatario (venditore o acquirente) che ha ricevuto un messaggio
      * nella chat di un libro.
      */
@@ -753,7 +724,7 @@ public class NotificationService {
     }
 
     /**
-     * Anti-spam per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE, BOOK_REQUEST).
+     * Anti-spam per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE).
      * Usa actionUrl come discriminatore: stessa URL = stessa conversazione/gruppo.
      */
     private boolean isNotificaDuplicataRecente(Long userId, Long triggeredByUserId,

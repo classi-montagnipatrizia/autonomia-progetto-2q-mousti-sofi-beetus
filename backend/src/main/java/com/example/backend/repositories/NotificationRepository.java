@@ -104,7 +104,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     );
 
     /**
-     * Controlla duplicati per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE, BOOK_REQUEST).
+     * Controlla duplicati per notifiche senza FK (BOOK_MESSAGE, GROUP_MESSAGE, GROUP_INVITE).
      * Usato per anti-spam: evita notifiche duplicate negli ultimi N minuti.
      */
     @Query("""
