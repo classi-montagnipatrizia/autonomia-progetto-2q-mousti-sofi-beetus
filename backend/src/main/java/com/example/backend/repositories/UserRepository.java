@@ -39,6 +39,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Trova utenti attivi
     List<User> findByIsActiveTrue();
 
+    // Trova utenti attivi della stessa classe (per notifiche new post)
+    List<User> findByIsActiveTrueAndClassroom(String classroom);
+
     // Trova utenti online
     @Query("""
         SELECT DISTINCT u FROM User u
