@@ -18,27 +18,27 @@
     <div class="flex flex-col items-center">
       <div class="relative mb-2">
         @if (uploadingPhoto()) {
-          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm">
+          <div class="w-20 h-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-[24px] flex items-center justify-center shadow-sm">
             <app-spinner size="sm"></app-spinner>
           </div>
         } @else if (profilePictureUrl()) {
-          <img [src]="profilePictureUrl()" class="w-20 h-20 rounded-2xl object-cover shadow-sm" alt="Foto gruppo"/>
+          <img [src]="profilePictureUrl()" class="w-20 h-20 rounded-[24px] object-cover shadow-sm" alt="Foto gruppo"/>
           <button
             type="button"
-            class="absolute -top-1 -right-1 w-6 h-6 bg-error-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-error-600 transition-colors"
+            class="absolute -top-1 -right-1 w-6 h-6 bg-error-500/90 backdrop-blur-md text-white border border-white/20 rounded-full flex items-center justify-center shadow-sm hover:bg-error-600 transition-colors"
             (click)="removePhoto()"
           >
             <lucide-icon [img]="XIcon" [size]="12"></lucide-icon>
           </button>
         } @else {
-          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm text-2xl font-bold text-gray-400 dark:text-gray-500">
+          <div class="w-20 h-20 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-[24px] flex items-center justify-center shadow-sm text-2xl font-bold text-gray-400 dark:text-gray-500">
             {{ groupInitials() }}
           </div>
         }
         @if (!uploadingPhoto()) {
           <button
             type="button"
-            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-500 hover:bg-primary-600 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center shadow-sm transition-colors"
+            class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-500/90 backdrop-blur-md hover:bg-primary-600 border border-white/20 rounded-full flex items-center justify-center shadow-sm transition-colors"
             (click)="triggerPhotoUpload()"
           >
             <lucide-icon [img]="CameraIcon" [size]="16" class="text-white"></lucide-icon>
@@ -59,7 +59,7 @@
         type="text"
         [value]="nome()"
         (input)="nome.set($any($event.target).value)"
-        class="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+        class="w-full px-4 py-3 rounded-[24px] border border-white/20 dark:border-gray-700/50 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm text-gray-900 dark:text-white placeholder-gray-400 shadow-sm"
         placeholder="Es. Club Robotica"
       />
     </div>
@@ -73,7 +73,7 @@
         rows="2"
         [value]="descrizione()"
         (input)="descrizione.set($any($event.target).value)"
-        class="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+        class="w-full px-4 py-3 rounded-[24px] border border-white/20 dark:border-gray-700/50 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none text-sm text-gray-900 dark:text-white placeholder-gray-400 shadow-sm"
         placeholder="Di cosa si occupa il gruppo?"
       ></textarea>
     </div>
@@ -90,7 +90,7 @@
           type="text"
           [value]="searchQuery()"
           (input)="onSearchInput($event)"
-          class="w-full px-4 py-2.5 pl-10 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
+          class="w-full px-4 py-2.5 pl-10 rounded-[24px] border border-white/20 dark:border-gray-700/50 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm text-gray-900 dark:text-white placeholder-gray-400 shadow-sm"
           placeholder="Cerca studenti..."
         />
         <lucide-icon
@@ -101,7 +101,7 @@
       </div>
 
       <!-- Info cross-class -->
-      <p class="text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 px-3 py-2 rounded-lg mb-3 flex items-center gap-1.5">
+      <p class="text-xs text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-900/20 backdrop-blur-sm border border-primary-100 dark:border-primary-800/30 px-3 py-2 rounded-xl mb-3 flex items-center gap-1.5 shadow-sm">
         <lucide-icon [img]="InfoIcon" [size]="14" class="shrink-0"></lucide-icon>
         Puoi aggiungere studenti di qualsiasi classe
       </p>
@@ -110,7 +110,7 @@
       @if (selectedMembers().length > 0) {
         <div class="flex flex-wrap gap-2 mb-3">
           @for (member of selectedMembers(); track member.id) {
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-primary-700 dark:text-primary-300 rounded-[16px] text-sm">
               {{ member.nomeCompleto }}
               <button
                 type="button"
@@ -126,11 +126,11 @@
 
       <!-- Lista suggerimenti studenti -->
       @if (filteredSuggestions().length > 0) {
-        <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+        <div class="border border-white/20 dark:border-gray-700/50 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] overflow-hidden max-h-48 overflow-y-auto shadow-sm">
           @for (student of filteredSuggestions(); track student.id; let first = $first) {
             <div
-              class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
-              [class]="!first ? 'border-t border-gray-100 dark:border-gray-700' : ''"
+              class="flex items-center gap-3 p-3 hover:bg-white/20 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+              [class]="!first ? 'border-t border-white/10 dark:border-gray-700/50' : ''"
               (click)="addMember(student)"
             >
               <app-avatar
@@ -148,7 +148,7 @@
           }
         </div>
       } @else if (searchQuery().trim()) {
-        <div class="text-center py-4">
+        <div class="text-center py-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-sm mt-2">
           <p class="text-sm text-gray-500 dark:text-gray-400">Nessuno studente trovato</p>
         </div>
       }
@@ -156,18 +156,18 @@
   </div>
 
   <!-- Footer -->
-  <div modal-footer class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3 bg-white dark:bg-gray-800">
+  <div modal-footer class="border-t border-white/20 dark:border-gray-700/50 px-6 py-4 flex gap-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md">
     <button
       type="button"
-      class="flex-1 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+      class="flex-1 py-3 border border-white/50 dark:border-gray-600 bg-white/40 dark:bg-gray-700/40 text-gray-700 dark:text-gray-300 rounded-[24px] font-medium hover:bg-white/60 dark:hover:bg-gray-700/60 transition-colors text-sm shadow-sm"
       (click)="onClose()"
     >
       Annulla
     </button>
     <button
       type="button"
-      class="flex-1 py-3 rounded-full font-medium transition-colors text-sm flex items-center justify-center gap-2"
-      [class]="isFormValid() ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/25' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'"
+      class="flex-1 py-3 rounded-[24px] font-medium transition-colors text-sm flex items-center justify-center gap-2"
+      [class]="isFormValid() ? 'bg-primary-500/90 hover:bg-primary-600 backdrop-blur-md border border-white/20 text-white shadow-lg shadow-primary-500/25' : 'bg-gray-200/50 dark:bg-gray-700/50 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-white/20'"
       [disabled]="!isFormValid() || submitting()"
       (click)="onSubmit()"
     >
