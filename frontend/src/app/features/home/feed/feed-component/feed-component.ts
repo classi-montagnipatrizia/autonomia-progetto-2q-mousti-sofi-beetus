@@ -11,7 +11,7 @@ import { CreatePostComponent } from '../../components/create-post/create-post-co
 import { SidebarOnlineComponent } from '../../components/sidebar-online/sidebar-online-component/sidebar-online-component';
 import { WebsocketService, PostLikeUpdate, CommentsCountUpdate } from '../../../../core/services/websocket-service';
 import { AuthService } from '../../../../core/auth/services/auth-service';
-import { OnlineUsersDrawerComponent } from '../../components/online-users-drawer/online-users-drawer-component/online-users-drawer-component';
+import { AuthStore } from '../../../../core/stores/auth-store';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
@@ -21,7 +21,6 @@ import { LoggerService } from '../../../../core/services/logger.service';
     PostCardComponent,
     CreatePostComponent,
     SidebarOnlineComponent,
-    OnlineUsersDrawerComponent,
     SkeletonComponent,
     SpinnerComponent,
     InfiniteScroll,
@@ -33,6 +32,7 @@ export class FeedComponent implements OnInit, OnDestroy {
   private readonly postService = inject(PostService);
   private readonly websocketService = inject(WebsocketService);
   private readonly authService = inject(AuthService);
+  private readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
 
   private newPostSubscription?: Subscription;
@@ -55,6 +55,7 @@ export class FeedComponent implements OnInit, OnDestroy {
   /**
    * Verifica se ci sono post da mostrare
    */
+  readonly isAdmin = computed(() => this.authStore.isAdmin());
   readonly hasPosts = computed(() => this.posts().length > 0);
 
   /**
