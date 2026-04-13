@@ -30,11 +30,6 @@ export class BookCardComponent {
    */
   readonly clicked = output<BookSummaryDTO>();
 
-  /**
-   * Emesso quando si clicca su "Richiedi"
-   */
-  readonly requested = output<BookSummaryDTO>();
-
   readonly conditionLabel = computed(() => {
     switch (this.book().condizione) {
       case BookCondition.OTTIMO:      return 'Ottimo';
@@ -67,8 +62,4 @@ export class BookCardComponent {
     if (this.clickable()) this.clicked.emit(this.book());
   }
 
-  onRequest(event: Event): void {
-    event.stopPropagation();
-    this.requested.emit(this.book());
-  }
 }

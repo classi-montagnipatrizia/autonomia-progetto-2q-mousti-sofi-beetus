@@ -1,6 +1,7 @@
 <article
-  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col transition-shadow hover:shadow-md"
+  class="bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-[24px] overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-white/50 dark:border-gray-700/50 flex flex-col transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-1 group"
   [class.cursor-pointer]="clickable()"
+  [class.active:scale-[0.98]]="clickable()"
   (click)="onCardClick()"
   (keyup.enter)="onCardClick()"
   [attr.tabindex]="clickable() ? 0 : null"
@@ -8,26 +9,29 @@
   [attr.aria-label]="book().titolo"
 >
   <!-- Copertina -->
-  <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 overflow-hidden">
+  <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
     <img
       [src]="book().frontImageUrl"
       [alt]="book().titolo"
-      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       loading="lazy"
     />
 
     <!-- Overlay stato (solo se non disponibile) -->
     @if (statusLabel()) {
-      <div class="absolute inset-0 bg-black/55 flex items-center justify-center">
-        <span class="text-white font-bold text-base tracking-widest uppercase">
+      <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-20 transition-all duration-300">
+        <span class="text-white font-bold text-[14px] sm:text-[15px] tracking-widest uppercase bg-black/40 px-4 py-1.5 rounded-full border border-white/10 shadow-lg">
           {{ statusLabel() }}
         </span>
       </div>
     }
 
+    <!-- Gradient Overlay in basso per far risaltare eventuale badge (o contrasto se c'è un footer cover) -->
+    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10 transition-opacity duration-300"></div>
+
     <!-- Badge condizione -->
     <span
-      class="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
+      class="absolute top-2.5 left-2.5 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm z-20 backdrop-blur-md"
       [ngClass]="conditionClasses()"
     >
       {{ conditionLabel() }}
@@ -35,55 +39,54 @@
   </div>
 
   <!-- Info -->
-  <div class="flex flex-col flex-1 p-3 gap-1.5">
+  <div class="flex flex-col flex-1 p-3 sm:p-4 gap-2 relative bg-white/70 dark:bg-surface-dark/70 z-30">
     <!-- Titolo e autore -->
     <div class="min-w-0">
-      <p class="font-semibold text-gray-900 dark:text-white text-sm leading-snug line-clamp-2">
+      <p class="font-bold text-gray-900 dark:text-white text-[15px] leading-snug line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
         {{ book().titolo }}
       </p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+      <p class="font-medium text-[13px] text-gray-500 dark:text-gray-400 mt-1 truncate">
         {{ book().autore }}
       </p>
     </div>
 
     <!-- Materia e anno -->
     @if (book().materia || book().annoScolastico) {
-      <div class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
+      <div class="flex items-center gap-1.5 text-[12px] font-medium text-gray-400 dark:text-gray-500 flex-wrap">
         @if (book().materia) {
-          <span class="flex items-center gap-0.5">
-            <lucide-icon [img]="BookOpenIcon" [size]="11" />
+          <span class="flex items-center gap-1 bg-gray-100/80 dark:bg-gray-800 px-2 py-0.5 rounded-md">
+            <lucide-icon [img]="BookOpenIcon" [size]="12" class="opacity-70" />
             {{ book().materia }}
           </span>
         }
-        @if (book().materia && book().annoScolastico) {
-          <span>·</span>
-        }
         @if (book().annoScolastico) {
-          <span>{{ book().annoScolastico }}</span>
+          <span class="bg-gray-100/80 dark:bg-gray-800 px-2 py-0.5 rounded-md">{{ book().annoScolastico }}</span>
         }
       </div>
     }
 
+    <!-- Spazio separatore flessibile -->
+    <div class="flex-1"></div>
+
     <!-- Venditore -->
-    <p class="text-xs text-gray-400 dark:text-gray-500 truncate">
-      di {{ book().venditore.nomeCompleto }}
+    <p class="text-[12px] font-medium text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5 mt-1">
+      <span class="w-4 h-4 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+        <span class="text-[9px] font-bold">{{ book().venditore.nomeCompleto.charAt(0) }}</span>
+      </span>
+      {{ book().venditore.nomeCompleto }}
     </p>
 
-    <!-- Footer: prezzo + bottone Richiedi -->
-    <div class="flex items-center justify-between mt-auto pt-1.5 border-t border-gray-100 dark:border-gray-800">
-      <span class="text-base font-bold text-primary-600 dark:text-primary-400">
+    <!-- Footer: prezzo -->
+    <div class="flex items-center justify-between mt-1 pt-2.5 border-t border-gray-100 dark:border-gray-800/60">
+      <span class="text-[17px] font-black text-primary-600 dark:text-primary-400 tracking-tight">
         €{{ book().prezzo | number:'1.0-2' }}
       </span>
-
-      @if (isAvailable() && clickable()) {
-        <button
-          type="button"
-          class="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white transition-colors cursor-pointer"
-          (click)="onRequest($event)"
-          [attr.aria-label]="'Richiedi ' + book().titolo"
-        >
-          Richiedi
-        </button>
+      
+      <!-- Icona chevron che appare all'hover (se cliccabile) -->
+      @if (clickable()) {
+        <div class="w-6 h-6 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-500 flex items-center justify-center translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+          <lucide-icon name="chevron-right" [size]="14"></lucide-icon>
+        </div>
       }
     </div>
   </div>
