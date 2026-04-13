@@ -11,7 +11,6 @@
 <div
   [ngClass]="dropzoneClasses()"
   [style.width]="width()"
-  [style.height]="hasImage() && showPreview() ? 'auto' : height()"
   [style.min-height]="height()"
   (dragenter)="onDragEnter($event)"
   (dragover)="onDragOver($event)"
@@ -30,7 +29,7 @@
       <!-- Pulsante rimuovi -->
       <button
         type="button"
-        class="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        class="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-red-500 hover:scale-110 active:scale-95 transition-all duration-300 shadow-md"
         (click)="removeImage()"
         aria-label="Rimuovi immagine"
       >
@@ -39,67 +38,71 @@
 
       <!-- Overlay progresso durante upload -->
       @if (uploadState() === 'uploading') {
-        <div class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center rounded-lg">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-lg flex flex-col items-center justify-center rounded-lg transition-all">
           <app-spinner size="lg" color="white" />
-          <p class="text-white text-sm mt-2">{{ uploadProgress() }}%</p>
+          <p class="text-white font-medium text-[15px] mt-3 animate-pulse">{{ uploadProgress() }}%</p>
         </div>
       }
     </div>
   } @else {
     <!-- Stato idle o uploading senza preview -->
     <div
-      class="flex flex-col items-center justify-center p-6 cursor-pointer w-full h-full"
+      class="flex flex-col items-center justify-center p-2 sm:p-4 w-full h-full"
       (click)="openFilePicker()"
     >
       @if (uploadState() === 'uploading') {
         <!-- Stato caricamento -->
         <app-spinner size="lg" />
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+        <p class="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mt-4 animate-pulse">
           Caricamento... {{ uploadProgress() }}%
         </p>
 
         <!-- Progress bar -->
-        <div class="w-full max-w-xs mt-3 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div class="w-full max-w-xs mt-4 h-2 bg-gray-200/50 dark:bg-gray-700/50 rounded-[10px] overflow-hidden shadow-inner">
           <div
-            class="h-full bg-primary-500 transition-all duration-300"
+            class="h-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-300 relative"
             [style.width.%]="uploadProgress()"
-          ></div>
+          >
+            <div class="absolute inset-0 bg-white/20 w-full animate-[ping_2s_ease-in-out_infinite]"></div>
+          </div>
         </div>
       } @else if (uploadState() === 'error') {
         <!-- Stato errore -->
-        <lucide-icon [img]="AlertCircleIcon" class="w-10 h-10 text-error-500" />
-        <p class="text-sm text-error-600 dark:text-error-400 mt-2 text-center">
+        <div class="p-3 mb-2 rounded-full bg-error-50 dark:bg-error-900/30 text-error-500 group-hover:scale-110 transition-transform">
+          <lucide-icon [img]="AlertCircleIcon" class="w-6 h-6" />
+        </div>
+        <p class="text-[14px] font-bold text-error-600 dark:text-error-400 mt-2 text-center">
           {{ errorMessage() }}
         </p>
         <app-button
           variant="ghost"
           size="sm"
           (clicked)="openFilePicker()"
-          class="mt-3"
+          class="mt-2 text-xs sm:mt-4 sm:text-sm"
         >
           Riprova
         </app-button>
       } @else {
         <!-- Stato idle -->
-        <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-3">
-          <lucide-icon [img]="ImageIcon" class="w-8 h-8 text-primary-500" />
+        <div class="p-2 sm:p-3 rounded-full bg-primary-50 dark:bg-primary-900/30 mb-1.5 sm:mb-3 group-hover:scale-110 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-all duration-300 shadow-sm border border-primary-100/50 dark:border-primary-800/50 shrink-0">
+          <lucide-icon [img]="ImageIcon" class="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
         </div>
 
-        <p class="text-sm font-medium text-text-light dark:text-text-dark">
+        <p class="text-[13px] sm:text-[14px] font-bold text-center text-gray-900 dark:text-white transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-400 leading-tight">
           {{ placeholder() }}
         </p>
 
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p class="text-[11px] sm:text-[12px] font-medium text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
           @if (enableDragDrop()) {
             Trascina qui o
-            <span class="text-primary-600 dark:text-primary-400">sfoglia</span>
+            <span class="text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-md font-bold">sfoglia</span>
           } @else {
             Clicca per selezionare
           }
         </p>
 
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
-          JPG, PNG o WEBP · Max {{ maxSizeMB() }}MB
+        <p class="hidden md:block text-[11px] font-medium text-gray-400 dark:text-gray-500 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50 w-1/2 text-center">
+          JPG, PNG o WEBP <br> Max {{ maxSizeMB() }}MB
         </p>
       }
     </div>

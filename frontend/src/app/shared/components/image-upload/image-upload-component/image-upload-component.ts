@@ -118,17 +118,17 @@ export class ImageUploadComponent {
    */
   readonly dropzoneClasses = computed(() => {
     const base =
-      'relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl transition-all';
+      'relative flex flex-col items-center justify-center border-[2px] border-dashed rounded-[20px] transition-all duration-300 backdrop-blur-md group cursor-pointer';
 
     if (this.isDragging()) {
-      return `${base} border-primary-500 bg-primary-50 dark:bg-primary-900/20`;
+      return `${base} border-primary-500 bg-primary-50/80 dark:bg-primary-900/40 scale-[0.98] shadow-inner`;
     }
 
     if (this.uploadState() === 'error') {
-      return `${base} border-error-500 bg-error-50 dark:bg-error-900/20`;
+      return `${base} border-error-400 bg-error-50/80 dark:bg-error-900/30`;
     }
 
-    return `${base} border-gray-300 dark:border-gray-600 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800/50`;
+    return `${base} border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-gray-800/30 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-white/80 dark:hover:bg-gray-800/60 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-0.5`;
   });
 
   /**
