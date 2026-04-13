@@ -1,12 +1,12 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen bg-transparent">
   <!-- Header -->
-  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+  <header class="sticky top-0 z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/50 shadow-sm">
     <div class="max-w-4xl mx-auto px-4">
-      <div class="flex items-center gap-3 h-14">
+      <div class="flex items-center gap-3 h-16 pt-2">
         <button
           type="button"
           (click)="goBack()"
-          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          class="p-2 -ml-2 rounded-full hover:bg-white/40 dark:hover:bg-gray-800/40 text-gray-500 dark:text-gray-400 transition-colors"
           aria-label="Torna indietro"
         >
           <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
@@ -17,24 +17,24 @@
   </header>
 
   <!-- Content -->
-  <main class="max-w-4xl mx-auto px-4 py-6">
+  <main class="max-w-4xl mx-auto px-4 py-8">
     <div class="flex flex-col lg:flex-row gap-6">
       <!-- Sidebar navigation -->
       <nav class="lg:w-64 flex-shrink-0">
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-sm overflow-hidden p-2 space-y-1">
           @for (section of sections; track section.id) {
             <button
               type="button"
               (click)="setSection(section.id)"
-              class="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors"
-              [class.bg-primary-50]="activeSection() === section.id"
-              [class.dark:bg-primary-900/20]="activeSection() === section.id"
+              class="w-full px-4 py-3 flex items-center gap-3 text-left transition-all rounded-[16px]"
+              [class.bg-primary-500/10]="activeSection() === section.id"
+              [class.dark:bg-primary-500/20]="activeSection() === section.id"
               [class.text-primary-600]="activeSection() === section.id"
               [class.dark:text-primary-400]="activeSection() === section.id"
               [class.text-gray-700]="activeSection() !== section.id"
               [class.dark:text-gray-300]="activeSection() !== section.id"
-              [class.hover:bg-gray-50]="activeSection() !== section.id"
-              [class.dark:hover:bg-gray-700]="activeSection() !== section.id"
+              [class.hover:bg-white/60]="activeSection() !== section.id"
+              [class.dark:hover:bg-gray-700/60]="activeSection() !== section.id"
             >
               <lucide-icon [img]="section.icon" [size]="20" />
               <span class="font-medium">{{ section.label }}</span>
@@ -45,7 +45,7 @@
 
       <!-- Content area -->
       <div class="flex-1">
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-3xl rounded-[32px] border border-white/30 dark:border-gray-700/50 shadow-sm p-6 sm:p-8">
           
           <!-- Profile Section -->
           @if (activeSection() === 'profile') {
@@ -63,9 +63,9 @@
                     size="xl"
                   />
                   <label
-                    class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary-500 hover:bg-primary-600 text-white flex items-center justify-center cursor-pointer transition-colors shadow-lg"
+                    class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary-500/90 backdrop-blur-md border border-white/20 hover:bg-primary-600 text-white flex items-center justify-center cursor-pointer transition-colors shadow-lg"
                   >
-                    <lucide-icon [img]="CameraIcon" [size]="12" />
+                    <lucide-icon [img]="CameraIcon" [size]="14" />
                     <input
                       type="file"
                       accept="image/*"
@@ -82,7 +82,7 @@
                     <button
                       type="button"
                       (click)="removeProfileImage()"
-                      class="text-xs text-red-500 hover:text-red-600 mt-2"
+                      class="text-xs text-error-500 hover:text-error-600 mt-2 font-medium px-2 py-1 bg-error-50 dark:bg-error-500/10 rounded-lg transition-colors"
                     >
                       Rimuovi foto
                     </button>
@@ -93,27 +93,27 @@
               <!-- Form fields -->
               <div class="space-y-6">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Nome completo
                   </label>
                   <input
                     type="text"
                     [value]="nomeCompleto()"
                     (input)="nomeCompleto.set($any($event.target).value)"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    class="w-full px-4 py-3 rounded-[24px] border border-white/40 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all shadow-inner"
                     placeholder="Il tuo nome completo"
                     maxlength="100"
                   />
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Bio
                   </label>
                   <textarea
                     [value]="bio()"
                     (input)="bio.set($any($event.target).value)"
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    class="w-full px-4 py-3 rounded-[24px] border border-white/40 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all shadow-inner resize-none"
                     placeholder="Scrivi qualcosa su di te..."
                     rows="4"
                     maxlength="500"
@@ -123,14 +123,16 @@
                   </p>
                 </div>
 
-                <app-button
-                  variant="primary"
-                  [loading]="isSaving()"
-                  (clicked)="saveProfile()"
-                >
-                  <lucide-icon [img]="SaveIcon" [size]="18" class="mr-2" />
-                  Salva modifiche
-                </app-button>
+                <div class="flex justify-end pt-4">
+                  <app-button
+                    variant="primary"
+                    [loading]="isSaving()"
+                    (clicked)="saveProfile()"
+                  >
+                    <lucide-icon [img]="SaveIcon" [size]="18" class="mr-2" />
+                    Salva modifiche
+                  </app-button>
+                </div>
               </div>
             </div>
           }
@@ -138,14 +140,14 @@
           <!-- Password Section -->
           @if (activeSection() === 'password') {
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
                 Cambia password
               </h2>
 
               <div class="space-y-6">
                 <!-- Old password -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Password attuale
                   </label>
                   <div class="relative">
@@ -153,13 +155,13 @@
                       [type]="showOldPassword() ? 'text' : 'password'"
                       [value]="vecchiaPassword()"
                       (input)="vecchiaPassword.set($any($event.target).value)"
-                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      class="w-full px-4 py-3 pr-12 rounded-[24px] border border-white/40 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all shadow-inner"
                       placeholder="Inserisci la password attuale"
                     />
                     <button
                       type="button"
                       (click)="togglePasswordVisibility('old')"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/40 dark:hover:bg-gray-700/40 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       <lucide-icon [img]="showOldPassword() ? EyeOffIcon : EyeIcon" [size]="20" />
                     </button>
@@ -168,7 +170,7 @@
 
                 <!-- New password -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Nuova password
                   </label>
                   <div class="relative">
@@ -176,25 +178,25 @@
                       [type]="showNewPassword() ? 'text' : 'password'"
                       [value]="nuovaPassword()"
                       (input)="nuovaPassword.set($any($event.target).value)"
-                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      class="w-full px-4 py-3 pr-12 rounded-[24px] border border-white/40 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all shadow-inner"
                       placeholder="Almeno 8 caratteri"
                     />
                     <button
                       type="button"
                       (click)="togglePasswordVisibility('new')"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/40 dark:hover:bg-gray-700/40 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       <lucide-icon [img]="showNewPassword() ? EyeOffIcon : EyeIcon" [size]="20" />
                     </button>
                   </div>
                   @if (nuovaPassword().length > 0 && !isPasswordValid()) {
-                    <p class="text-xs text-red-500 mt-1">La password deve essere di almeno 8 caratteri</p>
+                    <p class="text-xs text-error-500 mt-2 ml-2">La password deve essere di almeno 8 caratteri</p>
                   }
                 </div>
 
                 <!-- Confirm password -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Conferma nuova password
                   </label>
                   <div class="relative">
@@ -234,30 +236,26 @@
           <!-- Theme Section -->
           @if (activeSection() === 'theme') {
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
                 Tema applicazione
               </h2>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <!-- Light -->
                 <button
                   type="button"
                   (click)="setTheme('light')"
-                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  class="p-6 rounded-[24px] border-2 transition-all flex flex-col items-center gap-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md shadow-sm hover:bg-white/60 dark:hover:bg-gray-700/60"
                   [class.border-primary-500]="currentTheme() === 'light'"
-                  [class.bg-primary-50]="currentTheme() === 'light'"
-                  [class.dark:bg-primary-900/20]="currentTheme() === 'light'"
-                  [class.border-gray-200]="currentTheme() !== 'light'"
-                  [class.dark:border-gray-600]="currentTheme() !== 'light'"
-                  [class.hover:border-gray-300]="currentTheme() !== 'light'"
-                  [class.dark:hover:border-gray-500]="currentTheme() !== 'light'"
+                  [class.border-white/20]="currentTheme() !== 'light'"
+                  [class.dark:border-gray-700/50]="currentTheme() !== 'light'"
                 >
-                  <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <lucide-icon [img]="SunIcon" [size]="24" class="text-yellow-500" />
+                  <div class="w-16 h-16 rounded-[20px] bg-yellow-100 flex items-center justify-center shadow-inner">
+                    <lucide-icon [img]="SunIcon" [size]="32" class="text-yellow-600" />
                   </div>
                   <span class="font-medium text-gray-900 dark:text-white">Chiaro</span>
                   @if (currentTheme() === 'light') {
-                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                    <lucide-icon [img]="CheckIcon" [size]="20" class="text-primary-500 absolute top-4 right-4" />
                   }
                 </button>
 
@@ -265,21 +263,17 @@
                 <button
                   type="button"
                   (click)="setTheme('dark')"
-                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  class="p-6 rounded-[24px] border-2 transition-all flex flex-col items-center gap-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md shadow-sm hover:bg-white/60 dark:hover:bg-gray-700/60"
                   [class.border-primary-500]="currentTheme() === 'dark'"
-                  [class.bg-primary-50]="currentTheme() === 'dark'"
-                  [class.dark:bg-primary-900/20]="currentTheme() === 'dark'"
-                  [class.border-gray-200]="currentTheme() !== 'dark'"
-                  [class.dark:border-gray-600]="currentTheme() !== 'dark'"
-                  [class.hover:border-gray-300]="currentTheme() !== 'dark'"
-                  [class.dark:hover:border-gray-500]="currentTheme() !== 'dark'"
+                  [class.border-white/20]="currentTheme() !== 'dark'"
+                  [class.dark:border-gray-700/50]="currentTheme() !== 'dark'"
                 >
-                  <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
-                    <lucide-icon [img]="MoonIcon" [size]="24" class="text-gray-300" />
+                  <div class="w-16 h-16 rounded-[20px] bg-gray-800 flex items-center justify-center shadow-inner">
+                    <lucide-icon [img]="MoonIcon" [size]="32" class="text-gray-300" />
                   </div>
                   <span class="font-medium text-gray-900 dark:text-white">Scuro</span>
                   @if (currentTheme() === 'dark') {
-                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                    <lucide-icon [img]="CheckIcon" [size]="20" class="text-primary-500 absolute top-4 right-4" />
                   }
                 </button>
 
@@ -287,26 +281,22 @@
                 <button
                   type="button"
                   (click)="setTheme('system')"
-                  class="p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3"
+                  class="p-6 rounded-[24px] border-2 transition-all flex flex-col items-center gap-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md shadow-sm hover:bg-white/60 dark:hover:bg-gray-700/60"
                   [class.border-primary-500]="currentTheme() === 'system'"
-                  [class.bg-primary-50]="currentTheme() === 'system'"
-                  [class.dark:bg-primary-900/20]="currentTheme() === 'system'"
-                  [class.border-gray-200]="currentTheme() !== 'system'"
-                  [class.dark:border-gray-600]="currentTheme() !== 'system'"
-                  [class.hover:border-gray-300]="currentTheme() !== 'system'"
-                  [class.dark:hover:border-gray-500]="currentTheme() !== 'system'"
+                  [class.border-white/20]="currentTheme() !== 'system'"
+                  [class.dark:border-gray-700/50]="currentTheme() !== 'system'"
                 >
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-100 to-gray-700 flex items-center justify-center">
-                    <lucide-icon [img]="MonitorIcon" [size]="24" class="text-gray-600" />
+                  <div class="w-16 h-16 rounded-[20px] bg-gradient-to-br from-yellow-100 to-gray-800 flex items-center justify-center shadow-inner">
+                    <lucide-icon [img]="MonitorIcon" [size]="32" class="text-gray-900 dark:text-white" />
                   </div>
                   <span class="font-medium text-gray-900 dark:text-white">Sistema</span>
                   @if (currentTheme() === 'system') {
-                    <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-500" />
+                    <lucide-icon [img]="CheckIcon" [size]="20" class="text-primary-500 absolute top-4 right-4" />
                   }
                 </button>
               </div>
 
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-6 ml-2">
                 L'opzione "Sistema" seguirà automaticamente le preferenze del tuo dispositivo.
               </p>
             </div>
@@ -315,21 +305,23 @@
           <!-- Notifications Section -->
           @if (activeSection() === 'notifications') {
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Notifiche push
               </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 ml-1">
                 Ricevi notifiche anche quando non sei nell'app — per messaggi, like, commenti e molto altro.
               </p>
 
               <!-- iOS non installata come PWA -->
               @if (pushStatus() === 'ios-not-installed') {
-                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <div class="flex gap-3">
-                    <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-amber-500 flex-shrink-0 mt-0.5" />
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-[24px] p-6 backdrop-blur-md">
+                  <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                      <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-amber-500" />
+                    </div>
                     <div>
-                      <h4 class="text-sm font-medium text-amber-800 dark:text-amber-300">Installa beetUs su iPhone</h4>
-                      <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                      <h4 class="text-sm font-medium text-amber-700 dark:text-amber-400">Installa beetUs su iPhone</h4>
+                      <p class="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
                         Per ricevere notifiche su iPhone, aggiungi beetUs alla schermata Home:<br>
                         tasto <strong>Condividi</strong> → <strong>Aggiungi a schermata Home</strong>, poi torna qui.
                       </p>
@@ -340,9 +332,11 @@
 
               <!-- Browser non supporta push -->
               @if (pushStatus() === 'not-supported') {
-                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                  <div class="flex gap-3">
-                    <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-400 flex-shrink-0 mt-0.5" />
+                <div class="bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-gray-700/50 rounded-[24px] p-6 backdrop-blur-md">
+                  <div class="flex gap-4 items-center">
+                    <div class="w-10 h-10 rounded-full bg-gray-500/10 flex items-center justify-center flex-shrink-0">
+                      <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-500" />
+                    </div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                       Il tuo browser non supporta le notifiche push. Prova con Chrome o Safari aggiornato.
                     </p>
@@ -352,11 +346,13 @@
 
               <!-- Service worker non attivo (es. dev mode) -->
               @if (pushStatus() === 'sw-disabled') {
-                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                  <div class="flex gap-3">
-                    <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-400 flex-shrink-0 mt-0.5" />
+                <div class="bg-white/40 dark:bg-gray-800/40 border border-white/20 dark:border-gray-700/50 rounded-[24px] p-6 backdrop-blur-md">
+                  <div class="flex gap-4 items-center">
+                    <div class="w-10 h-10 rounded-full bg-gray-500/10 flex items-center justify-center flex-shrink-0">
+                      <lucide-icon [img]="BellIcon" [size]="20" class="text-gray-500" />
+                    </div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                      Le notifiche push sono disponibili solo nella build di produzione. Esegui <code class="bg-gray-100 dark:bg-gray-600 px-1 rounded">ng build</code> e servi l'app per testarle.
+                      Le notifiche push sono disponibili solo nella build di produzione. Esegui <code class="bg-gray-100 dark:bg-gray-600/50 px-2 py-0.5 rounded-lg text-xs">ng build</code> e servi l'app per testarle.
                     </p>
                   </div>
                 </div>
@@ -364,12 +360,14 @@
 
               <!-- Permesso negato dall'utente -->
               @if (pushStatus() === 'denied') {
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                  <div class="flex gap-3">
-                    <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-red-500 flex-shrink-0 mt-0.5" />
+                <div class="bg-error-500/10 border border-error-500/20 rounded-[24px] p-6 backdrop-blur-md">
+                  <div class="flex gap-4">
+                    <div class="w-10 h-10 rounded-full bg-error-500/20 flex items-center justify-center flex-shrink-0">
+                      <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-error-500" />
+                    </div>
                     <div>
-                      <h4 class="text-sm font-medium text-red-800 dark:text-red-300">Notifiche bloccate</h4>
-                      <p class="text-sm text-red-700 dark:text-red-400 mt-1">
+                      <h4 class="text-sm font-medium text-error-700 dark:text-error-400">Notifiche bloccate</h4>
+                      <p class="text-sm text-error-600/80 dark:text-error-400/80 mt-1">
                         Hai bloccato le notifiche per questo sito. Abilitale nelle impostazioni del browser, poi ricarica la pagina.
                       </p>
                     </div>
@@ -379,10 +377,10 @@
 
               <!-- Caso normale: toggle -->
               @if (pushStatus() === 'normal') {
-                <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                <div class="flex items-center justify-between p-6 bg-white/40 dark:bg-gray-800/40 rounded-[24px] border border-white/20 dark:border-gray-700/50 backdrop-blur-md shadow-sm">
                   <div>
-                    <p class="font-medium text-gray-900 dark:text-white">Notifiche push</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    <h3 class="font-medium text-gray-900 dark:text-white">Notifiche push</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       {{ isPushSubscribed() ? 'Attive su questo dispositivo' : 'Non attive su questo dispositivo' }}
                     </p>
                   </div>
@@ -390,15 +388,15 @@
                     type="button"
                     (click)="togglePushNotifications()"
                     [disabled]="isTogglingPush()"
-                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    [class.bg-primary-600]="isPushSubscribed()"
-                    [class.bg-gray-200]="!isPushSubscribed()"
+                    class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class.bg-primary-500]="isPushSubscribed()"
+                    [class.bg-gray-300]="!isPushSubscribed()"
                     [class.dark:bg-gray-600]="!isPushSubscribed()"
                     [attr.aria-checked]="isPushSubscribed()"
                     role="switch"
                   >
                     <span
-                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                      class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
                       [class.translate-x-5]="isPushSubscribed()"
                       [class.translate-x-0]="!isPushSubscribed()"
                     ></span>
@@ -411,20 +409,22 @@
           <!-- Account Section -->
           @if (activeSection() === 'account') {
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Disattiva account
               </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-8 ml-1">
                 La disattivazione è reversibile. Potrai riattivare il tuo account contattando l'assistenza.
               </p>
 
               <!-- Warning -->
-              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-                <div class="flex gap-3">
-                  <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-red-500 flex-shrink-0 mt-0.5" />
+              <div class="bg-error-500/10 border border-error-500/20 rounded-[24px] p-6 backdrop-blur-md mb-8">
+                <div class="flex gap-4">
+                  <div class="w-10 h-10 rounded-full bg-error-500/20 flex items-center justify-center flex-shrink-0">
+                    <lucide-icon [img]="AlertTriangleIcon" [size]="20" class="text-error-500" />
+                  </div>
                   <div>
-                    <h4 class="text-sm font-medium text-red-800 dark:text-red-300">Attenzione</h4>
-                    <p class="text-sm text-red-700 dark:text-red-400 mt-1">
+                    <h4 class="text-sm font-medium text-error-700 dark:text-error-400">Attenzione</h4>
+                    <p class="text-sm text-error-600/80 dark:text-error-400/80 mt-1">
                       Dopo la disattivazione non potrai più accedere al tuo account.
                       I tuoi post e commenti rimarranno visibili ma il tuo profilo risulterà inattivo.
                     </p>
@@ -432,9 +432,9 @@
                 </div>
               </div>
 
-              <div class="space-y-4">
+              <div class="space-y-6">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">
                     Conferma con la tua password
                   </label>
                   <div class="relative">
@@ -442,28 +442,30 @@
                       [type]="showDeactivatePassword() ? 'text' : 'password'"
                       [value]="deactivatePassword()"
                       (input)="deactivatePassword.set($any($event.target).value)"
-                      class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      class="w-full px-4 py-3 pr-12 rounded-[24px] border border-white/40 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-error-500/50 focus:border-error-500 transition-all shadow-inner"
                       placeholder="Inserisci la tua password"
                     />
                     <button
                       type="button"
                       (click)="togglePasswordVisibility('deactivate')"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/40 dark:hover:bg-gray-700/40 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       <lucide-icon [img]="showDeactivatePassword() ? EyeOffIcon : EyeIcon" [size]="20" />
                     </button>
                   </div>
                 </div>
 
-                <app-button
-                  variant="danger"
-                  [disabled]="!canDeactivate()"
-                  [loading]="isSaving()"
-                  (clicked)="deactivateAccount()"
-                >
-                  <lucide-icon [img]="PowerIcon" [size]="18" class="mr-2" />
-                  Disattiva account
-                </app-button>
+                <div class="pt-4 flex justify-end">
+                  <app-button
+                    variant="danger"
+                    [disabled]="!canDeactivate()"
+                    [loading]="isSaving()"
+                    (clicked)="deactivateAccount()"
+                  >
+                    <lucide-icon [img]="PowerIcon" [size]="18" class="mr-2" />
+                    Disattiva account
+                  </app-button>
+                </div>
               </div>
             </div>
           }
