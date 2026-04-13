@@ -1,25 +1,27 @@
-<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
   <!-- Like button -->
   @if (showLike()) {
     <button
       type="button"
-      class="flex items-center gap-2 text-sm transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 group"
+      class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 group border active:scale-[0.95]"
       [class]="effectiveHasLiked()
-        ? 'text-red-500 hover:text-red-600'
-        : 'text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'"
+        ? 'bg-red-50/80 dark:bg-red-900/30 text-red-500 dark:text-red-400 border-red-200 dark:border-red-800/50 shadow-sm'
+        : 'bg-gray-100/50 dark:bg-gray-800/30 text-gray-500 dark:text-gray-400 border-transparent hover:bg-red-50/80 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800/30 hover:text-red-500 hover:shadow-sm'"
       [disabled]="isLikeLoading()"
       appDebounceClick="300"
       (debounceClick)="toggleLike($event)"
       [attr.aria-label]="effectiveHasLiked() ? 'Rimuovi like' : 'Metti like'"
     >
-      <lucide-icon
-        [img]="HeartIcon"
-        [size]="20"
-        class="heart-icon transition-all duration-200"
-        [class.heart-filled]="effectiveHasLiked()"
-        [class.group-hover:scale-110]="!isLikeLoading()"
-      ></lucide-icon>
-      <span class="font-medium">{{ effectiveLikesCount() }}</span>
+      <div class="relative flex items-center justify-center">
+        <lucide-icon
+          [img]="HeartIcon"
+          [size]="20"
+          class="heart-icon transition-transform duration-300 group-active:scale-[0.80]"
+          [class.heart-filled]="effectiveHasLiked()"
+          [class.group-hover:scale-[1.15]]="!isLikeLoading()"
+        ></lucide-icon>
+      </div>
+      <span class="font-bold text-[14px]">{{ effectiveLikesCount() > 0 ? effectiveLikesCount() : 'Mi piace' }}</span>
     </button>
   }
 
@@ -27,12 +29,12 @@
   @if (showComments()) {
     <button
       type="button"
-      class="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400 transition-colors cursor-pointer"
+      class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-gray-100/50 dark:bg-gray-800/30 backdrop-blur-md text-gray-500 dark:text-gray-400 border border-transparent hover:bg-primary-50/80 dark:hover:bg-primary-900/20 hover:border-primary-100 dark:hover:border-primary-800/30 hover:text-primary-600 transition-all duration-300 cursor-pointer group active:scale-[0.95]"
       (click)="openComments($event)"
       aria-label="Vedi commenti"
     >
-      <lucide-icon [img]="MessageCircleIcon" [size]="20"></lucide-icon>
-      <span class="font-medium">{{ effectiveCommentsCount() }}</span>
+      <lucide-icon [img]="MessageCircleIcon" [size]="20" class="transition-transform duration-300 group-hover:scale-[1.15] group-active:scale-[0.80]"></lucide-icon>
+      <span class="font-bold text-[14px]">{{ effectiveCommentsCount() > 0 ? effectiveCommentsCount() : 'Commenta' }}</span>
     </button>
   }
 </div>

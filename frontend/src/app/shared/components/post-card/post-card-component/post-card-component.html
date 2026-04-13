@@ -1,5 +1,5 @@
 <article
-  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm"
+  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md"
   [class.cursor-pointer]="clickable()"
   (click)="goToPost()"
   (keyup.enter)="goToPost()"
@@ -7,10 +7,10 @@
   [attr.role]="clickable() ? 'button' : null"
 >
   <!-- Header -->
-  <header class="flex items-center justify-between px-4 pt-4">
+  <header class="flex items-start justify-between px-4 pt-4 sm:px-5 sm:pt-5">
     <!-- Autore -->
     <div
-      class="flex items-center gap-3 min-w-0 cursor-pointer group"
+      class="flex items-center gap-3 min-w-0 cursor-pointer group rounded-xl p-1 -ml-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
       (click)="goToAuthor($event)"
       (keyup.enter)="goToAuthor($event)"
       tabindex="0"
@@ -25,14 +25,14 @@
         class="shrink-0 cursor-pointer transition-transform group-hover:scale-105"
       />
 
-      <div class="min-w-0">
-        <p class="font-semibold text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+      <div class="min-w-0 flex flex-col justify-center">
+        <p class="font-bold text-gray-900 dark:text-white text-[15px] leading-snug truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
           {{ post().autore.nomeCompleto }}
         </p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
-          <span>&#64;{{ post().autore.username }}</span>
-          <span class="text-gray-300 dark:text-gray-600">•</span>
-          <app-time-ago [date]="post().createdAt" />
+        <p class="text-[13px] text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5 mt-0.5">
+          <span class="font-medium">&#64;{{ post().autore.username }}</span>
+          <span class="text-gray-300 dark:text-gray-600/80 text-[10px]">•</span>
+          <span class="hover:underline"><app-time-ago [date]="post().createdAt" /></span>
         </p>
       </div>
     </div>
@@ -99,12 +99,12 @@
   </header>
 
   <!-- Body -->
-  <div class="px-4 py-3">
+  <div class="px-4 py-3 sm:px-5 sm:py-4">
     <!-- Modalità visualizzazione -->
     @if (!isEditing()) {
       <!-- Contenuto testuale -->
       @if (post().contenuto) {
-        <p class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
+        <p class="text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed text-[15px] sm:text-base">
           <app-safe-mention-text [content]="post().contenuto" />
         </p>
       }
@@ -154,11 +154,11 @@
 
     <!-- Immagine -->
     @if (post().imageUrl) {
-      <div class="mt-3 rounded-xl overflow-hidden">
+      <div class="mt-4 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 relative">
         <img
           [src]="post().imageUrl"
           [alt]="'Immagine del post di ' + post().autore.nomeCompleto"
-          class="w-full max-h-[500px] object-cover cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+          class="w-full max-h-[500px] object-cover cursor-pointer hover:scale-[1.01] hover:brightness-[0.98] dark:hover:brightness-110 transition-all duration-300"
           loading="lazy"
           (click)="openImagePreview($event)"
         />
@@ -168,8 +168,8 @@
 
   <!-- Footer / Azioni -->
   @if (showActions()) {
-    <footer class="px-4 pb-4">
-      <div class="flex items-center justify-between">
+    <footer class="px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
+      <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-800/60 pt-3 mt-1">
         <app-post-actions
           [postId]="post().id"
           [likesCount]="post().likesCount"
@@ -182,13 +182,13 @@
         @if (effectiveCommentsCount() > 0) {
           <button
             type="button"
-            class="text-sm text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-medium transition-colors cursor-pointer"
+            class="text-[13px] text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-medium transition-colors cursor-pointer hover:underline underline-offset-2 decoration-primary-500/30"
             (click)="openComments($event)"
           >
             @if (effectiveCommentsCount() === 1) {
-              Vedi commento
+              Vedi i commenti
             } @else {
-              Vedi {{ effectiveCommentsCount() }} commenti
+              Vedi i {{ effectiveCommentsCount() }} commenti
             }
           </button>
         }
