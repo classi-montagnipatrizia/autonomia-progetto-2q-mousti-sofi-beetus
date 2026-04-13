@@ -1,16 +1,18 @@
-<div [ngClass]="containerClasses()" (click)="onClick()" (keyup.enter)="onClick()" [attr.tabindex]="clickable() ? 0 : null" [attr.role]="clickable() ? 'button' : null">
+<div [ngClass]="containerClasses()" (click)="onClick()" (keyup.enter)="onClick()" [attr.tabindex]="clickable() ? 0 : null" [attr.role]="clickable() ? 'button' : null" class="group">
   <!-- Avatar con status -->
-  <app-avatar
-    [src]="profilePictureUrl()"
-    [name]="nomeCompleto()"
-    [size]="avatarSize()"
-    [status]="avatarStatus()"
-  />
+  <div class="transition-transform duration-300 group-hover:scale-105">
+    <app-avatar
+      [src]="profilePictureUrl()"
+      [name]="nomeCompleto()"
+      [size]="avatarSize()"
+      [status]="avatarStatus()"
+    />
+  </div>
 
   <!-- Info utente -->
-  <div class="flex-1 min-w-0">
+  <div class="flex-1 min-w-0 flex flex-col justify-center">
     <!-- Nome completo -->
-    <p [ngClass]="nameClasses()" class="truncate">
+    <p [ngClass]="nameClasses()" class="truncate leading-none mb-0.5">
       {{ nomeCompleto() }}
     </p>
 
@@ -21,12 +23,14 @@
 
     <!-- Subtitle opzionale (solo variante detailed) -->
     @if (variant() === 'detailed' && subtitle()) {
-      <p class="text-sm text-gray-400 dark:text-gray-500 truncate mt-1">
+      <p class="text-[13px] font-medium text-gray-400 dark:text-gray-500 truncate mt-1.5">
         {{ subtitle() }}
       </p>
     }
   </div>
 
   <!-- Slot per contenuto aggiuntivo (es. pulsanti azione) -->
-  <ng-content></ng-content>
+  <div class="transition-opacity duration-300">
+    <ng-content></ng-content>
+  </div>
 </div>

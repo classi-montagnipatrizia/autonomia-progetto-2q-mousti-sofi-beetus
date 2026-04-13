@@ -93,9 +93,9 @@ export class UserListItemComponent {
    * Classi CSS per il contenitore principale
    */
   readonly containerClasses = computed(() => {
-    const base = 'flex items-center gap-3 rounded-lg transition-colors';
+    const base = 'flex items-center gap-3.5 rounded-[20px] transition-all duration-300';
     const clickableClasses = this.clickable()
-      ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+      ? 'cursor-pointer hover:bg-white/80 dark:hover:bg-gray-800/60 hover:backdrop-blur-md active:scale-[0.98] border border-transparent hover:border-white/50 dark:hover:border-gray-700/50 hover:shadow-sm'
       : '';
 
     const paddingMap: Record<UserListItemVariant, string> = {
@@ -112,11 +112,11 @@ export class UserListItemComponent {
    */
   readonly nameClasses = computed(() => {
     const sizeMap: Record<UserListItemVariant, string> = {
-      compact: 'text-sm',
-      default: 'text-base',
-      detailed: 'text-lg',
+      compact: 'text-[14px]',
+      default: 'text-[15px]',
+      detailed: 'text-[17px]',
     };
-    return `font-semibold text-text-light dark:text-text-dark ${sizeMap[this.variant()]}`;
+    return `font-bold text-gray-900 dark:text-white transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-400 ${sizeMap[this.variant()]}`;
   });
 
   /**
@@ -124,11 +124,11 @@ export class UserListItemComponent {
    */
   readonly usernameClasses = computed(() => {
     const sizeMap: Record<UserListItemVariant, string> = {
-      compact: 'text-xs',
-      default: 'text-sm',
-      detailed: 'text-base',
+      compact: 'text-[12px]',
+      default: 'text-[13px]',
+      detailed: 'text-[14px]',
     };
-    return `text-gray-500 dark:text-gray-400 ${sizeMap[this.variant()]}`;
+    return `font-medium text-gray-500 dark:text-gray-400 ${sizeMap[this.variant()]}`;
   });
 
   /**
