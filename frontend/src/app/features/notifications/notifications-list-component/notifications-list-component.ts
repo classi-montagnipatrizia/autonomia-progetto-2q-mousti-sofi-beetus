@@ -236,7 +236,6 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
       [NotificationType.MENTION]: '@',
       [NotificationType.DIRECT_MESSAGE]: '✉️',
       [NotificationType.NEW_POST]: '📝',
-      [NotificationType.BOOK_REQUEST]: '📚',
       [NotificationType.BOOK_MESSAGE]: '📖',
       [NotificationType.GROUP_MESSAGE]: '👥',
     };
