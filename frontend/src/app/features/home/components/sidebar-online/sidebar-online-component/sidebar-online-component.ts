@@ -93,6 +93,7 @@ export class SidebarOnlineComponent implements OnInit {
    * Verifica se ci sono utenti offline
    */
   readonly hasOfflineUsers = computed(() => this.offlineUsers().length > 0);
+  readonly isAdmin = computed(() => this.authStore.isAdmin());
 
   /**
    * Verifica se il caricamento è completato
