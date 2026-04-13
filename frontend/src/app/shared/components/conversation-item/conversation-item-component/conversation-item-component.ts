@@ -74,40 +74,39 @@ export class ConversationItemComponent {
    * Classi CSS per il contenitore principale
    */
   readonly containerClasses = computed(() => {
-    const base = 'flex items-center gap-3 p-3 cursor-pointer transition-colors';
+    const base = 'flex items-center gap-3 p-3.5 sm:p-4 rounded-[20px] transition-all duration-300 border border-transparent cursor-pointer group active:scale-[0.98]';
 
     if (this.isSelected()) {
-      return `${base} bg-primary-900/30`;
+      return `${base} bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-500/30 shadow-sm`;
     }
 
     if (this.unreadCount() > 0) {
-      return `${base} bg-gray-800/50 hover:bg-gray-800`;
+      return `${base} bg-white/70 dark:bg-gray-800/60 backdrop-blur-md border-white/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-white/90 dark:hover:bg-gray-800/80`;
     }
 
-    return `${base} hover:bg-gray-800`;
+    return `${base} bg-transparent hover:bg-white/50 dark:hover:bg-gray-800/30 hover:backdrop-blur-sm`;
   });
 
   /**
    * Classi CSS per il nome
    */
   readonly nameClasses = computed(() => {
-    const base = 'font-semibold text-white truncate';
+    const base = 'font-bold text-[15px] leading-tight text-gray-900 dark:text-white truncate transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-400';
 
-    // Nome in grassetto se ci sono messaggi non letti
-    return this.unreadCount() > 0 ? `${base} font-bold` : base;
+    return this.unreadCount() > 0 ? `${base} font-black text-primary-900 dark:text-primary-50` : base;
   });
 
   /**
    * Classi CSS per l'anteprima messaggio
    */
   readonly messageClasses = computed(() => {
-    const base = 'text-sm truncate';
+    const base = 'text-[13px] truncate transition-colors';
 
     if (this.unreadCount() > 0) {
-      return `${base} text-white font-medium`;
+      return `${base} text-gray-900 dark:text-gray-100 font-semibold`;
     }
 
-    return `${base} text-gray-400`;
+    return `${base} text-gray-500 dark:text-gray-400 font-medium group-hover:text-gray-600 dark:group-hover:text-gray-300`;
   });
 
   /**
