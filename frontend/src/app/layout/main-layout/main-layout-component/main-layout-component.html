@@ -4,9 +4,12 @@
   <!-- Header (fisso in alto) -->
   <app-header />
 
-  <!-- Contenuto principale con padding-top per compensare header fisso -->
-  <main class="flex-1 pt-16">
+  <!-- Contenuto principale: pt per header fisso, pb su mobile per bottom nav -->
+  <main class="flex-1 pt-14 md:pt-16 pb-16 md:pb-0">
     <router-outlet />
   </main>
-  
+
+  <!-- Drawer utenti online (globale, controllato da bottom nav) -->
+  <app-online-users-drawer />
+
 </div>
