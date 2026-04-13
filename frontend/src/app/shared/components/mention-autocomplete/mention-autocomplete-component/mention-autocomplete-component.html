@@ -1,42 +1,49 @@
 @if (show()) {
   <div 
-    class="mention-dropdown absolute z-50 w-64 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+    class="mention-dropdown absolute z-50 w-64 max-h-60 overflow-y-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-[20px] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.15)] flex flex-col py-1.5 transform origin-top-left transition-all duration-200"
     [style.top.px]="position().top"
     [style.left.px]="position().left"
   >
     <!-- Loading -->
     @if (isLoading()) {
-      <div class="p-3 text-center text-gray-500 dark:text-gray-400">
-        <div class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-        <span class="ml-2 text-sm">Ricerca...</span>
+      <div class="p-4 flex items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+        <div class="w-5 h-5 border-[3px] border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+        <span class="text-[14px] font-medium animate-pulse">Ricerca utenti...</span>
       </div>
     }
 
     <!-- Suggerimenti -->
     @if (!isLoading() && hasSuggestions()) {
-      <ul class="py-1">
+      <ul class="py-1 px-1.5 flex flex-col gap-0.5">
         @for (user of suggestions(); track user.id; let i = $index) {
           <li>
             <button
               type="button"
-              class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              [class.bg-blue-50]="selectedIndex() === i"
-              [class.dark:bg-blue-900/30]="selectedIndex() === i"
+              class="w-full flex items-center gap-3.5 px-3 py-2.5 text-left rounded-2xl transition-all duration-200 active:scale-[0.98]"
+              [class.bg-primary-50]="selectedIndex() === i"
+              [class.dark:bg-primary-900/40]="selectedIndex() === i"
+              [class.scale-[1.02]]="selectedIndex() === i"
+              [class.shadow-sm]="selectedIndex() === i"
               (click)="selectUser(user)"
               (mouseenter)="selectedIndex.set(i)"
             >
-              <app-avatar
-                [src]="user.profilePictureUrl"
-                [alt]="user.nomeCompleto"
-                [name]="user.nomeCompleto"
-                size="sm"
-                [status]="user.isOnline ? 'online' : 'none'"
-              />
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+              <div class="relative">
+                <app-avatar
+                  [src]="user.profilePictureUrl"
+                  [alt]="user.nomeCompleto"
+                  [name]="user.nomeCompleto"
+                  size="sm"
+                  [status]="user.isOnline ? 'online' : 'none'"
+                />
+                @if (user.isOnline) {
+                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+                }
+              </div>
+              <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <p class="text-[14px] font-bold text-gray-900 dark:text-white truncate">
                   {{ user.nomeCompleto }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p class="text-[12px] font-medium text-primary-600 dark:text-primary-400 truncate">
                   &#64;{{ user.username }}
                 </p>
               </div>
@@ -48,7 +55,8 @@
 
     <!-- Nessun risultato -->
     @if (!isLoading() && !hasSuggestions() && searchTerm().length > 0) {
-      <div class="p-3 text-center text-gray-500 dark:text-gray-400 text-sm">
+      <div class="p-4 text-center text-gray-500 dark:text-gray-400 text-[14px] font-medium flex flex-col items-center gap-1.5">
+        <span class="text-[20px]">🔍</span>
         Nessun utente trovato
       </div>
     }

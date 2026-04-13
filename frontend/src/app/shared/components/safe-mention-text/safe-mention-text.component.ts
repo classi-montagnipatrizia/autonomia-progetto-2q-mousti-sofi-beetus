@@ -125,10 +125,20 @@ export class SafeMentionTextComponent {
     this.renderer.addClass(link, 'hover:text-primary-600');
     this.renderer.addClass(link, 'dark:text-primary-400');
     this.renderer.addClass(link, 'dark:hover:text-primary-300');
-    this.renderer.addClass(link, 'font-medium');
-    this.renderer.addClass(link, 'hover:underline');
+    this.renderer.addClass(link, 'font-bold');
+    this.renderer.addClass(link, 'bg-primary-50/50');
+    this.renderer.addClass(link, 'dark:bg-primary-900/20');
+    this.renderer.addClass(link, 'px-1');
+    this.renderer.addClass(link, 'py-0.5');
+    this.renderer.addClass(link, 'rounded-md');
+    this.renderer.addClass(link, 'hover:bg-primary-100');
+    this.renderer.addClass(link, 'dark:hover:bg-primary-900/40');
+    this.renderer.addClass(link, 'mx-0.5');
     this.renderer.addClass(link, 'cursor-pointer');
-    this.renderer.addClass(link, 'transition-colors');
+    this.renderer.addClass(link, 'transition-all');
+    this.renderer.addClass(link, 'duration-200');
+    this.renderer.addClass(link, 'active:scale-95');
+    this.renderer.addClass(link, 'inline-block');
 
     // Event listener per navigazione
     this.renderer.listen(link, 'click', (event: Event) => {
