@@ -1,99 +1,79 @@
-<!-- Header Desktop/Tablet -->
-<header class="fixed top-0 left-0 right-0 z-40 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+<!-- =============================================
+     DESKTOP HEADER (md e superiori)
+     ============================================= -->
+<header class="hidden md:block fixed top-0 left-0 right-0 z-40 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
-      
+
       <!-- Logo -->
-      <a routerLink="/" class="flex items-center shrink-0">
-        <img 
-          src="images/beetUs_logo.svg" 
-          alt="beetUs" 
-          class="h-10 w-auto"
-        />
+      <a routerLink="/" class="flex items-center shrink-0 group">
+        <img src="images/beetUs_logo.svg" alt="beetUs" class="h-10 w-auto transition-transform group-hover:scale-105 duration-300" />
       </a>
 
-      <!-- Barra di ricerca (nascosta su mobile) -->
+      <!-- Barra di ricerca -->
       <div class="hidden md:flex flex-1 max-w-xl mx-8">
-        <app-search-dropdown-component 
-          class="w-full"
-          placeholder="Cerca utenti o post..."
-        />
+        <app-search-dropdown-component class="w-full" placeholder="Cerca utenti o post..." />
       </div>
 
       <!-- Azioni a destra -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-3">
 
-        <!-- Icona ricerca mobile -->
-        <button
-          type="button"
-          class="md:hidden p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          (click)="toggleMobileSearch()"
-          aria-label="Cerca"
-        >
-          <lucide-icon [img]="SearchIcon" [size]="22"></lucide-icon>
-        </button>
+        @if (!isAdmin()) {
+          <!-- Libreria -->
+          <a routerLink="/library"
+            class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all hover:scale-105"
+            aria-label="Libreria"
+            title="Libreria">
+            <lucide-icon [img]="BookOpenIcon" [size]="22"></lucide-icon>
+          </a>
 
-        <!-- Libreria -->
-        <a
-          routerLink="/library"
-          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-          aria-label="Libreria"
-          title="Libreria libri usati"
-        >
-          <lucide-icon [img]="BookOpenIcon" [size]="22"></lucide-icon>
-        </a>
+          <!-- Messaggi -->
+          <a routerLink="/messages"
+            class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all hover:scale-105"
+            aria-label="Messaggi"
+            title="Messaggi">
+            <lucide-icon [img]="MessageSquareIcon" [size]="22"></lucide-icon>
+          </a>
+        }
 
-        <!-- Messaggi -->
-        <a
-          routerLink="/messages"
-          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-          aria-label="Messaggi"
-          title="Messaggi"
-        >
-          <lucide-icon [img]="MessageSquareIcon" [size]="22"></lucide-icon>
-        </a>
+        @if (isAdmin()) {
+          <!-- Dashboard Admin -->
+          <a routerLink="/admin"
+            class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all hover:scale-105"
+            aria-label="Pannello Admin"
+            title="Pannello Admin">
+            <lucide-icon [img]="ShieldIcon" [size]="22"></lucide-icon>
+          </a>
+        }
 
         <!-- Notifiche -->
         <div class="relative">
-          <button
-            type="button"
-            class="relative p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          <button type="button"
+            class="relative p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all hover:scale-105"
             (click)="toggleNotifications($event)"
             aria-label="Notifiche"
-            [attr.aria-expanded]="isNotificationsOpen()"
-          >
+            title="Notifiche"
+            [attr.aria-expanded]="isNotificationsOpen()">
             <lucide-icon [img]="BellIcon" [size]="22"></lucide-icon>
-            
-            <!-- Badge notifiche non lette -->
             @if (hasUnread()) {
-              <span 
-                class="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-red-500 rounded-full"
-              >
+              <span class="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-bold text-white bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse-once">
                 {{ unreadCount() > 99 ? '99+' : unreadCount() }}
               </span>
             }
           </button>
 
-          <!-- Dropdown notifiche -->
           @if (isNotificationsOpen()) {
-            <div 
-              class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
-            >
-              <!-- Header dropdown -->
-              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-700/50 overflow-hidden z-50 animate-fade-in divide-y divide-gray-100 dark:divide-gray-800">
+              <div class="flex items-center justify-between px-5 py-4 bg-gray-50/50 dark:bg-gray-800/50">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notifiche</h3>
                 @if (hasUnread()) {
-                  <button
-                    type="button"
+                  <button type="button"
                     class="text-xs text-primary-500 hover:text-primary-600 font-medium"
-                    (click)="markAllAsRead()"
-                  >
+                    (click)="markAllAsRead()">
                     Segna tutte come lette
                   </button>
                 }
               </div>
-
-              <!-- Lista notifiche -->
               <div class="max-h-96 overflow-y-auto">
                 @if (recentNotifications().length === 0) {
                   <div class="flex flex-col items-center justify-center py-8 text-center">
@@ -102,32 +82,21 @@
                   </div>
                 } @else {
                   @for (notification of recentNotifications(); track notification.id) {
-                    <button
-                      type="button"
+                    <button type="button"
                       class="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
                       [class.bg-primary-50]="!notification.isRead"
                       [class.dark:bg-primary-900/20]="!notification.isRead"
-                      (click)="onNotificationClick(notification)"
-                    >
-                      <!-- Avatar utente che ha triggerato -->
+                      (click)="onNotificationClick(notification)">
                       @if (notification.utenteCheLHaGenerata) {
                         <app-avatar
                           [src]="notification.utenteCheLHaGenerata.profilePictureUrl"
                           [name]="notification.utenteCheLHaGenerata.nomeCompleto || notification.utenteCheLHaGenerata.username"
-                          size="sm"
-                        />
+                          size="sm" />
                       }
-                      
                       <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-900 dark:text-white line-clamp-2">
-                          {{ notification.contenuto }}
-                        </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {{ notification.createdAt | date:'dd/MM/yyyy HH:mm' }}
-                        </p>
+                        <p class="text-sm text-gray-900 dark:text-white line-clamp-2">{{ notification.contenuto }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ notification.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
                       </div>
-
-                      <!-- Indicatore non letta -->
                       @if (!notification.isRead) {
                         <span class="w-2 h-2 bg-primary-500 rounded-full shrink-0 mt-2"></span>
                       }
@@ -135,14 +104,10 @@
                   }
                 }
               </div>
-
-              <!-- Footer dropdown -->
               <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  type="button"
+                <button type="button"
                   class="w-full text-center text-sm text-primary-500 hover:text-primary-600 font-medium"
-                  (click)="goToNotifications()"
-                >
+                  (click)="goToNotifications()">
                   Vedi tutte le notifiche
                 </button>
               </div>
@@ -152,81 +117,49 @@
 
         <!-- Avatar e menu utente -->
         <div class="relative">
-          <button
-            type="button"
+          <button type="button"
             class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             (click)="toggleUserMenu($event)"
             aria-label="Menu utente"
-            [attr.aria-expanded]="isUserMenuOpen()"
-          >
-            <app-avatar
-              [src]="avatarUrl()"
-              [name]="displayName()"
-              size="sm"
-              [status]="'online'"
-            />
+            [attr.aria-expanded]="isUserMenuOpen()">
+            <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" [status]="'online'" />
           </button>
 
-          <!-- Dropdown menu utente -->
           @if (isUserMenuOpen()) {
-            <div 
-              class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
-            >
-              <!-- Info utente -->
+            <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
               <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                  {{ displayName() }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  @{{ currentUser()?.username }}
-                </p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ displayName() }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ currentUser()?.username }}</p>
               </div>
-
-              <!-- Voci menu -->
               <div class="py-1">
-                <!-- Profilo -->
-                <button
-                  type="button"
-                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  (click)="goToProfile()"
-                >
-                  <lucide-icon [img]="UserIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
-                  Profilo
-                </button>
-
-                <!-- Pannello Admin (solo admin) -->
-                @if (isAdmin()) {
-                  <button
-                    type="button"
+                @if (!isAdmin()) {
+                  <button type="button"
                     class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    (click)="goToAdmin()"
-                  >
+                    (click)="goToProfile()">
+                    <lucide-icon [img]="UserIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                    Profilo
+                  </button>
+                }
+                @if (isAdmin()) {
+                  <button type="button"
+                    class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    (click)="goToAdmin()">
                     <lucide-icon [img]="ShieldIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
                     Pannello Admin
                   </button>
                 }
-
-                <!-- Impostazioni -->
-                <button
-                  type="button"
+                <button type="button"
                   class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  (click)="goToSettings()"
-                >
+                  (click)="goToSettings()">
                   <lucide-icon [img]="SettingsIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
                   Impostazioni
                 </button>
               </div>
-
-              <!-- Separatore -->
               <div class="border-t border-gray-200 dark:border-gray-700"></div>
-
-              <!-- Logout -->
               <div class="py-1">
-                <button
-                  type="button"
+                <button type="button"
                   class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  (click)="logout()"
-                >
+                  (click)="logout()">
                   <lucide-icon [img]="LogOutIcon" [size]="18"></lucide-icon>
                   Esci
                 </button>
@@ -238,23 +171,204 @@
     </div>
   </div>
 
-  <!-- Barra di ricerca mobile (espandibile) -->
+  <!-- Barra di ricerca mobile desktop (non usata su mobile) -->
   @if (isMobileSearchOpen()) {
     <div class="md:hidden px-4 pb-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div class="flex items-center gap-2 pt-3">
-        <app-search-dropdown-component 
-          class="flex-1"
-          placeholder="Cerca utenti o post..."
-        />
-        <button
-          type="button"
+        <app-search-dropdown-component class="flex-1" placeholder="Cerca utenti o post..." />
+        <button type="button"
           class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           (click)="toggleMobileSearch()"
-          aria-label="Chiudi ricerca"
-        >
+          aria-label="Chiudi ricerca">
           <lucide-icon [img]="XIcon" [size]="20"></lucide-icon>
         </button>
       </div>
     </div>
   }
 </header>
+
+
+<!-- =============================================
+     MOBILE TOP BAR (< md)
+     ============================================= -->
+<header class="md:hidden fixed top-0 left-0 right-0 z-40 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800/50 shadow-sm">
+  <div class="relative flex items-center justify-between h-14 px-4">
+
+    <!-- Sinistra: placeholder per bilanciare l'avatar a destra -->
+    <div class="w-10 h-10"></div>
+
+    <!-- Centro: logo (assoluto per centratura precisa) -->
+    <a routerLink="/" class="absolute left-1/2 -translate-x-1/2">
+      <img src="images/beetUs_logo.svg" alt="beetUs" class="h-9 w-auto" />
+    </a>
+
+    <!-- Destra: avatar + menu -->
+    <div class="relative">
+      <button type="button"
+        class="flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-primary-400 transition-all"
+        (click)="toggleUserMenu($event)"
+        aria-label="Menu utente"
+        [attr.aria-expanded]="isUserMenuOpen()">
+        <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" [status]="'online'" />
+      </button>
+
+      @if (isUserMenuOpen()) {
+        <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
+          <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ displayName() }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ currentUser()?.username }}</p>
+          </div>
+          <div class="py-1">
+            @if (!isAdmin()) {
+              <button type="button"
+                class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                (click)="goToProfile()">
+                <lucide-icon [img]="UserIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                Profilo
+              </button>
+            }
+            @if (isAdmin()) {
+              <button type="button"
+                class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                (click)="goToAdmin()">
+                <lucide-icon [img]="ShieldIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                Pannello Admin
+              </button>
+            }
+            <button type="button"
+              class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              (click)="goToSettings()">
+              <lucide-icon [img]="SettingsIcon" [size]="18" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+              Impostazioni
+            </button>
+          </div>
+          <div class="border-t border-gray-200 dark:border-gray-700"></div>
+          <div class="py-1">
+            <button type="button"
+              class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              (click)="logout()">
+              <lucide-icon [img]="LogOutIcon" [size]="18"></lucide-icon>
+              Esci
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+</header>
+
+
+<!-- =============================================
+     MOBILE BOTTOM NAV (< md)
+     ============================================= -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-t border-white/20 dark:border-gray-700/50 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.2)] pb-[env(safe-area-inset-bottom)]">
+  <div class="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+
+    @if (isAdmin()) {
+      <!-- NAV ADMIN: Home | Cerca | Notifiche | Dashboard -->
+
+      <!-- Home -->
+      <a routerLink="/"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Home">
+        <lucide-icon [img]="HomeIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Cerca -->
+      <a routerLink="/search"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Cerca">
+        <lucide-icon [img]="SearchIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Notifiche -->
+      <a routerLink="/notifications"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="relative flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Notifiche">
+        <lucide-icon [img]="BellIcon" [size]="24"></lucide-icon>
+        @if (hasUnread()) {
+          <span class="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-error-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse-once shadow-sm">
+            {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+          </span>
+        }
+      </a>
+
+      <!-- Dashboard Admin -->
+      <a routerLink="/admin"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Dashboard Admin">
+        <lucide-icon [img]="ShieldIcon" [size]="24"></lucide-icon>
+      </a>
+
+    } @else {
+      <!-- NAV STUDENTE: Home | Cerca | Libreria | Messaggi | Notifiche | Utenti -->
+
+      <!-- Home -->
+      <a routerLink="/"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Home">
+        <lucide-icon [img]="HomeIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Cerca -->
+      <a routerLink="/search"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Cerca">
+        <lucide-icon [img]="SearchIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Libreria -->
+      <a routerLink="/library"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Libreria">
+        <lucide-icon [img]="BookOpenIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Messaggi -->
+      <a routerLink="/messages"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Messaggi">
+        <lucide-icon [img]="MessageSquareIcon" [size]="24"></lucide-icon>
+      </a>
+
+      <!-- Notifiche -->
+      <a routerLink="/notifications"
+         routerLinkActive="text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 scale-110 shadow-sm"
+         class="relative flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300"
+         aria-label="Notifiche">
+        <lucide-icon [img]="BellIcon" [size]="24"></lucide-icon>
+        @if (hasUnread()) {
+          <span class="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-error-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse-once shadow-sm">
+            {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+          </span>
+        }
+      </a>
+
+      <!-- Utenti online -->
+      <button type="button"
+         (click)="toggleOnlineDrawer()"
+         class="relative flex items-center justify-center w-12 h-12 rounded-[20px] text-gray-500 dark:text-gray-400 transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+         aria-label="Utenti online">
+        <lucide-icon [img]="UsersIcon" [size]="24"></lucide-icon>
+        @if (onlineCount() > 0) {
+          <span class="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-green-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse-once shadow-sm">
+            {{ onlineCount() > 99 ? '99+' : onlineCount() }}
+          </span>
+        }
+      </button>
+
+    }
+
+  </div>
+</nav>

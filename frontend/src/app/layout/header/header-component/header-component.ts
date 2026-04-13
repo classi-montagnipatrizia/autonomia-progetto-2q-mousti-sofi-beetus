@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { LucideAngularModule, Bell, Search, Settings, LogOut, User, Shield, X, Menu, BookOpen, MessageSquare } from 'lucide-angular';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { LucideAngularModule, Bell, Search, Settings, LogOut, User, Shield, X, Menu, BookOpen, MessageSquare, Home, Users } from 'lucide-angular';
 
 import { AuthStore } from '../../../core/stores/auth-store';
 import { NotificationStore } from '../../../core/stores/notification-store';
@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/auth/services/auth-service';
 import { WebsocketService } from '../../../core/services/websocket-service';
 import { DialogService } from '../../../core/services/dialog-service';
 import { LoggerService } from '../../../core/services/logger.service';
+import { OnlineDrawerService } from '../../../core/services/online-drawer.service';
 
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SearchDropdownComponent } from '../../../shared/components/search-dropdown/search-dropdown-component/search-dropdown-component';
@@ -19,6 +20,7 @@ import { SearchDropdownComponent } from '../../../shared/components/search-dropd
   imports: [
     CommonModule,
     RouterLink,
+    RouterLinkActive,
     LucideAngularModule,
     AvatarComponent,
     SearchDropdownComponent,
@@ -36,6 +38,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private readonly dialogService = inject(DialogService);
   private readonly elementRef = inject(ElementRef);
   private readonly logger = inject(LoggerService);
+  private readonly onlineDrawer = inject(OnlineDrawerService);
 
   // Icone Lucide
   readonly BellIcon = Bell;
@@ -48,6 +51,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly MenuIcon = Menu;
   readonly BookOpenIcon = BookOpen;
   readonly MessageSquareIcon = MessageSquare;
+  readonly HomeIcon = Home;
+  readonly UsersIcon = Users;
 
   // ========== STATE ==========
 
@@ -85,6 +90,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   /** Avatar URL */
   readonly avatarUrl = computed(() => this.currentUser()?.profilePictureUrl ?? null);
+
+  /** Utenti online (escluso se stesso) */
+  readonly onlineCount = computed(() => {
+    const me = this.authStore.userId();
+    return this.onlineUsersStore.onlineUsers().filter(u => u.id !== me).length;
+  });
+
+  toggleOnlineDrawer(): void {
+    this.onlineDrawer.toggle();
+  }
 
   // ========== LIFECYCLE ==========
 
@@ -165,9 +180,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
    */
   goToProfile(): void {
     this.closeAllDropdowns();
-    const userId = this.authStore.userId();
-    if (userId) {
-      this.router.navigate(['/profile', userId]);
+    if (this.authStore.isAdmin()) {
+      this.router.navigate(['/admin']);
+    } else {
+      const userId = this.authStore.userId();
+      if (userId) {
+        this.router.navigate(['/profile', userId]);
+      }
     }
   }
 
