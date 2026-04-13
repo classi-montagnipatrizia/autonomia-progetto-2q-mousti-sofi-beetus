@@ -115,6 +115,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (userId) {
         const parsedId = Number(userId);
 
+        // Se l'admin apre il proprio profilo, reindirizza alla dashboard
+        const currentUser = this.authStore.currentUser();
+        if (currentUser?.isAdmin && parsedId === currentUser.id) {
+          this.router.navigate(['/admin'], { replaceUrl: true });
+          return;
+        }
+
         if (Number.isFinite(parsedId)) {
           this.loadProfile(parsedId);
         } else {

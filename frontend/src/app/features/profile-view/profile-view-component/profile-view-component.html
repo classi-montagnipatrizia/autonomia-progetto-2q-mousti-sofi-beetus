@@ -1,9 +1,9 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen bg-transparent">
   <!-- Loading state -->
   @if (isLoading()) {
-    <div class="max-w-5xl mx-auto px-4">
+    <div class="max-w-5xl mx-auto px-4 pt-4">
       <!-- Header skeleton -->
-      <div class="p-6 pb-4">
+      <div class="p-6 pb-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-sm">
         <div class="flex items-start justify-between mb-4">
           <app-skeleton shape="circle" width="90px" height="90px" />
           <app-skeleton width="40px" height="40px" borderRadius="50%" />
@@ -18,9 +18,9 @@
         </div>
       </div>
       <!-- Tabs skeleton -->
-      <div class="flex border-b border-gray-200 dark:border-gray-700">
-        <app-skeleton width="50%" height="48px" />
-        <app-skeleton width="50%" height="48px" />
+      <div class="flex mt-6 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 p-1">
+        <app-skeleton width="50%" height="48px" borderRadius="20px" />
+        <app-skeleton width="50%" height="48px" borderRadius="20px" />
       </div>
     </div>
   }
@@ -28,7 +28,7 @@
   <!-- Error state -->
   @if (error()) {
     <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div class="w-16 h-16 mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+      <div class="w-16 h-16 mb-4 rounded-[24px] bg-red-100/50 dark:bg-red-900/20 backdrop-blur-md border border-red-200/50 dark:border-red-800/30 flex items-center justify-center shadow-sm">
         <span class="text-3xl">😕</span>
       </div>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
@@ -42,18 +42,18 @@
 
   <!-- Profile content -->
   @if (!isLoading() && !error() && user()) {
-    <div class="max-w-5xl mx-auto px-4">
+    <div class="max-w-5xl mx-auto px-4 md:pt-4">
       <!-- Profile Header -->
-      <header class="relative p-4 pb-3">
+      <header class="relative p-6 bg-white/40 dark:bg-gray-800/40 backdrop-blur-3xl border border-white/40 dark:border-gray-700/50 sm:rounded-[32px] shadow-sm mb-6 mt-0 sm:mt-2">
         <!-- Gradient background for header -->
-        <div class="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-purple-500/5 to-pink-500/10 dark:from-primary-500/5 dark:via-purple-500/5 dark:to-pink-500/5 rounded-b-3xl -z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-purple-500/5 to-pink-500/10 dark:from-primary-500/5 dark:via-purple-500/5 dark:to-pink-500/5 sm:rounded-[32px] -z-10"></div>
 
         <!-- Top row: Back button + Settings -->
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between mb-4">
           <button
             type="button"
             (click)="goBack()"
-            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            class="p-2 -ml-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 text-gray-500 dark:text-gray-400 transition-colors"
             aria-label="Torna indietro"
           >
             <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
@@ -64,7 +64,7 @@
             <button
               type="button"
               (click)="goToSettings()"
-              class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-700/60 transition-colors shadow-sm bg-white/30 dark:bg-gray-800/30 border border-white/20 dark:border-gray-700/50"
               aria-label="Impostazioni"
             >
               <lucide-icon [img]="SettingsIcon" [size]="24" />
@@ -73,12 +73,12 @@
         </div>
 
         <!-- Avatar + Info row -->
-        <div class="flex items-center gap-4 mb-3">
+        <div class="flex items-center gap-5 mb-4">
           <!-- Avatar with online status (clickable to view full size) -->
           <button
             type="button"
             (click)="openProfilePictureViewer()"
-            class="shrink-0 rounded-full transition-opacity hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 touch-manipulation active:opacity-70"
+            class="shrink-0 rounded-[32px] transition-opacity hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 touch-manipulation active:opacity-70 shadow-lg border border-white/50 dark:border-gray-700/50"
             [attr.aria-label]="'Visualizza foto profilo di ' + user()!.nomeCompleto"
           >
             <app-avatar
@@ -87,7 +87,7 @@
               [name]="user()!.nomeCompleto"
               size="xl"
               [status]="isOwnProfile() ? 'none' : (isOnline() ? 'online' : 'none')"
-              class="ring-4 ring-white dark:ring-gray-900 shadow-lg"
+              class="ring-4 ring-white/60 dark:ring-gray-800/60"
             />
           </button>
 
@@ -107,64 +107,67 @@
 
         <!-- Bio -->
         @if (user()!.bio) {
-          <p class="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-wrap">
-            {{ user()!.bio }}
-          </p>
+          <div class="p-4 mt-2 mb-5 rounded-[24px] bg-white/30 dark:bg-gray-800/30 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-500 to-purple-500 rounded-l-full"></div>
+            <p class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap ml-2">
+              {{ user()!.bio }}
+            </p>
+          </div>
         }
 
         <!-- Stats -->
-        <div class="flex gap-6 py-4 mt-2 border-t border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-            <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+        <div class="flex gap-4 py-4 mt-2 border-t border-white/20 dark:border-gray-700/50">
+          <div class="flex flex-col items-center flex-1 px-3 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl border border-white/30 dark:border-gray-700/50 shadow-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent drop-shadow-sm">
               {{ formattedPostsCount() }}
             </span>
-            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Post</span>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-1 uppercase tracking-wider">Post</span>
           </div>
-          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-            <span class="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-400 bg-clip-text text-transparent">
+          <div class="flex flex-col items-center flex-1 px-3 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl border border-white/30 dark:border-gray-700/50 shadow-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-400 bg-clip-text text-transparent drop-shadow-sm">
               {{ formattedLikesCount() }}
             </span>
-            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Like</span>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-1 uppercase tracking-wider">Like</span>
           </div>
-          <div class="flex flex-col items-center flex-1 px-3 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-400 bg-clip-text text-transparent">
+          <div class="flex flex-col items-center flex-1 px-3 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl border border-white/30 dark:border-gray-700/50 shadow-sm">
+            <span class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
               {{ formattedCommentsCount() }}
             </span>
-            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Commenti</span>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-1 uppercase tracking-wider">Commenti</span>
           </div>
         </div>
       </header>
 
       <!-- Tabs -->
-      <nav class="sticky top-0 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-        <div class="flex">
+      <nav class="sticky top-2 z-10 mx-auto max-w-sm bg-white/60 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[32px] p-1 border border-white/40 dark:border-gray-700/50 shadow-lg mb-6">
+        <div class="flex relative">
           <button
             type="button"
             (click)="setTab('posts')"
-            class="flex-1 py-4 text-sm font-semibold transition-all relative"
+            class="flex-1 py-3 text-sm font-semibold transition-all relative z-10 rounded-[28px]"
             [class.text-gray-900]="activeTab() === 'posts'"
             [class.dark:text-white]="activeTab() === 'posts'"
             [class.text-gray-500]="activeTab() !== 'posts'"
             [class.dark:text-gray-400]="activeTab() !== 'posts'"
+            [class.bg-white]="activeTab() === 'posts'"
+            [class.dark:bg-gray-700]="activeTab() === 'posts'"
+            [class.shadow-sm]="activeTab() === 'posts'"
           >
             Post
-            @if (activeTab() === 'posts') {
-              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-primary-600 to-primary-400 rounded-t-full shadow-lg shadow-primary-500/50"></span>
-            }
           </button>
           <button
             type="button"
             (click)="setTab('media')"
-            class="flex-1 py-4 text-sm font-semibold transition-all relative"
+            class="flex-1 py-3 text-sm font-semibold transition-all relative z-10 rounded-[28px]"
             [class.text-gray-900]="activeTab() === 'media'"
             [class.dark:text-white]="activeTab() === 'media'"
             [class.text-gray-500]="activeTab() !== 'media'"
             [class.dark:text-gray-400]="activeTab() !== 'media'"
+            [class.bg-white]="activeTab() === 'media'"
+            [class.dark:bg-gray-700]="activeTab() === 'media'"
+            [class.shadow-sm]="activeTab() === 'media'"
           >
             Media
-            @if (activeTab() === 'media') {
-              <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-pink-600 to-rose-400 rounded-t-full shadow-lg shadow-pink-500/50"></span>
-            }
           </button>
         </div>
       </nav>
@@ -174,9 +177,9 @@
         <!-- Posts Tab -->
         @if (activeTab() === 'posts') {
           @if (isLoadingPosts()) {
-            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            <div class="px-4 space-y-4">
               @for (i of [1, 2, 3]; track i) {
-                <div class="p-4">
+                <div class="p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-sm">
                   <div class="flex items-center gap-3 mb-3">
                     <app-skeleton shape="circle" width="40px" height="40px" />
                     <div class="flex-1">
@@ -184,13 +187,13 @@
                       <app-skeleton width="80px" height="12px" />
                     </div>
                   </div>
-                  <app-skeleton width="100%" height="60px" borderRadius="8px" />
+                  <app-skeleton width="100%" height="60px" borderRadius="16px" />
                 </div>
               }
             </div>
           } @else if (posts().length === 0) {
             <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <div class="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <div class="w-16 h-16 mb-4 rounded-[24px] bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm flex items-center justify-center">
                 <span class="text-3xl">📝</span>
               </div>
               <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
@@ -214,12 +217,14 @@
               (scrolled)="loadMorePosts()"
             >
               @for (post of posts(); track post.id) {
-                <app-post-card-component
-                  [post]="post"
-                  (deleted)="onPostDeleted($event)"
-                  (edited)="onPostEdited($event)"
-                  (hidden)="onPostHidden($event)"
-                />
+                <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-sm overflow-hidden p-4">
+                  <app-post-card-component
+                    [post]="post"
+                    (deleted)="onPostDeleted($event)"
+                    (edited)="onPostEdited($event)"
+                    (hidden)="onPostHidden($event)"
+                  />
+                </div>
               }
             </div>
 
@@ -232,9 +237,11 @@
 
             <!-- Messaggio fine post -->
             @if (!hasMorePosts() && posts().length > 0) {
-              <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
-                Hai visto tutti i post 🎉
-              </p>
+              <div class="flex justify-center mt-4 mb-2">
+                <p class="text-center text-sm font-semibold text-gray-500 dark:text-gray-400 py-3 px-6 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm inline-block">
+                  Hai visto tutti i post 🎉
+                </p>
+              </div>
             }
           }
         }
@@ -242,14 +249,16 @@
         <!-- Media Tab -->
         @if (activeTab() === 'media') {
           @if (isLoadingPosts()) {
-            <div class="grid grid-cols-3 gap-0.5">
+            <div class="grid grid-cols-3 gap-2 px-4">
               @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-                <app-skeleton width="100%" height="0" class="pb-[100%]" />
+                <div class="rounded-[24px] overflow-hidden bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm aspect-square p-2">
+                  <app-skeleton width="100%" height="100%" borderRadius="16px" />
+                </div>
               }
             </div>
           } @else if (mediaPosts().length === 0) {
             <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <div class="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <div class="w-16 h-16 mb-4 rounded-[24px] bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm flex items-center justify-center">
                 <lucide-icon [img]="ImageIcon" [size]="32" class="text-gray-400" />
               </div>
               <h3 class="text-base font-medium text-gray-900 dark:text-white mb-1">
@@ -265,7 +274,7 @@
             </div>
           } @else {
             <div
-              class="grid grid-cols-3 gap-0.5"
+              class="grid grid-cols-3 gap-2 px-4"
               appInfiniteScroll
               [useWindow]="true"
               [threshold]="400"
@@ -275,13 +284,13 @@
               @for (post of mediaPosts(); track post.id) {
                 <button
                   type="button"
-                  class="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                  class="relative aspect-square overflow-hidden bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm rounded-[24px] cursor-pointer hover:scale-[0.98] transition-transform"
                   (click)="openImagePreview(post.imageUrl!)"
                 >
                   <img
                     [src]="post.imageUrl"
                     [alt]="'Media di ' + post.autore.nomeCompleto"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     loading="lazy"
                   />
                 </button>
@@ -297,9 +306,11 @@
 
             <!-- Messaggio fine foto -->
             @if (!hasMorePosts() && mediaPosts().length > 0) {
-              <p class="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
-                Hai visto tutte le foto 🎉
-              </p>
+              <div class="flex justify-center mt-4 mb-2">
+                <p class="text-center text-sm font-semibold text-gray-500 dark:text-gray-400 py-3 px-6 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm inline-block">
+                  Hai visto tutte le foto 🎉
+                </p>
+              </div>
             }
           }
         }
