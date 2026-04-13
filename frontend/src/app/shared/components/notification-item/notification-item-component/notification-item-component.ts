@@ -107,7 +107,6 @@ export class NotificationItemComponent {
       [NotificationType.MENTION]: this.AtSignIcon,
       [NotificationType.DIRECT_MESSAGE]: this.MailIcon,
       [NotificationType.NEW_POST]: this.FileTextIcon,
-      [NotificationType.BOOK_REQUEST]: this.BookOpenIcon,
       [NotificationType.BOOK_MESSAGE]: this.MessageSquareIcon,
       [NotificationType.GROUP_MESSAGE]: this.UsersIcon,
     };
@@ -124,7 +123,6 @@ export class NotificationItemComponent {
       [NotificationType.MENTION]: 'text-info-500',
       [NotificationType.DIRECT_MESSAGE]: 'text-success-500',
       [NotificationType.NEW_POST]: 'text-warning-500',
-      [NotificationType.BOOK_REQUEST]: 'text-amber-500',
       [NotificationType.BOOK_MESSAGE]: 'text-teal-500',
       [NotificationType.GROUP_MESSAGE]: 'text-indigo-500',
     };
@@ -136,10 +134,10 @@ export class NotificationItemComponent {
    */
   readonly containerClasses = computed(() => {
     const base =
-      'flex items-start gap-3 p-4 rounded-lg cursor-pointer transition-colors';
+      'flex items-start gap-3.5 p-4 rounded-[20px] cursor-pointer transition-all duration-300 group hover:-translate-y-0.5 border border-transparent active:scale-[0.98]';
     const readState = this.isRead()
-      ? 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800'
-      : 'bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30';
+      ? 'bg-transparent hover:bg-white/50 dark:hover:bg-gray-800/40 hover:backdrop-blur-sm'
+      : 'bg-primary-50/80 dark:bg-primary-900/20 backdrop-blur-md border-primary-100/50 dark:border-primary-800/30 shadow-sm hover:shadow-md hover:bg-primary-50 dark:hover:bg-primary-900/30';
 
     return `${base} ${readState}`;
   });
