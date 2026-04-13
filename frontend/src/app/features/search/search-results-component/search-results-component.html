@@ -1,13 +1,13 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen bg-transparent">
   <!-- Header con ricerca -->
-  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+  <header class="sticky top-0 z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-white/20 dark:border-gray-700/50 shadow-sm">
     <div class="max-w-3xl mx-auto px-4">
       <!-- Search bar row -->
-      <div class="flex items-center gap-3 h-14">
+      <div class="flex items-center gap-3 h-16 pt-2">
         <button
           type="button"
           (click)="goBack()"
-          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
+          class="p-2 -ml-2 rounded-full hover:bg-white/40 dark:hover:bg-gray-800/40 text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
           aria-label="Torna indietro"
         >
           <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
@@ -18,20 +18,20 @@
           <lucide-icon 
             [img]="SearchIcon" 
             [size]="18" 
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" 
+            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" 
           />
           <input
             type="text"
             [value]="searchQuery()"
             (input)="onSearchInput($event)"
             placeholder="Cerca utenti o post..."
-            class="w-full pl-14 pr-10 py-2.5 rounded-full bg-gray-100 dark:bg-gray-800 border-0 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full pl-12 pr-10 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm transition-all"
           />
           @if (searchQuery()) {
             <button
               type="button"
               (click)="clearSearch()"
-              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 text-gray-400 z-10 transition-colors"
             >
               <lucide-icon [img]="XIcon" [size]="16" />
             </button>
@@ -40,47 +40,51 @@
       </div>
 
       <!-- Tabs -->
-      <div class="flex border-b border-transparent -mb-px">
+      <div class="flex mt-3">
         <button
           type="button"
           (click)="setTab('users')"
-          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors"
-          [class.border-primary-500]="activeTab() === 'users'"
-          [class.text-primary-500]="activeTab() === 'users'"
-          [class.border-transparent]="activeTab() !== 'users'"
+          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative z-10 rounded-t-[24px]"
+          [class.text-primary-600]="activeTab() === 'users'"
+          [class.dark:text-primary-400]="activeTab() === 'users'"
+          [class.bg-white/60]="activeTab() === 'users'"
+          [class.dark:bg-gray-800/60]="activeTab() === 'users'"
           [class.text-gray-500]="activeTab() !== 'users'"
-          [class.hover:text-gray-700]="activeTab() !== 'users'"
           [class.dark:text-gray-400]="activeTab() !== 'users'"
-          [class.dark:hover:text-gray-200]="activeTab() !== 'users'"
         >
           <lucide-icon [img]="UsersIcon" [size]="18" />
           Utenti
+          @if (activeTab() === 'users') {
+            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 shadow-lg shadow-primary-500/50"></span>
+          }
         </button>
         <button
           type="button"
           (click)="setTab('posts')"
-          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors"
-          [class.border-primary-500]="activeTab() === 'posts'"
-          [class.text-primary-500]="activeTab() === 'posts'"
-          [class.border-transparent]="activeTab() !== 'posts'"
+          class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative z-10 rounded-t-[24px]"
+          [class.text-primary-600]="activeTab() === 'posts'"
+          [class.dark:text-primary-400]="activeTab() === 'posts'"
+          [class.bg-white/60]="activeTab() === 'posts'"
+          [class.dark:bg-gray-800/60]="activeTab() === 'posts'"
           [class.text-gray-500]="activeTab() !== 'posts'"
-          [class.hover:text-gray-700]="activeTab() !== 'posts'"
           [class.dark:text-gray-400]="activeTab() !== 'posts'"
-          [class.dark:hover:text-gray-200]="activeTab() !== 'posts'"
         >
           <lucide-icon [img]="FileTextIcon" [size]="18" />
           Post
+          @if (activeTab() === 'posts') {
+            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 shadow-lg shadow-primary-500/50"></span>
+          }
         </button>
       </div>
     </div>
   </header>
 
   <!-- Content -->
-  <main class="max-w-3xl mx-auto">
+  <main class="max-w-3xl mx-auto py-4">
     <!-- Initial state -->
     @if (showInitialState()) {
       <div class="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div class="w-20 h-20 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div class="w-20 h-20 mb-4 rounded-[32px] bg-white/50 dark:bg-gray-800/50 backdrop-blur-md flex items-center justify-center border border-white/20 dark:border-gray-700/50 shadow-sm">
           <lucide-icon [img]="SearchIcon" [size]="40" class="text-gray-400 dark:text-gray-500" />
         </div>
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
@@ -94,10 +98,10 @@
 
     <!-- Loading -->
     @if (isLoading()) {
-      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+      <div class="px-4 space-y-3">
         @if (activeTab() === 'users') {
           @for (i of [1, 2, 3, 4, 5]; track i) {
-            <div class="px-4 py-4 flex items-center gap-3">
+            <div class="p-4 flex items-center gap-3 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-sm">
               <app-skeleton shape="circle" width="48px" height="48px" />
               <div class="flex-1 space-y-2">
                 <app-skeleton width="150px" height="16px" />
@@ -107,7 +111,7 @@
           }
         } @else {
           @for (i of [1, 2, 3]; track i) {
-            <div class="p-4">
+            <div class="p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-sm">
               <div class="flex items-center gap-3 mb-3">
                 <app-skeleton shape="circle" width="40px" height="40px" />
                 <app-skeleton width="120px" height="14px" />
@@ -132,12 +136,12 @@
           </p>
         </div>
       } @else if (users().length > 0) {
-        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="px-4 space-y-3">
           @for (user of users(); track user.id) {
             <button
               type="button"
               (click)="goToProfile(user.id)"
-              class="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
+              class="w-full p-4 flex items-center gap-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all text-left shadow-sm hover:shadow-md"
             >
               <app-avatar
                 [src]="user.profilePictureUrl"
@@ -158,12 +162,12 @@
         </div>
 
         @if (hasMoreUsers()) {
-          <div class="p-4">
+          <div class="px-4 py-8 flex justify-center">
             <app-button
               variant="outline"
-              [fullWidth]="true"
               [loading]="isLoadingMore()"
               (clicked)="loadMore()"
+              class="shadow-sm backdrop-blur-md bg-white/40 dark:bg-gray-800/40 border-white/20 hover:bg-white/60 dark:hover:bg-gray-800/60 rounded-[24px]"
             >
               Carica altri utenti
             </app-button>
@@ -185,9 +189,9 @@
           </p>
         </div>
       } @else if (posts().length > 0) {
-        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="px-4 space-y-4">
           @for (post of posts(); track post.id) {
-            <div class="p-4">
+            <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-sm overflow-hidden p-4">
               <app-post-card-component
                 [post]="post"
                 (deleted)="onPostDeleted($event)"
@@ -199,12 +203,12 @@
         </div>
 
         @if (hasMorePosts()) {
-          <div class="p-4">
+          <div class="px-4 py-8 flex justify-center">
             <app-button
               variant="outline"
-              [fullWidth]="true"
               [loading]="isLoadingMore()"
               (clicked)="loadMore()"
+              class="shadow-sm backdrop-blur-md bg-white/40 dark:bg-gray-800/40 border-white/20 hover:bg-white/60 dark:hover:bg-gray-800/60 rounded-[24px]"
             >
               Carica altri post
             </app-button>
