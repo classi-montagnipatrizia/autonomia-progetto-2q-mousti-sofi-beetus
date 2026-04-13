@@ -1,13 +1,13 @@
 <!-- Chat View -->
-<div class="h-full flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+<div class="chat-shell h-full flex flex-col bg-transparent overflow-hidden">
 
   <!-- Header - altezza fissa -->
-  <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+  <header class="chat-header flex-shrink-0 flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-white/20 dark:border-gray-700/50 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-t-[24px] sm:rounded-t-[32px]">
     <!-- Freccia indietro (sempre visibile su mobile, nascosta su desktop se c'è la sidebar) -->
     <button
       type="button"
       (click)="goBack()"
-      class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors lg:hidden"
+      class="p-2 -ml-2 rounded-full hover:bg-white/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400 transition-colors lg:hidden"
       aria-label="Torna alle conversazioni"
     >
       <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
@@ -25,15 +25,15 @@
         <h2 class="font-semibold text-gray-900 dark:text-white truncate">
           {{ user.nomeCompleto }}
         </h2>
-        <p class="text-sm" [class]="isOtherUserTyping() ? 'text-primary-400' : (isOtherUserOnline() ? 'text-green-500' : 'text-gray-500 dark:text-gray-400')">
+        <p class="text-sm" [class]="isOtherUserTyping() ? 'text-primary-400 font-medium' : (isOtherUserOnline() ? 'text-green-500 font-medium' : 'text-gray-500 dark:text-gray-400')">
           {{ onlineStatusText() }}
         </p>
       </div>
     } @else if (isLoading()) {
       <app-skeleton shape="circle" width="40px" height="40px" />
       <div class="flex-1 space-y-1">
-        <app-skeleton width="120px" height="16px" />
-        <app-skeleton width="60px" height="14px" />
+        <app-skeleton width="120px" height="16px" borderRadius="8px" />
+        <app-skeleton width="60px" height="14px" borderRadius="8px" />
       </div>
     }
   </header>
@@ -41,7 +41,7 @@
   <!-- Messages area - SOLO questa sezione scrolla -->
   <div
     #messagesContainer
-    class="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900"
+    class="chat-messages flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 bg-transparent"
   >
     <!-- Loading skeleton -->
     @if (isLoading()) {
@@ -51,7 +51,8 @@
             <app-skeleton 
               [width]="i % 2 === 0 ? '200px' : '250px'" 
               height="60px" 
-              borderRadius="16px"
+              borderRadius="24px"
+              [class]="i % 2 === 0 ? 'opacity-80' : 'opacity-60'"
             />
           </div>
         }
@@ -61,16 +62,23 @@
     <!-- Error state -->
     @if (error()) {
       <div class="flex flex-col items-center justify-center h-full text-center">
-        <p class="text-gray-500 dark:text-gray-400">{{ error() }}</p>
+        <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-gray-700/50 shadow-sm">
+          <p class="text-gray-500 dark:text-gray-400">{{ error() }}</p>
+        </div>
       </div>
     }
 
     <!-- Empty state -->
     @if (!isLoading() && !error() && messages().length === 0) {
       <div class="flex flex-col items-center justify-center h-full text-center">
-        <p class="text-gray-500 dark:text-gray-400">
-          Nessun messaggio. Inizia la conversazione!
-        </p>
+        <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-3xl p-8 border border-white/20 dark:border-gray-700/50 shadow-sm mx-auto max-w-sm">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-[20px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 shadow-md flex items-center justify-center">
+            <span class="text-3xl">👋</span>
+          </div>
+          <p class="text-gray-700 dark:text-gray-300 font-medium">
+            Nessun messaggio.<br>Inizia la conversazione!
+          </p>
+        </div>
       </div>
     }
 
@@ -78,18 +86,18 @@
     @if (!isLoading() && messages().length > 0) {
       @for (message of messages(); track trackByMessageId($index, message)) {
         <!-- Wrapper con id per scroll al messaggio -->
-        <div [id]="'message-' + message.id">
+        <div [id]="'message-' + message.id" class="group">
         <!-- Messaggio eliminato dal mittente -->
         @if (isMessageDeleted(message)) {
           <div [class]="message.mittente.id === currentUserId() ? 'flex justify-end' : 'flex justify-start'">
-            <div class="px-4 py-3 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm">
+            <div class="px-5 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm shadow-sm transition-all hover:shadow-md">
               {{ message.mittente.id === currentUserId() ? 'Hai cancellato questo messaggio' : 'Messaggio cancellato' }}
             </div>
           </div>
         } @else if (isMessageHidden(message)) {
           <!-- Messaggio nascosto dall'utente corrente -->
           <div class="flex justify-start">
-            <div class="px-4 py-3 rounded-2xl bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm">
+            <div class="px-5 py-3 rounded-[24px] bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 text-gray-500 dark:text-gray-400 italic text-sm max-w-xs sm:max-w-sm shadow-sm transition-all hover:shadow-md">
               Hai nascosto questo messaggio
             </div>
           </div>
@@ -107,14 +115,16 @@
                   class="max-w-xs sm:max-w-sm md:max-w-md cursor-pointer active:opacity-80 transition-opacity"
                 >
                   <div
-                    class="rounded-2xl overflow-hidden"
-                    [class.bg-primary-500]="message.mittente.id === currentUserId()"
+                    class="rounded-[24px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-white/20 dark:border-gray-700/30 backdrop-blur-md"
+                    [class.bg-gradient-to-br]="message.mittente.id === currentUserId()"
+                    [class.from-primary-500]="message.mittente.id === currentUserId()"
+                    [class.to-primary-600]="message.mittente.id === currentUserId()"
                     [class.text-white]="message.mittente.id === currentUserId()"
                     [class.rounded-br-sm]="message.mittente.id === currentUserId()"
-                    [class.bg-gray-200]="message.mittente.id !== currentUserId()"
-                    [class.dark:bg-gray-700]="message.mittente.id !== currentUserId()"
-                    [class.text-text-light]="message.mittente.id !== currentUserId()"
-                    [class.dark:text-text-dark]="message.mittente.id !== currentUserId()"
+                    [class.bg-white/60]="message.mittente.id !== currentUserId()"
+                    [class.dark:bg-gray-800/60]="message.mittente.id !== currentUserId()"
+                    [class.text-gray-800]="message.mittente.id !== currentUserId()"
+                    [class.dark:text-gray-200]="message.mittente.id !== currentUserId()"
                     [class.rounded-bl-sm]="message.mittente.id !== currentUserId()"
                   >
                     <!-- Messaggio vocale -->
@@ -129,11 +139,11 @@
                     } @else {
                       <!-- Immagine allegata -->
                       @if (message.imageUrl) {
-                        <div [class.mb-3]="message.contenuto">
+                        <div [class.mb-3]="message.contenuto" class="p-1">
                           <img
                             [src]="message.imageUrl"
                             alt="Immagine allegato"
-                            class="w-full h-auto"
+                            class="w-full h-auto rounded-[20px]"
                             loading="lazy"
                           />
                         </div>
@@ -141,22 +151,26 @@
 
                       <!-- Contenuto testuale  -->
                       @if (message.contenuto) {
-                        <p class="text-sm whitespace-pre-wrap break-words px-4" [class.py-2]="!message.imageUrl" [class.pb-2]="message.imageUrl" [innerHTML]="getHighlightedContent(message)"></p>
+                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5" 
+                           [class.py-3]="!message.imageUrl" 
+                           [class.pb-4]="message.imageUrl" 
+                           [class.pt-1]="message.imageUrl"
+                           [innerHTML]="getHighlightedContent(message)"></p>
                       }
                     }
                   </div>
                 </div>
 
                 <!-- Menu dropdown -->
-                <div menu class="py-1 min-w-[120px]">
+                <div menu class="py-2 min-w-[140px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-xl overflow-hidden">
                   @if (message.imageUrl) {
                     <!-- Visualizza immagine -->
                     <button
                       type="button"
                       (click)="openImageViewer(message.imageUrl!)"
-                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                     >
-                      <lucide-icon [img]="EyeIcon" [size]="16" />
+                      <lucide-icon [img]="EyeIcon" [size]="16" class="text-gray-400 dark:text-gray-500" />
                       <span>Visualizza</span>
                     </button>
                   }
@@ -166,9 +180,9 @@
                       type="button"
                       (click)="deleteMessage(message.id)"
                       [disabled]="isDeleting(message.id)"
-                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                      class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <lucide-icon [img]="TrashIcon" [size]="16" />
+                      <lucide-icon [img]="TrashIcon" [size]="16" class="opacity-80" />
                       <span>Elimina</span>
                     </button>
                   } @else {
@@ -177,9 +191,9 @@
                       type="button"
                       (click)="deleteMessage(message.id)"
                       [disabled]="isDeleting(message.id)"
-                      class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                      class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <lucide-icon [img]="EyeOffIcon" [size]="16" />
+                      <lucide-icon [img]="EyeOffIcon" [size]="16" class="text-gray-400 dark:text-gray-500" />
                       <span>Nascondi</span>
                     </button>
                   }
@@ -187,11 +201,11 @@
               </app-dropdown>
 
               <!-- Footer: timestamp e stato lettura -->
-              <div class="text-xs mt-1 flex items-center gap-1">
-                <app-time-ago [date]="message.createdAt" class="text-gray-500 dark:text-gray-400" />
+              <div class="text-[11px] mt-1.5 flex items-center gap-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity" [class.opacity-100]="message.mittente.id === currentUserId()">
+                <app-time-ago [date]="message.createdAt" class="text-gray-500/80 dark:text-gray-400/80 font-medium tracking-wide" />
                 @if (message.mittente.id === currentUserId()) {
-                  <span class="mx-1 text-gray-500 dark:text-gray-400">·</span>
-                  <span [class.text-primary-500]="message.isRead" class="text-gray-500 dark:text-gray-400">
+                  <span class="text-gray-400/50 dark:text-gray-600/50">•</span>
+                  <span [class.text-primary-500]="message.isRead" class="font-medium tracking-wide" [class.text-gray-500/80]="!message.isRead" [class.dark:text-gray-400/80]="!message.isRead">
                     {{ message.isRead ? 'Letto' : 'Inviato' }}
                   </span>
                 }
@@ -218,7 +232,7 @@
   </div>
 
   <!-- Input area - altezza fissa, sempre in basso -->
-  <div class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+  <div class="chat-composer flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
     <!-- Audio recorder -->
     @if (showRecorder()) {
       <app-audio-recorder-component
@@ -252,7 +266,7 @@
     }
 
     @if (!showRecorder()) {
-    <div class="flex items-end gap-3">
+    <div class="composer-inner flex items-end gap-2.5">
       <!-- Image picker (hidden input) -->
       <input
         #imageInputRef
@@ -285,14 +299,14 @@
       </button>
 
       <!-- Text input -->
-      <div class="flex-1 relative">
+      <div class="composer-input-wrap flex-1 relative">
         <input
           type="text"
           [value]="messageText()"
           (input)="onMessageInput($any($event.target).value)"
           (keydown)="onKeyDown($event)"
           placeholder="Scrivi un messaggio..."
-          class="w-full px-4 py-3 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors"
+          class="w-full px-4 py-3 rounded-2xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-colors"
           [disabled]="isSending()"
         />
       </div>
@@ -302,7 +316,7 @@
         type="button"
         (click)="sendMessage()"
         [disabled]="!canSend()"
-        class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
+        class="flex-shrink-0 w-12 h-12 rounded-xl bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors shadow-sm"
         aria-label="Invia messaggio"
       >
         <lucide-icon [img]="SendIcon" [size]="20" />
