@@ -8,7 +8,6 @@ export enum NotificationType {
   LIKE = 'LIKE',
   DIRECT_MESSAGE = 'DIRECT_MESSAGE',
   NEW_POST = 'NEW_POST',
-  BOOK_REQUEST = 'BOOK_REQUEST',   // Qualcuno ha richiesto un tuo libro
   BOOK_MESSAGE = 'BOOK_MESSAGE',   // Nuovo messaggio nella chat libreria
   GROUP_MESSAGE = 'GROUP_MESSAGE', // Nuovo messaggio in un gruppo
 }
@@ -22,12 +21,6 @@ export enum BookCondition {
 export enum BookStatus {
   DISPONIBILE = 'DISPONIBILE',
   VENDUTO = 'VENDUTO',
-}
-
-export enum BookRequestStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
 }
 
 export enum MentionableType {
@@ -180,8 +173,6 @@ export interface BookSummaryDTO {
   materia: string | null;
   frontImageUrl: string;
   venditore: UserSummaryDTO;
-  richiesteCount: number;       // numero richieste PENDING
-  miaRichiesta: BookRequestStatus | null; // stato della richiesta dell'utente corrente
   createdAt: string;
 }
 
@@ -199,20 +190,8 @@ export interface BookResponseDTO {
   frontImageUrl: string;
   backImageUrl: string | null;
   venditore: UserSummaryDTO;
-  richiesteCount: number;
-  miaRichiesta: BookRequestStatus | null;
   createdAt: string;
   updatedAt: string;
-}
-
-/**
- * Richiesta di acquisto libro (vista dal venditore)
- */
-export interface BookRequestDTO {
-  id: number;
-  acquirente: UserSummaryDTO;
-  stato: BookRequestStatus;
-  createdAt: string;
 }
 
 /**
