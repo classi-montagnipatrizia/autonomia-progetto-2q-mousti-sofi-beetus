@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule, ChevronRight } from 'lucide-angular';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputComponent } from '../../../../shared/ui/input/input-component/input-component';
@@ -14,7 +15,9 @@ import { schoolEmailValidator, usernameValidator } from '../../../../core/utils/
     ReactiveFormsModule,
     RouterLink,
     InputComponent,
-    ButtonComponent,],
+    ButtonComponent,
+    LucideAngularModule,
+],
   templateUrl: './login-component.html',
   styleUrl: './login-component.scss',
 })
@@ -29,6 +32,7 @@ private readonly fb = inject(FormBuilder);
   readonly errorMessage = signal<string>('');
   readonly showResendForm = signal<boolean>(false);
   readonly isResending = signal<boolean>(false);
+  readonly ChevronRightIcon = ChevronRight;
   readonly verificationInfoMessage = signal<string>('');
 
   // Form per reinvio verifica

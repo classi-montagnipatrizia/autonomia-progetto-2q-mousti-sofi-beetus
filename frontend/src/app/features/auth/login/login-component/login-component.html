@@ -1,27 +1,27 @@
-<div class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark p-4">
-  <div class="w-full max-w-md flex flex-col items-center">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 relative overflow-hidden">
+  <!-- Sfondo decorativo -->
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary-500/10 dark:bg-primary-500/5 blur-[120px]"></div>
+    <div class="absolute top-[60%] -right-[10%] w-[40%] h-[40%] rounded-full bg-purple-500/10 dark:bg-purple-500/5 blur-[100px]"></div>
+  </div>
+
+  <div class="w-full max-w-md flex flex-col items-center relative z-10">
     <!-- Logo e titolo -->
-    <div class="mb-8 text-center">
-      <a routerLink="/" class="inline-flex items-center justify-center gap-3">
-        <img src="images/beetUs_logo.svg" alt="beetUs Logo" class="h-10 w-10" />
-        <span class="text-3xl sm:text-4xl font-bold text-text-light dark:text-text-dark">
+    <div class="mb-8 text-center animate-fade-in-up">
+      <a routerLink="/" class="inline-flex items-center justify-center gap-3 hover:opacity-80 transition-opacity duration-300">
+        <img src="images/beetUs_logo.svg" alt="beetUs Logo" class="h-10 w-10 sm:h-12 sm:w-12" />
+        <span class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
           beetUs
         </span>
       </a>
-      <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-        Connettiti con la tua classe
+      <p class="mt-3 text-base font-medium text-gray-500 dark:text-gray-400">
+        Bentornato! Connettiti con la tua classe
       </p>
     </div>
 
     <!-- Card login -->
-    <div class="w-full rounded-xl bg-surface-light dark:bg-surface-dark p-6 sm:p-8 shadow-sm">
+    <div class="w-full bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[32px] border border-white/20 dark:border-gray-700/50 p-8 shadow-[0_8px_40px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_40px_rgb(0,0,0,0.12)]">
       <div class="flex flex-col space-y-6">
-        <!-- Titolo card -->
-        <div class="text-center">
-          <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">
-            Bentornato!
-          </h1>
-        </div>
 
         <!-- Messaggio info verifica email -->
         @if (verificationInfoMessage()) {
@@ -117,19 +117,19 @@
           </div>
         }
 
-        <!-- Link secondari -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 text-sm">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-4 border-t border-gray-100 dark:border-gray-700/50 text-sm">
           <a
             routerLink="/auth/reset-password"
-            class="font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+            class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline transition-colors"
           >
             Password dimenticata?
           </a>
           <a
             routerLink="/auth/register"
-            class="font-medium text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
+            class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline transition-colors flex items-center gap-1 group"
           >
-            Non hai un account? Registrati
+            Registrati
+            <lucide-icon [img]="ChevronRightIcon" [size]="16" class="group-hover:translate-x-1 transition-transform" />
           </a>
         </div>
       </div>
