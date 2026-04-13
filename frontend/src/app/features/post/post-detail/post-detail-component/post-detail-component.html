@@ -1,54 +1,57 @@
 <!-- Full-screen post detail overlay -->
-<div class="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-hidden flex flex-col">
+<div class="fixed inset-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl overflow-hidden flex flex-col">
   
   <!-- Header fisso -->
-  <header class="shrink-0 flex items-center gap-4 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-    <!-- Pulsante indietro -->
-    <button
-      type="button"
-      class="p-2 -ml-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-      (click)="goBack()"
-      aria-label="Torna indietro"
-    >
-      <lucide-icon [img]="ArrowLeftIcon" [size]="24"></lucide-icon>
-    </button>
+  <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/50 shadow-sm relative z-10">
+    <!-- Blocco sinistra: Titolo e indietro -->
+    <div class="flex items-center gap-3">
+      <!-- Pulsante indietro -->
+      <button
+        type="button"
+        class="p-2 -ml-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95"
+        (click)="goBack()"
+        aria-label="Torna indietro"
+      >
+        <lucide-icon [img]="ArrowLeftIcon" [size]="22"></lucide-icon>
+      </button>
 
-    <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
-      Post
-    </h1>
-
-    <div class="flex-1"></div>
+      <h1 class="text-[17px] font-bold text-gray-900 dark:text-white">
+        Post
+      </h1>
+    </div>
 
     <!-- Menu azioni (solo per owner/admin) -->
     @if (post() && (isOwner() || isAdmin())) {
-      <app-dropdown placement="bottom-end">
-        <button
-          trigger
-          type="button"
-          class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <lucide-icon [img]="EllipsisIcon" [size]="20"></lucide-icon>
-        </button>
-
-        <div content class="py-1 min-w-[160px]">
-          @if (isOwner()) {
-            <button
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
-              (click)="startEdit()"
-            >
-              <lucide-icon [img]="PencilIcon" [size]="16"></lucide-icon>
-              Modifica
-            </button>
-          }
+      <div class="flex items-center">
+        <app-dropdown placement="bottom-end">
           <button
-            class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3"
-            (click)="deletePost()"
+            trigger
+            type="button"
+            class="p-2 -mr-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95 cursor-pointer"
           >
-            <lucide-icon [img]="Trash2Icon" [size]="16"></lucide-icon>
-            Elimina
+            <lucide-icon [img]="EllipsisIcon" [size]="20"></lucide-icon>
           </button>
-        </div>
-      </app-dropdown>
+
+          <div content class="py-1 min-w-[160px] animate-fade-in shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)]">
+            @if (isOwner()) {
+              <button
+                class="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-3 transition-colors font-medium border-b border-gray-100 dark:border-gray-800/50 cursor-pointer"
+                (click)="startEdit()"
+              >
+                <lucide-icon [img]="PencilIcon" [size]="16" class="text-gray-500 dark:text-gray-400"></lucide-icon>
+                Modifica
+              </button>
+            }
+            <button
+              class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors font-medium cursor-pointer"
+              (click)="deletePost()"
+            >
+              <lucide-icon [img]="Trash2Icon" [size]="16"></lucide-icon>
+              Elimina {{ isAdmin() && !isOwner() ? '(Admin)' : '' }}
+            </button>
+          </div>
+        </app-dropdown>
+      </div>
     }
   </header>
 
@@ -77,29 +80,35 @@
 
     <!-- Post content -->
     @else if (post(); as postData) {
-      <div class="max-w-2xl mx-auto">
+      <div class="max-w-2xl mx-auto sm:my-6 rounded-none sm:rounded-2xl bg-white/60 dark:bg-surface-dark border-x sm:border-y border-gray-100 sm:border-gray-200/50 dark:border-gray-800 shadow-sm animate-fade-in">
         <!-- Post -->
-        <article class="border-b border-gray-200 dark:border-gray-700">
+        <article class="border-b border-gray-100 dark:border-gray-800">
           <!-- Header autore -->
-          <div class="flex items-center gap-3 p-4">
-            <button (click)="goToAuthor()" class="shrink-0">
+          <div class="flex items-center gap-3 p-4 sm:p-5">
+            <button (click)="goToAuthor()" class="shrink-0 group">
               <app-avatar
                 [src]="postData.autore.profilePictureUrl"
                 [alt]="postData.autore.nomeCompleto"
                 [name]="postData.autore.nomeCompleto"
-                size="md"
+                size="lg"
+                class="transition-transform group-hover:scale-[1.03]"
               />
             </button>
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 flex flex-col justify-center">
               <button
                 (click)="goToAuthor()"
-                class="font-semibold text-gray-900 dark:text-white hover:underline truncate block"
+                class="font-bold text-gray-900 dark:text-white text-[16px] leading-tight hover:text-primary-600 dark:hover:text-primary-400 hover:underline w-fit text-left flex shrink-0"
               >
                 {{ postData.autore.nomeCompleto }}
               </button>
-              <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                &#64;{{ postData.autore.username }} · <app-time-ago [date]="postData.createdAt" />
+              <p class="text-[14px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                &#64;{{ postData.autore.username }}
               </p>
+            </div>
+            
+            <!-- Tempo in top right come X (Twitter) -->
+            <div class="hidden sm:flex text-[13px] text-gray-400 dark:text-gray-500 mt-[-10px] self-start">
+               <app-time-ago [date]="postData.createdAt" />
             </div>
           </div>
 
@@ -109,27 +118,27 @@
               <!-- Modalità modifica -->
               <div class="space-y-3">
                 <textarea
-                  class="w-full px-3 py-2 text-lg border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:border-primary-500 focus:outline-none"
+                  class="w-[95%] mx-auto px-4 py-3 text-[15px] sm:text-[16px] border border-gray-200/80 dark:border-gray-700/80 rounded-2xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white resize-none shadow-inner-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none transition-all duration-200 placeholder:text-gray-400"
                   rows="4"
                   [value]="editContent()"
                   (input)="editContent.set($any($event.target).value)"
                   [attr.maxlength]="MAX_CONTENT_LENGTH"
                 ></textarea>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-gray-400">
+                <div class="flex items-center justify-between w-[95%] mx-auto">
+                  <span class="text-[13px] font-medium" [class]="editContent().length > (MAX_CONTENT_LENGTH * 0.9) ? 'text-amber-500' : 'text-gray-400'">
                     {{ editContent().length }} / {{ MAX_CONTENT_LENGTH }}
                   </span>
                   <div class="flex gap-2">
                     <button
                       type="button"
-                      class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      class="px-4 py-2 text-[14px] font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors active:scale-95 duration-200"
                       (click)="cancelEdit()"
                     >
                       Annulla
                     </button>
                     <button
                       type="button"
-                      class="px-3 py-1.5 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      class="px-4 py-2 text-[14px] font-semibold bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-all shadow-sm active:scale-95 duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       [disabled]="!editContent().trim() || isSaving()"
                       (click)="saveEdit()"
                     >
@@ -141,94 +150,107 @@
             } @else {
               <!-- Contenuto normale -->
               @if (postData.contenuto) {
-                <p class="text-lg text-gray-900 dark:text-white whitespace-pre-wrap break-words leading-relaxed">
-                  <app-safe-mention-text [content]="postData.contenuto" />
-                </p>
+                <div class="px-1 sm:px-2">
+                  <p class="text-gray-900 dark:text-gray-100 leading-relaxed text-[15px] sm:text-[16px] break-words whitespace-pre-wrap font-normal">
+                    <app-safe-mention-text [content]="postData.contenuto" />
+                  </p>
+                </div>
               }
             }
           </div>
 
           <!-- Immagine -->
-          @if (postData.imageUrl) {
-            <div class="mt-2">
+          @if (postData.imageUrl && !isEditing()) {
+            <div class="mt-2 mb-4 mx-4 sm:mx-5 rounded-[20px] overflow-hidden border border-gray-200/60 dark:border-gray-800 relative bg-gray-50/50 shadow-sm cursor-pointer group" (click)="openImagePreview()">
               <img
                 [src]="postData.imageUrl"
                 alt="Immagine post"
-                class="w-full max-h-[70vh] object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                class="w-full max-h-[500px] object-cover object-center transition-transform duration-500 group-hover:scale-[1.01]"
                 loading="lazy"
-                (click)="openImagePreview()"
               />
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
             </div>
           }
 
           <!-- Statistiche e azioni -->
-          <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
-            <!-- Contatori -->
-            <div class="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-3">
+          <div class="px-5 py-3 border-t border-gray-100 dark:border-gray-800">
+            <!-- Timestamp stile X (es. 15:30 · 11 Apr 2026) -->
+            <div class="flex items-center text-[15px] text-gray-500 dark:text-gray-400 gap-1.5 mb-4 font-medium">
+               <span>{{ postData.createdAt | date:'HH:mm' }}</span>
+               <span class="text-gray-300 dark:text-gray-600">·</span>
+               <span>{{ postData.createdAt | date:'d MMM y' }}</span>
+            </div>
+
+            <!-- Contatori con separatore -->
+            <div class="flex items-center gap-5 text-[15px] text-gray-500 dark:text-gray-400 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-800 mb-1">
               <button
                 type="button"
                 (click)="openLikesModal()"
                 [disabled]="localLikesCount() === 0"
-                class="hover:underline disabled:cursor-default disabled:hover:no-underline transition-all touch-manipulation active:opacity-70"
-                [style.cursor]="localLikesCount() > 0 ? 'pointer' : 'default'"
+                class="group flex items-center gap-1.5 focus:outline-none transition-all touch-manipulation pb-0.5"
+                [class.cursor-not-allowed]="localLikesCount() === 0"
               >
-                <strong class="text-gray-900 dark:text-white">{{ localLikesCount() }}</strong>
-                {{ localLikesCount() === 1 ? 'Mi piace' : 'Mi piace' }}
+                <strong class="text-gray-900 dark:text-white group-hover:underline decoration-gray-400 underline-offset-4">{{ localLikesCount() }}</strong>
+                <span class="text-gray-500 group-hover:text-gray-700 transition-colors">{{ localLikesCount() === 1 ? 'Mi piace' : 'Mi piace' }}</span>
               </button>
-              <span>
+              
+              <div class="flex items-center gap-1.5">
                 <strong class="text-gray-900 dark:text-white">{{ postData.commentsCount }}</strong>
-                {{ postData.commentsCount === 1 ? 'commento' : 'commenti' }}
-              </span>
+                <span class="text-gray-500">{{ postData.commentsCount === 1 ? 'Risposta' : 'Risposte' }}</span>
+              </div>
             </div>
 
             <!-- Pulsanti azione -->
-            <div class="flex items-center justify-around pt-3 border-t border-gray-100 dark:border-gray-800">
+            <div class="flex items-center justify-around pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-800 mb-1">
               <!-- Like -->
               <button
                 type="button"
-                class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-colors group"
+                class="flex items-center justify-center gap-2 flex-1 sm:flex-none sm:px-6 py-2 sm:py-2.5 rounded-full transition-all duration-300 active:scale-95 group relative overflow-hidden focus:outline-none"
                 [class]="localHasLiked()
-                  ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
+                  ? 'text-rose-500'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-rose-500'"
                 [disabled]="isLiking()"
                 (click)="toggleLike()"
               >
+                <div class="absolute inset-0 bg-gray-50/0 group-hover:bg-rose-50 dark:group-hover:bg-rose-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
                 <lucide-icon
                   [img]="HeartIcon"
                   [size]="22"
-                  class="heart-icon transition-all duration-200"
-                  [class.heart-filled]="localHasLiked()"
+                  class="relative transition-transform duration-300 group-hover:scale-110"
+                  [class.fill-current]="localHasLiked()"
                 ></lucide-icon>
-                <span class="font-medium hidden xs:inline">Mi piace</span>
+                <span class="relative font-bold hidden xs:inline tracking-wide">Mi piace</span>
               </button>
 
               <!-- Commenta -->
               <button
                 type="button"
-                class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                class="flex items-center justify-center gap-2 flex-1 sm:flex-none sm:px-6 py-2 sm:py-2.5 rounded-full text-gray-500 dark:text-gray-400 transition-all duration-300 active:scale-95 group relative overflow-hidden focus:outline-none hover:text-blue-500"
                 (click)="focusCommentInput()"
               >
-                <lucide-icon [img]="MessageCircleIcon" [size]="22"></lucide-icon>
-                <span class="font-medium hidden xs:inline">Commenta</span>
+                <div class="absolute inset-0 bg-gray-50/0 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
+                <lucide-icon [img]="MessageCircleIcon" [size]="22" class="relative group-hover:scale-110 transition-transform duration-300"></lucide-icon>
+                <span class="relative font-bold hidden xs:inline tracking-wide">Rispondi</span>
               </button>
 
               <!-- Condividi -->
               <button
                 type="button"
-                class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                class="flex items-center justify-center gap-2 flex-1 sm:flex-none sm:px-6 py-2 sm:py-2.5 rounded-full text-gray-500 dark:text-gray-400 transition-all duration-300 active:scale-95 group relative overflow-hidden focus:outline-none hover:text-emerald-500"
                 (click)="sharePost()"
               >
-                <lucide-icon [img]="Share2Icon" [size]="22"></lucide-icon>
-                <span class="font-medium hidden xs:inline">Condividi</span>
+                <div class="absolute inset-0 bg-gray-50/0 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
+                <lucide-icon [img]="Share2Icon" [size]="22" class="relative group-hover:scale-110 transition-transform duration-300"></lucide-icon>
+                <span class="relative font-bold hidden xs:inline tracking-wide">Condividi</span>
               </button>
             </div>
           </div>
         </article>
 
         <!-- Sezione commenti -->
-        <section id="comments-section" class="pb-4">
+        <section id="comments-section" class="pb-20 sm:pb-4 rounded-b-none sm:rounded-b-2xl bg-white/40 dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
           <!-- Form nuovo commento -->
-          <div id="comment-form" class="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div id="comment-form" class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/40">
             <app-comment-form-component
               #commentForm
               [postId]="postData.id"
@@ -240,9 +262,9 @@
 
           <!-- Lista commenti -->
           @if (comments().length > 0) {
-            <div class="divide-y divide-gray-100 dark:divide-gray-800">
+            <div class="divide-y divide-gray-100 dark:divide-gray-800/60">
               @for (comment of comments(); track comment.id) {
-                <div class="p-4">
+                <div class="p-4 sm:p-5 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
                   <app-comment
                     [comment]="comment"
                     [postId]="postData.id"
@@ -255,14 +277,17 @@
               }
             </div>
           } @else {
-            <div class="flex flex-col items-center justify-center py-12 text-center">
-              <lucide-icon 
-                [img]="MessageCircleIcon" 
-                [size]="48"
-                class="text-gray-300 dark:text-gray-600 mb-3"
-              ></lucide-icon>
-              <p class="text-gray-500 dark:text-gray-400">
-                Nessun commento ancora. Sii il primo!
+            <div class="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
+              <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-4">
+                <lucide-icon 
+                  [img]="MessageCircleIcon" 
+                  [size]="32"
+                  class="text-blue-400 dark:text-blue-500"
+                ></lucide-icon>
+              </div>
+              <h3 class="text-gray-900 dark:text-white font-bold text-lg mb-1">Nessuna risposta</h3>
+              <p class="text-gray-500 dark:text-gray-400 text-[15px]">
+                Sii il primo a condividere un tuo pensiero!
               </p>
             </div>
           }
@@ -275,13 +300,13 @@
 <!-- Image Preview Modal -->
 @if (isImagePreviewOpen() && post()?.imageUrl) {
   <div
-    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 sm:p-8 animate-fade-in"
     (click)="closeImagePreview()"
   >
     <!-- Close button -->
     <button
       type="button"
-      class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+      class="absolute top-4 right-4 p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white transition-all duration-200 z-[70] shadow-sm focus:outline-none"
       (click)="closeImagePreview()"
       aria-label="Chiudi anteprima"
     >
@@ -292,7 +317,7 @@
     <img
       [src]="post()!.imageUrl!"
       [alt]="'Immagine del post di ' + post()!.autore.nomeCompleto"
-      class="max-w-full max-h-full object-contain"
+      class="max-w-full max-h-full object-contain rounded-2xl sm:rounded-none shadow-2xl sm:shadow-none"
       (click)="$event.stopPropagation()"
     />
   </div>
@@ -305,36 +330,42 @@
   [size]="'sm'"
   (closed)="closeLikesModal()"
 >
-  <div class="max-h-[60vh] overflow-y-auto">
+  <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
     @if (isLoadingLikes()) {
       <!-- Loading state -->
-      <div class="flex items-center justify-center py-8">
-        <div class="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full"></div>
+      <div class="flex flex-col items-center justify-center py-12 gap-3">
+        <div class="animate-spin w-8 h-8 border-[3px] border-primary-500/20 border-t-primary-500 rounded-full"></div>
+        <p class="text-sm font-medium text-gray-500 animate-pulse">Caricamento...</p>
       </div>
     } @else if (likesUsers().length === 0) {
       <!-- Empty state -->
-      <div class="flex flex-col items-center justify-center py-8 text-center">
-        <p class="text-gray-500 dark:text-gray-400">Nessun like ancora</p>
+      <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
+          <lucide-icon [img]="HeartIcon" [size]="32" class="text-gray-300 dark:text-gray-600"></lucide-icon>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Nessun like al momento</p>
       </div>
     } @else {
       <!-- Lista utenti -->
-      <div class="divide-y divide-gray-100 dark:divide-gray-800">
+      <div class="divide-y divide-gray-100 dark:divide-gray-800/60">
         @for (user of likesUsers(); track user.id) {
           <button
             type="button"
             (click)="goToUserProfile(user.username)"
-            class="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors touch-manipulation active:bg-gray-100 dark:active:bg-gray-700"
+            class="w-full flex items-center gap-3.5 p-4 sm:p-5 hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-all duration-200 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 focus:outline-none focus-visible:bg-gray-50 group"
           >
-            <app-avatar
-              [src]="user.profilePictureUrl"
-              [name]="user.nomeCompleto"
-              size="md"
-            />
+            <div class="relative shrink-0 transition-transform duration-200 group-hover:scale-105">
+              <app-avatar
+                [src]="user.profilePictureUrl"
+                [name]="user.nomeCompleto"
+                size="md"
+              />
+            </div>
             <div class="flex-1 text-left min-w-0">
-              <p class="font-semibold text-gray-900 dark:text-white truncate">
+              <p class="font-bold text-[15px] sm:text-[16px] text-gray-900 dark:text-white truncate leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                 {{ user.nomeCompleto }}
               </p>
-              <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+              <p class="text-[14px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
                 &#64;{{ user.username }}
               </p>
             </div>
