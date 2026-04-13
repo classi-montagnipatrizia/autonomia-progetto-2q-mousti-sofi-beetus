@@ -1,9 +1,9 @@
-<div class="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden">
+<div class="messages-layout h-screen flex bg-gray-50/50 dark:bg-gray-900/50 overflow-hidden backdrop-blur-3xl">
 
       <!-- Desktop: Layout a 2 colonne -->
-      <div class="hidden lg:flex w-full h-full overflow-hidden">
+      <div class="hidden lg:flex w-full h-full overflow-hidden p-4 lg:p-6 gap-6">
         <!-- Sidebar -->
-        <aside class="w-80 xl:w-96 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 h-full overflow-hidden flex flex-col">
+        <aside class="messages-sidebar w-80 xl:w-96 flex-shrink-0 bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-full overflow-hidden flex flex-col">
           @if (activeTab() === 'chat') {
             <app-conversations-component (tabChanged)="switchTab($event)" />
           } @else {
@@ -12,20 +12,20 @@
         </aside>
 
         <!-- Area chat -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <main class="messages-main flex-1 flex flex-col h-full bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
           @if (hasChatOpen()) {
             <router-outlet />
           } @else {
             <!-- Placeholder quando nessuna chat è selezionata -->
-            <div class="flex-1 flex items-center justify-center bg-white dark:bg-gray-900">
-              <div class="text-center p-8">
-                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <div class="layout-placeholder flex-1 flex items-center justify-center p-8">
+              <div class="text-center">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-[24px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 shadow-xl flex items-center justify-center">
                   <span class="text-5xl">💬</span>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mb-2">
                   I tuoi messaggi
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400 max-w-xs">
+                <p class="text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
                   Seleziona una conversazione dalla lista per iniziare a chattare.
                 </p>
               </div>
@@ -35,17 +35,19 @@
       </div>
 
       <!-- Mobile: Mostra lista O chat -->
-      <div class="lg:hidden w-full h-full overflow-hidden">
-        @if (hasChatOpen()) {
-          <!-- Chat a schermo intero su mobile -->
-          <router-outlet />
-        } @else {
-          @if (activeTab() === 'chat') {
-            <app-conversations-component (tabChanged)="switchTab($event)" />
+      <div class="lg:hidden w-full h-full overflow-hidden p-2 sm:p-4">
+        <div class="w-full h-full overflow-hidden bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] sm:rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col">
+          @if (hasChatOpen()) {
+            <!-- Chat a schermo intero su mobile -->
+            <router-outlet />
           } @else {
-            <app-group-list (tabChanged)="switchTab($event)" />
+            @if (activeTab() === 'chat') {
+              <app-conversations-component (tabChanged)="switchTab($event)" />
+            } @else {
+              <app-group-list (tabChanged)="switchTab($event)" />
+            }
           }
-        }
+        </div>
       </div>
 
     </div>

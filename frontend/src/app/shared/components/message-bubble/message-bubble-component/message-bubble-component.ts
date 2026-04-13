@@ -84,27 +84,27 @@ export class MessageBubbleComponent {
   readonly bubbleClasses = computed(() => {
     // I messaggi audio hanno padding ridotto (il player ha il proprio padding)
     const base = this.audioUrl()
-      ? 'max-w-xs sm:max-w-sm px-3 py-2 rounded-2xl'
-      : 'max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl';
+      ? 'max-w-xs sm:max-w-sm px-3 py-2 rounded-[24px] shadow-sm backdrop-blur-md transition-all duration-300'
+      : 'max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2.5 rounded-[24px] shadow-sm backdrop-blur-md transition-all duration-300';
 
     if (this.isMine()) {
-      return `${base} bg-primary-500 text-white rounded-br-sm`;
+      return `${base} bg-primary-500/90 dark:bg-primary-600/90 text-white rounded-br-[6px] border border-primary-400/50`;
     }
 
-    return `${base} bg-gray-200 dark:bg-gray-700 text-text-light dark:text-text-dark rounded-bl-sm`;
+    return `${base} bg-white/70 dark:bg-gray-800/60 text-gray-800 dark:text-gray-100 rounded-bl-[6px] border border-white/50 dark:border-gray-700/50`;
   });
 
   /**
    * Classi CSS per il timestamp
    */
   readonly timestampClasses = computed(() => {
-    const base = 'text-xs mt-1';
+    const base = 'text-[11px] font-medium mt-1';
 
     if (this.isMine()) {
-      return `${base} text-right text-gray-500 dark:text-gray-400`;
+      return `${base} text-right text-gray-400 dark:text-gray-400/80 mr-1`;
     }
 
-    return `${base} text-left text-gray-500 dark:text-gray-400`;
+    return `${base} text-left text-gray-500 dark:text-gray-400 ml-1`;
   });
 
   /**
