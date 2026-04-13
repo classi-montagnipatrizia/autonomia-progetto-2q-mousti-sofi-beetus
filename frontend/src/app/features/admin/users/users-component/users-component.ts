@@ -32,10 +32,10 @@ import { AuthService } from '../../../../core/auth/services/auth-service';
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     LucideAngularModule,
     ButtonComponent,
     AvatarComponent,
+    RouterLink
   ],
   templateUrl: './users-component.html',
   styleUrl: './users-component.scss',
