@@ -19,7 +19,6 @@ import { SearchService, GlobalSearchResults } from '../../../../core/services/se
 import { UserSummaryDTO, PostResponseDTO } from '../../../../models';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
 import { ButtonComponent } from '../../../ui/button/button-component/button-component';
-import { SpinnerComponent } from '../../../ui/spinner/spinner-component/spinner-component';
 import { ClickOutside } from '../../../directives/click-outside';
 
 @Component({
@@ -29,7 +28,6 @@ import { ClickOutside } from '../../../directives/click-outside';
     LucideAngularModule,
     AvatarComponent,
     ButtonComponent,
-    SpinnerComponent,
     ClickOutside,
     ],
   templateUrl: './search-dropdown-component.html',

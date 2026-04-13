@@ -36,33 +36,39 @@
   <!-- Dropdown risultati -->
   @if (isOpen()) {
     <div
-      class="absolute top-full left-0 right-0 mt-2 bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden z-50 max-h-96 overflow-y-auto"
+      class="absolute top-full left-0 right-0 mt-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-2xl rounded-[24px] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.15)] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-50 max-h-96 overflow-y-auto transform origin-top transition-all duration-300 animate-in fade-in slide-in-from-top-2"
     >
       @if (isLoading()) {
         <!-- Stato caricamento -->
-        <div class="flex items-center justify-center py-8">
-          <app-spinner size="md" />
+        <div class="flex flex-col items-center justify-center py-10 gap-3">
+          <div class="w-6 h-6 border-[3px] border-primary-200 border-t-primary-500 rounded-full animate-spin"></div>
+          <span class="text-[14px] font-medium text-gray-500 dark:text-gray-400 animate-pulse">Ricerca in corso...</span>
         </div>
       } @else if (!hasResults()) {
         <!-- Nessun risultato -->
-        <div class="py-8 text-center">
-          <lucide-icon [img]="SearchIcon" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto" />
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Nessun risultato per "{{ searchTerm() }}"
+        <div class="py-10 text-center flex flex-col items-center justify-center">
+          <div class="p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-full mb-3 shadow-inner">
+            <lucide-icon [img]="SearchIcon" class="w-10 h-10 text-gray-400 dark:text-gray-500" />
+          </div>
+          <p class="text-[15px] font-bold text-gray-700 dark:text-gray-300">
+            Nessun risultato
+          </p>
+          <p class="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-1">
+            per "{{ searchTerm() }}"
           </p>
         </div>
       } @else {
         <!-- Sezione Utenti -->
         @if (hasUsers()) {
-          <div class="p-2">
-            <p class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div class="p-2.5">
+            <p class="px-3 py-2 text-[11px] font-black text-primary-500 dark:text-primary-400 uppercase tracking-widest">
               Utenti
             </p>
 
             @for (user of displayedUsers(); track user.id) {
               <button
                 type="button"
-                class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                class="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all duration-200 text-left active:scale-[0.98] group"
                 (click)="selectUser(user)"
               >
                 <app-avatar
@@ -71,11 +77,11 @@
                   size="sm"
                   [status]="user.isOnline ? 'online' : 'none'"
                 />
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-text-light dark:text-text-dark truncate">
+                <div class="flex-1 min-w-0 flex flex-col justify-center">
+                  <p class="text-[14px] font-bold text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                     {{ user.nomeCompleto }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p class="text-[12px] font-medium text-gray-500 dark:text-gray-400 truncate mt-0.5 group-hover:text-primary-500/70 dark:group-hover:text-primary-400/70">
                     @{{ user.username }}
                   </p>
                 </div>
@@ -83,12 +89,13 @@
             }
 
             @if (showViewAllUsers()) {
-              <div class="px-1 py-1">
+              <div class="px-2 pt-2 pb-1">
                 <app-button
                   variant="ghost"
                   size="sm"
                   [fullWidth]="true"
                   (clicked)="viewAll('users')"
+                  class="hover:scale-[1.02] active:scale-95 transition-transform"
                 >
                   Vedi tutti i risultati
                 </app-button>
@@ -99,30 +106,30 @@
 
         <!-- Separatore -->
         @if (hasUsers() && hasPosts()) {
-          <div class="border-t border-border-light dark:border-border-dark"></div>
+          <div class="border-t mx-4 border-gray-100 dark:border-gray-700/50"></div>
         }
 
         <!-- Sezione Post -->
         @if (hasPosts()) {
-          <div class="p-2">
-            <p class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div class="p-2.5">
+            <p class="px-3 py-2 text-[11px] font-black text-primary-500 dark:text-primary-400 uppercase tracking-widest">
               Post
             </p>
 
             @for (post of displayedPosts(); track post.id) {
               <button
                 type="button"
-                class="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                class="w-full flex items-start gap-3.5 px-3 py-2.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 text-left active:scale-[0.98] group"
                 (click)="selectPost(post)"
               >
-                <div class="flex-shrink-0 mt-0.5">
-                  <lucide-icon [img]="FileTextIcon" class="w-5 h-5 text-gray-400" />
+                <div class="flex-shrink-0 mt-1 p-2 bg-gray-100/50 dark:bg-gray-700/30 rounded-xl group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 group-hover:text-primary-500 transition-colors">
+                  <lucide-icon [img]="FileTextIcon" class="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm text-text-light dark:text-text-dark line-clamp-2">
+                  <p class="text-[13px] font-medium text-gray-800 dark:text-gray-200 line-clamp-2 leading-relaxed group-hover:text-gray-950 dark:group-hover:text-white transition-colors">
                     {{ truncateContent(post.contenuto) }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-1.5 flex items-center gap-1">
                     da @{{ post.autore.username }}
                   </p>
                 </div>
@@ -130,12 +137,13 @@
             }
 
             @if (showViewAllPosts()) {
-              <div class="px-1 py-1">
+              <div class="px-2 pt-2 pb-1">
                 <app-button
                   variant="ghost"
                   size="sm"
                   [fullWidth]="true"
                   (clicked)="viewAll('posts')"
+                  class="hover:scale-[1.02] active:scale-95 transition-transform"
                 >
                   Vedi tutti i risultati
                 </app-button>
