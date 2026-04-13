@@ -1,28 +1,30 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
   <!-- Header -->
-  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+  <header class="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4">
-      <div class="flex items-center justify-between h-14">
+      <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <button
             type="button"
             (click)="goBack()"
-            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            class="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 active:scale-[0.96] text-gray-500 dark:text-gray-400 transition-all"
             aria-label="Torna alla dashboard"
           >
             <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
           </button>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Audit Log</h1>
+          <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Audit Log</h1>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <button
             type="button"
             (click)="toggleFilters()"
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            class="p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-800/60 backdrop-blur-sm border border-transparent hover:border-white/20 dark:hover:border-gray-700/50 hover:shadow-sm active:scale-[0.96] text-gray-500 dark:text-gray-400 transition-all"
             [class.bg-primary-50]="showFilters()"
-            [class.dark:bg-primary-900/20]="showFilters()"
+            [class.dark:bg-primary-900/30]="showFilters()"
             [class.text-primary-600]="showFilters()"
+            [class.!border-primary-200]="showFilters()"
+            [class.dark:!border-primary-800]="showFilters()"
             aria-label="Filtri"
           >
             <lucide-icon [img]="FilterIcon" [size]="20" />
@@ -30,7 +32,7 @@
           <button
             type="button"
             (click)="refresh()"
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-700/80 hover:shadow-md active:scale-[0.96] text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 disabled:pointer-events-none"
             [disabled]="isLoading()"
             aria-label="Ricarica"
           >
@@ -46,16 +48,16 @@
     
     <!-- Filtri -->
     @if (showFilters()) {
-      <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="mb-6 p-6 bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all animate-in fade-in slide-in-from-top-4 duration-300">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Tipo azione
             </label>
             <select
               [ngModel]="filterAction()"
               (ngModelChange)="filterAction.set($event); applyFilters()"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+              class="w-full px-4 py-3 border border-gray-300/50 dark:border-gray-600/50 rounded-[16px] bg-white/50 dark:bg-gray-700/50 backdrop-blur-md text-gray-900 dark:text-white focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all shadow-inner"
             >
               <option value="">Tutte le azioni</option>
               @for (action of availableActions; track action) {
@@ -65,7 +67,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               ID Amministratore
             </label>
             <input
@@ -74,13 +76,13 @@
               (ngModelChange)="filterAdmin.set($event)"
               (keyup.enter)="applyFilters()"
               placeholder="ID admin..."
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500"
+              class="w-full px-4 py-3 border border-gray-300/50 dark:border-gray-600/50 rounded-[16px] bg-white/50 dark:bg-gray-700/50 backdrop-blur-md text-gray-900 dark:text-white placeholder-gray-500/70 focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all shadow-inner"
             />
           </div>
         </div>
 
-        <div class="mt-4 flex gap-2">
-          <app-button variant="secondary" size="sm" (click)="resetFilters()">
+        <div class="mt-5 flex gap-3">
+          <app-button variant="secondary" size="sm" (click)="resetFilters()" class="active:scale-[0.98] transition-transform">
             Reset filtri
           </app-button>
         </div>
@@ -105,46 +107,50 @@
 
     <!-- Log Table -->
     @if (!isLoading() && !hasError() && hasLogs()) {
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full">
-            <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <thead class="bg-gray-100/50 dark:bg-gray-900/50 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Data/Ora
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Admin
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Azione
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Target
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Dettagli
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   IP
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50">
               @for (log of logs(); track log.id) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                  <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                <tr class="hover:bg-white/40 dark:hover:bg-gray-700/40 hover:backdrop-blur-md transition-all duration-200 group">
+                  <td class="px-5 py-4 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
                     {{ formatDate(log.createdAt) }}
                   </td>
-                  <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                    <div class="flex items-center gap-2">
-                      <lucide-icon [img]="UserIcon" [size]="16" class="text-gray-400" />
-                      <span class="font-medium">{{ log.adminUsername }}</span>
-                      <span class="text-gray-500">(ID: {{ log.adminId }})</span>
+                  <td class="px-5 py-4 text-sm text-gray-900 dark:text-white">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-gray-200/80 dark:bg-gray-700/80 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                        <lucide-icon [img]="UserIcon" [size]="16" class="text-gray-500 dark:text-gray-400" />
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="font-bold">{{ log.adminUsername }}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">ID: {{ log.adminId }}</span>
+                      </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-sm">
-                    <span class="font-medium" [class]="getActionColor(log.azione)">
+                  <td class="px-5 py-4 text-sm">
+                    <span class="px-3 py-1 font-bold text-xs rounded-full inline-block backdrop-blur-md border shadow-sm" [class]="getActionColor(log.azione)">
                       {{ log.azione }}
                     </span>
                   </td>

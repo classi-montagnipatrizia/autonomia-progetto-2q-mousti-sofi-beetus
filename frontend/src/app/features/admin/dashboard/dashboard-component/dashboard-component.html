@@ -1,20 +1,20 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
   <!-- Header -->
-  <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+  <header class="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-300">
     <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between h-14">
+      <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <button
             type="button"
             (click)="goBack()"
-            class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+            class="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 active:scale-[0.96] text-gray-500 dark:text-gray-400 transition-all"
             aria-label="Torna indietro"
           >
             <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
           </button>
           <div class="flex items-center gap-2">
             <lucide-icon [img]="ShieldIcon" [size]="24" class="text-primary-500" />
-            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Dashboard Admin</h1>
+            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Dashboard Admin</h1>
           </div>
         </div>
 
@@ -23,7 +23,7 @@
           type="button"
           (click)="refresh()"
           [disabled]="isLoading()"
-          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors disabled:opacity-50"
+          class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-700/80 hover:shadow-md active:scale-[0.96] text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 disabled:pointer-events-none"
           aria-label="Aggiorna statistiche"
         >
           <lucide-icon
@@ -42,12 +42,12 @@
     @if (isLoading() && !stats()) {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
+          <div class="bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] p-6 animate-pulse">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div class="w-14 h-14 bg-gray-200/80 dark:bg-gray-700/80 rounded-[18px]"></div>
               <div class="flex-1">
-                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
-                <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                <div class="h-4 bg-gray-200/80 dark:bg-gray-700/80 rounded-full w-20 mb-3"></div>
+                <div class="h-8 bg-gray-200/80 dark:bg-gray-700/80 rounded-full w-16"></div>
               </div>
             </div>
           </div>
@@ -57,9 +57,11 @@
 
     <!-- Error state -->
     @if (hasError()) {
-      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-        <lucide-icon [img]="AlertCircleIcon" [size]="48" class="text-red-500 mx-auto mb-4" />
-        <h3 class="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+      <div class="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-xl border border-red-200/50 dark:border-red-800/50 rounded-[24px] p-8 text-center shadow-[0_12px_40px_rgb(0,0,0,0.05)]">
+        <div class="w-20 h-20 mx-auto bg-red-100/50 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-5">
+          <lucide-icon [img]="AlertCircleIcon" [size]="40" class="text-red-500" />
+        </div>
+        <h3 class="text-xl font-bold text-red-800 dark:text-red-300 mb-3">
           Errore nel caricamento
         </h3>
         <p class="text-red-700 dark:text-red-400 mb-4">
@@ -80,22 +82,25 @@
         </p>
       }
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
         @for (card of statCards(); track card.label) {
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full flex items-center justify-center" [class]="getCardColorClasses(card.color)">
-                <lucide-icon [img]="card.icon" [size]="24" />
+          <div class="bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] border border-white/20 dark:border-gray-700/50 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_16px_40px_rgb(0,0,0,0.2)] transition-all duration-300 relative overflow-hidden group">
+            <!-- Glow background on hover -->
+            <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div class="flex items-center gap-4 relative z-10">
+              <div class="w-14 h-14 rounded-[18px] flex items-center justify-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm shadow-inner group-hover:scale-110 transition-transform duration-300" [class]="getCardColorClasses(card.color)">
+                <lucide-icon [img]="card.icon" [size]="28" strokeWidth="2.5" />
               </div>
               <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{{ card.label }}</p>
+                <p class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
                   {{ formatNumber(card.value) }}
                 </p>
               </div>
             </div>
             @if (card.description) {
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-4 relative z-10 font-medium">
                 {{ card.description }}
               </p>
             }
@@ -105,22 +110,25 @@
 
       <!-- Quick Actions -->
       <section>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 mb-6">
           Sezioni amministrazione
         </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           @for (action of quickActions; track action.route) {
             <a
               [routerLink]="action.route"
-              class="flex flex-col gap-3 p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all group"
+              class="flex flex-col gap-4 p-6 bg-white/70 dark:bg-gray-800/60 backdrop-blur-2xl rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-[0_16px_40px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_16px_40px_rgb(0,0,0,0.2)] active:scale-[0.98] transition-all duration-300 group overflow-hidden relative"
             >
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <lucide-icon [img]="action.icon" [size]="20" />
+              <!-- Hover shimmer -->
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+              <div class="flex items-center gap-4 relative z-10">
+                <div class="w-12 h-12 rounded-full border border-primary-200/50 dark:border-primary-800/50 bg-primary-50/80 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-inner">
+                  <lucide-icon [img]="action.icon" [size]="24" />
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-white">{{ action.label }}</span>
+                <span class="font-bold text-gray-900 dark:text-white text-lg tracking-tight">{{ action.label }}</span>
               </div>
-              <p class="text-sm text-gray-600 dark:text-gray-400">{{ action.description }}</p>
+              <p class="text-sm font-medium text-gray-600/90 dark:text-gray-400/90 relative z-10">{{ action.description }}</p>
             </a>
           }
         </div>
