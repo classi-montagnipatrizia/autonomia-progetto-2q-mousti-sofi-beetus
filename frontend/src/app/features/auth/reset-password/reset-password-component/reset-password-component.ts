@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LucideAngularModule, MailCheck, CircleCheck } from 'lucide-angular';
+import { LucideAngularModule, MailCheck, CircleCheck, ArrowLeft, LockKeyhole } from 'lucide-angular';
 import { InputComponent } from '../../../../shared/ui/input/input-component/input-component';
 import { ButtonComponent } from '../../../../shared/ui/button/button-component/button-component';
 import { AuthService } from '../../../../core/auth/services/auth-service';
@@ -39,6 +39,8 @@ export class ResetPasswordComponent implements OnInit{
   // Icone Lucide
   readonly MailCheckIcon = MailCheck;
   readonly CheckCircleIcon = CircleCheck;
+  readonly ArrowLeftIcon = ArrowLeft;
+  readonly LockKeyholeIcon = LockKeyhole;
 
   // Stato UI
   readonly currentStep = signal<ResetStep>('request');
