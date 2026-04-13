@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, computed, HostListener,signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, Users, X, MessageSquare } from 'lucide-angular';
 import { UserListItemComponent } from '../../../../../shared/components/user-list-item/user-list-item-component/user-list-item-component';
 import { AuthStore } from '../../../../../core/stores/auth-store';
 import { OnlineUsersStore } from '../../../../../core/stores/online-users-store';
+import { OnlineDrawerService } from '../../../../../core/services/online-drawer.service';
 import { UserService } from '../../../../../core/api/user-service';
 import { UserSummaryDTO } from '../../../../../models';
 import { LoggerService } from '../../../../../core/services/logger.service';
@@ -25,19 +26,20 @@ import { LoggerService } from '../../../../../core/services/logger.service';
   styleUrl: './online-users-drawer-component.scss',
 })
 export class OnlineUsersDrawerComponent {
- private readonly onlineUsersStore = inject(OnlineUsersStore);
+  private readonly onlineUsersStore = inject(OnlineUsersStore);
   private readonly authStore = inject(AuthStore);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggerService);
+  private readonly drawerService = inject(OnlineDrawerService);
 
   // Icone
   readonly UsersIcon = Users;
   readonly XIcon = X;
   readonly MessageSquareIcon = MessageSquare;
 
-  // Stato drawer
-  readonly isOpen = signal(false);
+  // Stato drawer (da servizio condiviso)
+  readonly isOpen = this.drawerService.isOpen;
 
   // Tutti gli utenti per mostrare offline
   private readonly _allUsers = signal<UserSummaryDTO[]>([]);
@@ -83,11 +85,11 @@ export class OnlineUsersDrawerComponent {
   }
 
   toggleDrawer(): void {
-    this.isOpen.update(v => !v);
+    this.drawerService.toggle();
   }
 
   closeDrawer(): void {
-    this.isOpen.set(false);
+    this.drawerService.close();
   }
 
   onUserClick(userId: number): void {

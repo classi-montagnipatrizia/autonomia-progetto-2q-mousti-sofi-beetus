@@ -1,20 +1,3 @@
-<!-- FAB Button - visibile solo su mobile/tablet -->
-    <button
-      (click)="toggleDrawer()"
-      class="fixed bottom-6 right-4 z-30 flex items-center justify-center w-14 h-14 rounded-full bg-primary-500 hover:bg-primary-600 text-white shadow-lg transition-all hover:scale-105 active:scale-95 lg:hidden"
-      [attr.aria-label]="'Utenti online: ' + onlineCount()"
-      [attr.aria-expanded]="isOpen()"
-    >
-      <lucide-icon [img]="UsersIcon" [size]="24" />
-      
-      <!-- Badge contatore -->
-      @if (onlineCount() > 0) {
-        <span class="absolute -top-1 -right-1 flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-xs font-bold text-white bg-green-500 rounded-full ring-2 ring-white dark:ring-gray-900">
-          {{ onlineCount() > 99 ? '99+' : onlineCount() }}
-        </span>
-      }
-    </button>
-
     <!-- Backdrop -->
     @if (isOpen()) {
       <div 
@@ -29,54 +12,60 @@
       [class.translate-y-full]="!isOpen()"
       [class.translate-y-0]="isOpen()"
     >
-      <div class="bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl max-h-[70vh] flex flex-col">
+      <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] max-h-[85vh] flex flex-col border-t border-white/50 dark:border-gray-700/50">
         <!-- Handle per drag -->
-        <div class="flex justify-center pt-3 pb-2">
-          <div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+        <div class="flex justify-center pt-4 pb-2 relative">
+          <div class="w-12 h-1.5 bg-gray-300/80 dark:bg-gray-600/80 rounded-full"></div>
         </div>
 
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <lucide-icon [img]="UsersIcon" [size]="20" class="text-primary-500" />
-            Utenti Online
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-              ({{ onlineCount() }})
-            </span>
-          </h2>
+        <div class="flex flex-col items-center justify-center px-4 pb-4 border-b border-gray-100 dark:border-gray-800/50 relative">
+          <div class="flex items-center justify-center gap-2 mt-1">
+            <!-- Pulsante chiusura (spostato a sinistra assoluto o destra) -->
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+              Contatti
+            </h2>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Vedi chi è in giro</p>
           <button
             (click)="closeDrawer()"
-            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            class="absolute right-4 top-2 p-2.5 rounded-full bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-all active:scale-95"
             aria-label="Chiudi"
           >
-            <lucide-icon [img]="XIcon" [size]="20" />
+            <lucide-icon [img]="XIcon" [size]="18" />
           </button>
         </div>
 
         <!-- Pulsante Messaggi Privati -->
-        <div class="px-4 py-3">
+        <div class="px-6 py-4">
           <a
             routerLink="/messages"
             (click)="closeDrawer()"
-            class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 hover:bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition-colors"
+            class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 border border-primary-100 dark:border-primary-800/30 px-4 py-3.5 text-sm font-semibold text-primary-600 dark:text-primary-400 transition-all shadow-sm active:scale-95"
           >
-            <lucide-icon [img]="MessageSquareIcon" [size]="20" />
-            <span>Messaggi Privati</span>
+            <lucide-icon [img]="MessageSquareIcon" class="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span>Vai ai Messaggi</span>
           </a>
         </div>
 
         <!-- Lista utenti scrollabile -->
-        <div class="overflow-y-auto flex-1 px-4 pb-6">
+        <div class="overflow-y-auto flex-1 px-4 sm:px-6 pb-8 space-y-6">
           <!-- Sezione ONLINE -->
-          <div class="mb-4">
-            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
-              Online
-            </h3>
+          <div class="animate-fade-in animate-duration-300">
+            <div class="flex items-center gap-2 px-3 mb-4">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Online <span class="bg-gray-100/80 dark:bg-gray-800/80 text-[10px] px-2 py-0.5 rounded-full ml-1 border border-gray-200/50 dark:border-gray-700/50">{{ onlineUsers().length }}</span>
+              </h3>
+            </div>
             
             @if (hasOnlineUsers()) {
-              <ul class="space-y-1">
+              <ul class="space-y-2">
                 @for (user of onlineUsers(); track user.id) {
-                  <li>
+                  <li class="rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors p-1.5 cursor-pointer border border-transparent hover:border-gray-100 dark:hover:border-gray-700/50">
                     <app-user-list-item-component
                       [userId]="user.id"
                       [username]="user.username"
@@ -91,22 +80,29 @@
                 }
               </ul>
             } @else {
-              <p class="text-sm text-gray-400 dark:text-gray-500 px-2 py-2">
-                Nessun utente online
-              </p>
+              <div class="px-4 py-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800/50 text-center mx-2">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Nessun utente online al momento
+                </p>
+              </div>
             }
           </div>
 
+          <hr class="border-gray-100 dark:border-gray-800/50 mx-4" />
+
           <!-- Sezione OFFLINE -->
-          <div>
-            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
-              Offline
-            </h3>
+          <div class="animate-fade-in animate-duration-300">
+            <div class="flex items-center gap-2 px-3 mb-4">
+              <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 block shrink-0"></span>
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Offline <span class="bg-gray-100/80 dark:bg-gray-800/80 text-[10px] px-2 py-0.5 rounded-full ml-1 border border-gray-200/50 dark:border-gray-700/50">{{ offlineUsers().length }}</span>
+              </h3>
+            </div>
             
             @if (hasOfflineUsers()) {
-              <ul class="space-y-1">
+              <ul class="space-y-2 opacity-70">
                 @for (user of offlineUsers(); track user.id) {
-                  <li>
+                  <li class="rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors p-1.5 cursor-pointer border border-transparent grayscale group-hover:grayscale-0">
                     <app-user-list-item-component
                       [userId]="user.id"
                       [username]="user.username"
@@ -121,9 +117,11 @@
                 }
               </ul>
             } @else {
-              <p class="text-sm text-gray-400 dark:text-gray-500 px-2 py-2">
-                Nessun altro utente
-              </p>
+              <div class="px-4 py-5 text-center mx-2">
+                <p class="text-sm text-gray-400 dark:text-gray-500">
+                  Nessun altro utente
+                </p>
+              </div>
             }
           </div>
         </div>
