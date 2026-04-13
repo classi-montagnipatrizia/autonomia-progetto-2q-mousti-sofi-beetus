@@ -1,11 +1,11 @@
-<div class="flex flex-col gap-3 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+<div class="flex flex-col gap-4 rounded-2xl bg-surface-light dark:bg-surface-dark border border-gray-100 dark:border-gray-800 shadow-sm p-4 sm:p-5 transition-shadow hover:shadow-md">
   <!-- Header: Avatar + Textarea -->
-  <div class="flex items-start gap-3">
+  <div class="flex items-start gap-3 sm:gap-4">
     <!-- Avatar utente corrente -->
     <button
       type="button"
       (click)="goToProfile()"
-      class="flex-shrink-0"
+      class="flex-shrink-0 mt-0.5 rounded-full hover:ring-2 hover:ring-primary-100 dark:hover:ring-primary-900/30 transition-all active:scale-95"
       [attr.aria-label]="'Vai al tuo profilo'"
     >
       <app-avatar
@@ -26,7 +26,7 @@
         [placeholder]="placeholder()"
         [attr.maxlength]="MAX_CONTENT_LENGTH"
         rows="3"
-        class="w-full min-h-[80px] resize-none rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark p-3 text-base text-text-light dark:text-text-dark placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+        class="w-full min-h-[90px] resize-none rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-3.5 text-sm sm:text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all shadow-inner"
       ></textarea>
 
       <!-- Mention Autocomplete Dropdown -->
@@ -43,15 +43,15 @@
 
   <!-- Preview immagine caricata (se presente e upload nascosto) -->
   @if (imageUrl() && !showImageUpload()) {
-    <div class="ml-13 relative">
+    <div class="ml-0 sm:ml-16 relative animate-fade-in group">
       <img
         [src]="imageUrl()"
         alt="Immagine allegata"
-        class="max-h-48 rounded-lg object-cover"
+        class="max-h-64 w-full sm:w-auto rounded-2xl object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
       />
       <button
         type="button"
-        class="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+        class="absolute top-2 right-2 p-2 rounded-full bg-gray-900/60 backdrop-blur-sm text-white hover:bg-red-500 hover:scale-105 transition-all shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100"
         (click)="removeImage()"
         aria-label="Rimuovi immagine"
       >
@@ -62,50 +62,60 @@
 
   <!-- Area upload immagine (quando visibile) -->
   @if (showImageUpload()) {
-    <div class="ml-13">
-      <app-image-upload-component
-        imageType="post"
-        placeholder="Aggiungi un'immagine al post"
-        [existingImageUrl]="imageUrl()"
-        height="150px"
-        (uploadSuccess)="onImageUploaded($event)"
-        (uploadError)="onImageError($event)"
-        (imageRemoved)="onImageRemoved()"
-      />
+    <div class="ml-0 sm:ml-16 animate-fade-in mt-3">
+      <div class="rounded-2xl overflow-hidden relative shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all">
+        <app-image-upload-component
+          imageType="post"
+          placeholder="Aggiungi una foto al post..."
+          [existingImageUrl]="imageUrl()"
+          height="140px"
+          (uploadSuccess)="onImageUploaded($event)"
+          (uploadError)="onImageError($event)"
+          (imageRemoved)="onImageRemoved()"
+        />
+      </div>
     </div>
   }
 
   <!-- Footer: Azioni -->
-  <div class="flex items-center justify-between ml-13">
-    <div class="flex items-center gap-2">
+  <div class="flex items-center justify-between ml-0 sm:ml-16 pt-2 border-t border-gray-100 dark:border-gray-800/50">
+    <div class="flex items-center gap-3">
       <!-- Pulsante aggiungi immagine -->
       <button
         type="button"
-        class="p-2 rounded-full transition-colors"
-        [class]="showImageUpload() || imageUrl() ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-500' : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-primary-500'"
+        class="flex items-center gap-1.5 p-2 rounded-xl transition-all font-medium text-sm active:scale-95"
+        [class]="showImageUpload() || imageUrl() ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-gray-500 dark:text-gray-400 hover:text-primary-500'"
         (click)="toggleImageUpload()"
         [attr.aria-label]="showImageUpload() ? 'Nascondi upload immagine' : 'Aggiungi immagine'"
       >
-        <lucide-icon [img]="ImageIcon" class="w-5 h-5" />
+        <lucide-icon [img]="ImageIcon" class="w-4 h-4" />
+        <span class="hidden sm:inline">{{ showImageUpload() ? 'Foto aggiunta' : 'Aggiungi Foto' }}</span>
       </button>
 
-      <!-- Contatore caratteri (visibile quando si avvicina al limite) -->
+      <!-- Contatore caratteri -->
       @if (showCharCount()) {
-        <span [class]="charCountClasses()" class="text-xs">
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" [ngClass]="charCount() > (MAX_CONTENT_LENGTH - 20) ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'">
           {{ charCount() }}/{{ MAX_CONTENT_LENGTH }}
         </span>
       }
     </div>
 
     <!-- Pulsante pubblica -->
-    <app-button
-      variant="primary"
-      size="md"
-      [disabled]="!canSubmit()"
-      [loading]="isSubmitting()"
-      (clicked)="submitPost()"
-    >
-      Pubblica
-    </app-button>
+    <div class="flex items-center">
+      <button
+        type="button"
+        class="px-5 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2"
+        [disabled]="!canSubmit() || isSubmitting()"
+        (click)="submitPost()"
+      >
+        @if (isSubmitting()) {
+          <app-spinner size="sm" color="white" />
+          <span>Post in corso...</span>
+        } @else {
+          <span>Pubblica</span>
+          <lucide-icon [img]="SendIcon" class="w-4 h-4 ml-0.5" />
+        }
+      </button>
+    </div>
   </div>
 </div>

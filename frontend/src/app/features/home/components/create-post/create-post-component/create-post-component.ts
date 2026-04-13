@@ -1,9 +1,9 @@
 import { Component, inject, signal, output, computed, viewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Image, X } from 'lucide-angular';
+import { LucideAngularModule, Image, X, Send } from 'lucide-angular';
 import { AvatarComponent } from '../../../../../shared/ui/avatar/avatar-component/avatar-component';
-import { ButtonComponent } from '../../../../../shared/ui/button/button-component/button-component';
+import { SpinnerComponent } from '../../../../../shared/ui/spinner/spinner-component/spinner-component';
 import { ImageUploadComponent } from '../../../../../shared/components/image-upload/image-upload-component/image-upload-component';
 import { MentionAutocompleteComponent } from '../../../../../shared/components/mention-autocomplete/mention-autocomplete-component/mention-autocomplete-component';
 import { PostService } from '../../../../../core/api/post-service';
@@ -16,7 +16,7 @@ import { CreaPostRequestDTO, PostResponseDTO, UserSummaryDTO } from '../../../..
   imports: [ CommonModule,
     LucideAngularModule,
     AvatarComponent,
-    ButtonComponent,
+    SpinnerComponent,
     ImageUploadComponent,
     MentionAutocompleteComponent,],
   templateUrl: './create-post-component.html',
@@ -35,6 +35,7 @@ private readonly postService = inject(PostService);
   // Icone Lucide
   readonly ImageIcon = Image;
   readonly XIcon = X;
+  readonly SendIcon = Send;
 
   // Stato UI
   readonly content = signal<string>('');
