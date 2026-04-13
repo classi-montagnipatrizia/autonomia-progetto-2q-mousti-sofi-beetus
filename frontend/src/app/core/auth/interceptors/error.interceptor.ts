@@ -185,8 +185,12 @@ function handle403Error(error: HttpErrorResponse, toastService: ToastService, lo
 function handle404Error(error: HttpErrorResponse, toastService: ToastService, logger: LoggerService) {
   logger.error('Risorsa non trovata', error);
 
-  // Mostra toast solo per endpoint API, non per assets/immagini
-  if (error.url && error.url.includes('/api/')) {
+  // 404 su conversations/mine è normale: il buyer non ha ancora inviato messaggi.
+  // Non mostrare toast — il componente gestisce lo stato "chat vuota".
+  const isExpected404 = error.url && error.url.includes('/conversations/mine');
+
+  // Mostra toast solo per endpoint API, non per assets/immagini né per 404 attesi
+  if (!isExpected404 && error.url && error.url.includes('/api/')) {
     const errorMessage = extractErrorMessage(error) || 'La risorsa richiesta non è stata trovata.';
     toastService.warning(errorMessage, { duration: 5000 });
   }

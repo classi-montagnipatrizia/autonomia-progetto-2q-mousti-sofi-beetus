@@ -150,6 +150,14 @@ export class AdminService {
   }
 
   /**
+   * Lista tutti i commenti (per moderazione admin)
+   */
+  getAllComments(page = 0, size = 20): Observable<PageResponse<AdminCommentDTO>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PageResponse<AdminCommentDTO>>(`${this.baseUrl}/comments`, { params });
+  }
+
+  /**
    * Elimina tutti i commenti di un utente
    *
    * Endpoint: DELETE /api/admin/users/{userId}/comments
@@ -500,4 +508,15 @@ export interface AdminGroupDTO {
   description: string | null;
   profilePictureUrl: string | null;
   memberCount: number;
+}
+
+/**
+ * DTO commento per pagina admin
+ */
+export interface AdminCommentDTO {
+  id: number;
+  contenuto: string;
+  autore: { id: number; username: string; nomeCompleto: string; profilePictureUrl: string | null };
+  parentCommentId: number | null;
+  createdAt: string;
 }

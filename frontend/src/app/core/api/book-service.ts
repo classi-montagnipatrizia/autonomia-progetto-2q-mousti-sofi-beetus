@@ -7,7 +7,6 @@ import {
   BookSummaryDTO,
   BookConversationDTO,
   BookMessageDTO,
-  BookRequestDTO,
   CreaLibroRequestDTO,
   ModificaLibroRequestDTO,
   PageResponse,
@@ -94,39 +93,6 @@ export class BookService {
   /** PATCH /api/books/{id}/stato — aggiorna stato libro */
   aggiornaStato(bookId: number, stato: string): Observable<BookResponseDTO> {
     return this.http.patch<BookResponseDTO>(`${this.baseUrl}/${bookId}/stato`, { stato });
-  }
-
-  // ── RICHIESTA ────────────────────────────────────────────────────────────────
-
-  /** POST /api/books/{id}/richiedi — richiedi libro */
-  richiediLibro(bookId: number): Observable<BookResponseDTO> {
-    return this.http.post<BookResponseDTO>(`${this.baseUrl}/${bookId}/richiedi`, {});
-  }
-
-  /** DELETE /api/books/{id}/richiedi — annulla richiesta */
-  annullaRichiesta(bookId: number): Observable<BookResponseDTO> {
-    return this.http.delete<BookResponseDTO>(`${this.baseUrl}/${bookId}/richiedi`);
-  }
-
-  // ── RICHIESTE (VENDITORE) ────────────────────────────────────────────────────
-
-  /** GET /api/books/{id}/richieste — lista interessati (solo venditore) */
-  getRichieste(bookId: number): Observable<BookRequestDTO[]> {
-    return this.http.get<BookRequestDTO[]>(`${this.baseUrl}/${bookId}/richieste`);
-  }
-
-  /** POST /api/books/{id}/richieste/{requestId}/accetta — accetta un interessato */
-  accettaRichiesta(bookId: number, requestId: number): Observable<BookResponseDTO> {
-    return this.http.post<BookResponseDTO>(
-      `${this.baseUrl}/${bookId}/richieste/${requestId}/accetta`, {}
-    );
-  }
-
-  /** POST /api/books/{id}/richieste/{requestId}/rifiuta — rifiuta un interessato */
-  rifiutaRichiesta(bookId: number, requestId: number): Observable<BookResponseDTO> {
-    return this.http.post<BookResponseDTO>(
-      `${this.baseUrl}/${bookId}/richieste/${requestId}/rifiuta`, {}
-    );
   }
 
   // ── CLEANUP CLOUDINARY ───────────────────────────────────────────────────────
