@@ -32,7 +32,6 @@ import { BookCardComponent } from '../../../shared/components/book-card/book-car
 import { AiChatbot } from '../ai-chatbot/ai-chatbot';
 import {
   BookResponseDTO,
-  BookSummaryDTO,
   BookCondition,
   BookStatus,
   BookConversationDTO,
@@ -176,7 +175,7 @@ export class LibraryPage implements OnInit, OnDestroy {
     this.store.loadMyListings();
     this.store.loadConversazioni();
 
-    // Legge il tab dal query param (es. dalla notifica push BOOK_REQUEST → ?tab=miei)
+    // Legge il tab dal query param (es. dalla notifica push BOOK_MESSAGE → ?tab=messaggi)
     const tab = this.route.snapshot.queryParamMap.get('tab') as LibraryTab | null;
     if (tab && ['compra', 'miei', 'messaggi'].includes(tab)) {
       this.store.setActiveTab(tab);
@@ -316,18 +315,6 @@ export class LibraryPage implements OnInit, OnDestroy {
     await this.store.loadAvailableBooks();
     this.editingListing.set(null);
     this.store.closeSellModal();
-  }
-
-  // =========================================================================
-  // Richiesta libro dalla card
-  // =========================================================================
-  async onBookRequested(book: BookSummaryDTO): Promise<void> {
-    try {
-      await this.store.requestBook(book.id);
-      this.toast.success('Richiesta inviata al venditore!');
-    } catch {
-      this.toast.error('Errore durante la richiesta. Riprova.');
-    }
   }
 
   // =========================================================================

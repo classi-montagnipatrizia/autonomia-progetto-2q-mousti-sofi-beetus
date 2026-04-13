@@ -1,39 +1,48 @@
-<div class="min-h-screen bg-background-light dark:bg-background-dark">
+<div class="library-page min-h-screen bg-background-light dark:bg-background-dark">
 
   <!-- ============================================
        HEADER
        ============================================ -->
-  <header class="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+  <header class="library-header sticky top-0 z-20 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-14">
+      <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <button type="button" (click)="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" aria-label="Torna indietro">
             <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
           </button>
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Libreria</h1>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white leading-tight">Libreria</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block mt-0.5">Compra e vendi libri scolastici usati</p>
+          </div>
         </div>
-        <button type="button" (click)="openSellModal()" class="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium text-sm transition-colors shadow-sm">
+        <!-- Pulsante Desktop -->
+        <button type="button" (click)="openSellModal()" class="sell-button hidden sm:flex items-center gap-2 px-5 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-medium text-sm transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
           <lucide-icon [img]="PlusIcon" [size]="18" />
-          <span class="hidden sm:inline">Vendi un libro</span>
+          <span>Vendi un libro</span>
         </button>
       </div>
     </div>
   </header>
+
+  <!-- Pulsante FAB (Mobile) -->
+  <button type="button" (click)="openSellModal()" class="sm:hidden fixed bottom-20 right-4 z-40 flex items-center justify-center w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all" aria-label="Vendi un libro">
+    <lucide-icon [img]="PlusIcon" [size]="24" />
+  </button>
 
   <!-- ============================================
        CONTENUTO PRINCIPALE
        ============================================ -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- Sottotitolo -->
-    <div class="mb-6">
+    <!-- Sottotitolo Mobile -->
+    <div class="sm:hidden mb-5">
       <p class="text-gray-500 dark:text-gray-400 text-sm">Compra e vendi libri scolastici usati</p>
     </div>
 
     <!-- ============================================
          TABS
          ============================================ -->
-    <div class="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 max-w-md">
+    <div class="library-tabs flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-6 max-w-md">
       <button type="button"
         (click)="switchTab('compra')"
         class="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all"
@@ -81,10 +90,10 @@
          SEZIONE: COMPRA
          ============================================ -->
     @if (store.activeTab() === 'compra') {
-      <section>
+      <section class="animate-fade-in animate-duration-300">
 
         <!-- Filtri -->
-        <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 mb-6 shadow-sm border border-border-light dark:border-border-dark">
+        <div class="filters-card bg-surface-light dark:bg-surface-dark rounded-2xl p-4 mb-6 shadow-sm border border-border-light dark:border-border-dark">
           <!-- Riga 1: Ricerca + filtri mobile -->
           <div class="flex gap-3">
             <div class="flex-1 relative">
@@ -129,11 +138,11 @@
         </div>
 
         <!-- Risultati e ordinamento -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="results-toolbar flex items-center justify-between mb-4">
           <p class="text-sm text-gray-500 dark:text-gray-400">
             <span class="font-medium text-gray-700 dark:text-gray-200">{{ sortedAvailableBooks().length }}</span> libri disponibili
           </p>
-          <select [value]="sortOrder()" (change)="onSortChange($event)" class="text-sm text-gray-500 dark:text-gray-400 bg-transparent border-none focus:outline-none cursor-pointer">
+          <select [value]="sortOrder()" (change)="onSortChange($event)" class="sort-select text-sm text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer">
             @for (opt of sortOptions; track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
             }
@@ -182,7 +191,6 @@
                 [book]="book"
                 [clickable]="true"
                 (clicked)="router.navigate(['/library', book.id])"
-                (requested)="onBookRequested($event)"
               />
             }
           </div>
@@ -202,7 +210,7 @@
          SEZIONE: I MIEI ANNUNCI
          ============================================ -->
     @if (store.activeTab() === 'miei') {
-      <section>
+      <section class="animate-fade-in animate-duration-300">
 
         <!-- Info stati -->
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-6">
@@ -249,20 +257,23 @@
         @if (!store.isLoading() && store.myListings().length > 0) {
           <div class="space-y-3">
             @for (listing of store.myListings(); track listing.id) {
-              <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm transition-shadow hover:shadow-md"
+              <article class="listing-card bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm transition-shadow hover:shadow-md"
                 [ngClass]="{
                   'border border-border-light dark:border-border-dark': listing.stato !== BookStatus.VENDUTO,
                   'border border-gray-200 dark:border-gray-700 opacity-60': listing.stato === BookStatus.VENDUTO
                 }">
                 <div class="p-4 flex gap-4">
                   <!-- Immagine -->
-                  <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0 relative">
+                  <div class="w-20 h-28 sm:w-24 sm:h-32 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0 relative shadow-inner">
                     <img [src]="listing.frontImageUrl" [alt]="listing.titolo" class="w-full h-full object-cover" />
-                    @if (listing.stato === BookStatus.VENDUTO) {
-                      <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span class="text-white font-bold text-xs tracking-wider uppercase">Venduto</span>
-                      </div>
-                    }
+                    <!-- Badge di stato sull'immagine -->
+                    <div class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide shadow-sm"
+                         [ngClass]="{
+                           'bg-red-500 text-white': listing.stato === BookStatus.VENDUTO,
+                           'bg-green-500 text-white': listing.stato === BookStatus.DISPONIBILE
+                         }">
+                      {{ listing.stato === BookStatus.VENDUTO ? 'VENDUTO' : 'ATTIVO' }}
+                    </div>
                   </div>
 
                   <!-- Dettagli -->
@@ -276,17 +287,6 @@
                     </div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ listing.autore }}@if (listing.annoScolastico) { · {{ listing.annoScolastico }} }</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Pubblicato il {{ formatDate(listing.createdAt) }}</p>
-
-                    <!-- Richieste pendenti -->
-                    @if (listing.richiesteCount > 0 && listing.stato !== BookStatus.VENDUTO) {
-                      <div class="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-                        <lucide-icon [img]="UsersIcon" [size]="16" class="text-amber-600 dark:text-amber-400 shrink-0" />
-                        <p class="text-xs text-amber-800 dark:text-amber-200">
-                          <span class="font-semibold">{{ listing.richiesteCount }}</span>
-                          {{ listing.richiesteCount === 1 ? 'acquirente interessato' : 'acquirenti interessati' }}
-                        </p>
-                      </div>
-                    }
 
                     <!-- Azioni -->
                     <div class="flex items-center justify-between">
@@ -341,7 +341,7 @@
          SEZIONE: MESSAGGI LIBRERIA
          ============================================ -->
     @if (store.activeTab() === 'messaggi') {
-      <section>
+      <section class="animate-fade-in animate-duration-300">
 
         <!-- Skeleton Loading -->
         @if (store.isLoading()) {
@@ -374,7 +374,7 @@
         @if (!store.isLoading() && store.conversations().length > 0) {
           <div class="space-y-2">
             @for (conv of store.conversations(); track conv.id) {
-              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark hover:shadow-md transition-shadow cursor-pointer"
+              <div class="conversation-card bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-border-light dark:border-border-dark hover:shadow-md transition-shadow cursor-pointer"
                 (click)="openConversation(conv)">
                 <div class="p-4 flex gap-3">
                   <div class="w-14 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
@@ -434,8 +434,8 @@
        ============================================ -->
   @if (showMobileFilters()) {
     <div class="fixed inset-0 z-50">
-      <div class="absolute inset-0 bg-black/50" (click)="toggleMobileFilters()"></div>
-      <div class="absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark rounded-t-2xl p-6 space-y-4">
+      <div class="mobile-filters-backdrop absolute inset-0 bg-black/50" (click)="toggleMobileFilters()"></div>
+      <div class="mobile-filters-sheet absolute bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark rounded-t-2xl p-6 space-y-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtri</h3>
           <button type="button" (click)="toggleMobileFilters()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -505,7 +505,7 @@
        ============================================ -->
   <button type="button"
     (click)="showChatbot.set(true)"
-    class="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-full font-medium text-sm shadow-lg shadow-primary-500/30 transition-all hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95">
+    class="ai-fab fixed bottom-6 right-6 z-30 flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl font-medium text-sm shadow-lg shadow-primary-500/30 transition-all hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95">
     <lucide-icon [img]="LightbulbIcon" [size]="20" />
     <span class="hidden sm:inline">Chiedi all'AI</span>
   </button>
