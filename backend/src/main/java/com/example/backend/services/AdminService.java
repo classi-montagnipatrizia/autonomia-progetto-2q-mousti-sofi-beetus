@@ -1,6 +1,8 @@
 package com.example.backend.services;
 
 import com.example.backend.dtos.response.AdminUserListDTO;
+import com.example.backend.dtos.response.CommentResponseDTO;
+import com.example.backend.dtos.response.UserSummaryDTO;
 import com.example.backend.events.CommentDeletedEvent;
 import com.example.backend.events.DeleteMentionsEvent;
 import com.example.backend.exception.AdminProtectionException;
@@ -688,6 +690,26 @@ public class AdminService {
     // =========================================================================
 
     /**
+     * Lista tutti i commenti non eliminati con paginazione (per moderazione admin).
+     */
+    @Transactional(readOnly = true)
+    public Page<CommentResponseDTO> getTuttiCommenti(Pageable pageable) {
+        return commentRepository.findAllForAdmin(pageable)
+                .map(comment -> CommentResponseDTO.builder()
+                        .id(comment.getId())
+                        .autore(UserSummaryDTO.builder()
+                                .id(comment.getUser().getId())
+                                .username(comment.getUser().getUsername())
+                                .nomeCompleto(comment.getUser().getFullName())
+                                .profilePictureUrl(comment.getUser().getProfilePictureUrl())
+                                .build())
+                        .contenuto(comment.getContent())
+                        .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
+                        .createdAt(comment.getCreatedAt())
+                        .build());
+    }
+
+    /**
      * Lista tutti i libri con paginazione (per moderazione admin).
      */
     @Transactional(readOnly = true)
@@ -841,6 +863,12 @@ public class AdminService {
         int notifDeleted = notificationRepository.deleteByRelatedPostIdIn(postIds);
         log.debug("Eliminate {} notifiche associate a {} post dell'utente {}", notifDeleted, count, userId);
 
+        // Elimina anche le notifiche che referenziano commenti (di altri utenti) sui post dell'utente.
+        // Il cascade Post.comments eliminerà quei commenti, ma le loro notifiche (TO terzi)
+        // causerebbero FK violation su notifications.related_comment_id.
+        int notifCommentDeleted = notificationRepository.deleteByRelatedCommentOnPostsIn(postIds);
+        log.debug("Eliminate {} notifiche su commenti altrui nei post dell'utente {}", notifCommentDeleted, userId);
+
         // L'eliminazione dei post eliminerà in cascade:
         // - tutti i commenti (via CascadeType.ALL)
         // - tutti i like (via CascadeType.ALL)
@@ -881,6 +909,13 @@ public class AdminService {
             Long postId = comment.getPost().getId();
             postCommentsCount.put(postId, postCommentsCount.getOrDefault(postId, 0) + 1);
         }
+
+        // Prima elimina notifiche che referenziano risposte (childComments) ai commenti dell'utente.
+        // Quando deleteAll fa cascade su Comment.childComments, le risposte di altri vengono eliminate,
+        // ma le loro notifiche (TO terzi, triggered da terzi) causerebbero FK violation.
+        List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+        int notifChildDeleted = notificationRepository.deleteByRelatedCommentChildrenOf(commentIds);
+        log.debug("Eliminate {} notifiche su risposte ai commenti dell'utente {}", notifChildDeleted, userId);
 
         // HARD DELETE - Elimina fisicamente i commenti dal database
         // Questo è necessario quando eliminiamo un utente per rispettare i vincoli FK

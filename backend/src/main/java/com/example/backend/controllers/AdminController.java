@@ -4,6 +4,7 @@ import com.example.backend.config.CurrentUser;
 import com.example.backend.dto.AuditLogDTO;
 import com.example.backend.dtos.response.AdminUserListDTO;
 import com.example.backend.dtos.response.BookSummaryDTO;
+import com.example.backend.dtos.response.CommentResponseDTO;
 import com.example.backend.dtos.response.GroupSummaryDTO;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.models.AdminAuditLog;
@@ -164,6 +165,22 @@ public class AdminController {
         adminService.eliminaPost(admin.getId(), postId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Post eliminato con successo"));
+    }
+
+    /**
+     * GET /api/admin/comments
+     * Lista tutti i commenti con paginazione (per moderazione)
+     */
+    @GetMapping("/comments")
+    public ResponseEntity<Page<CommentResponseDTO>> getTuttiCommenti(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            @CurrentUser User admin) {
+
+        log.debug("GET /api/admin/comments - Admin: {}", admin.getUsername());
+        validateAdminUser(admin);
+
+        return ResponseEntity.ok(adminService.getTuttiCommenti(pageable));
     }
 
     /**
