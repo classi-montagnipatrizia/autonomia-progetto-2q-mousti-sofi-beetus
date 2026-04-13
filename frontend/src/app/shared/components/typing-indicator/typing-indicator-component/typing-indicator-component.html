@@ -1,6 +1,6 @@
-<div class="flex items-center gap-2">
-  <!-- Pallini animati -->
-  <div class="flex items-center" [ngClass]="containerGapClass()">
+<div class="flex items-center gap-3">
+  <!-- Pillola animata iMessage-style -->
+  <div class="flex items-center backdrop-blur-md px-3 sm:px-3.5 py-2.5 rounded-[20px] bg-white/70 dark:bg-gray-800/70 border border-white/50 dark:border-gray-700/50 shadow-sm" [ngClass]="containerGapClass()">
     <span [ngClass]="dotClasses()" class="typing-dot"></span>
     <span [ngClass]="dotClasses()" class="typing-dot animation-delay-200"></span>
     <span [ngClass]="dotClasses()" class="typing-dot animation-delay-400"></span>
@@ -8,7 +8,7 @@
 
   <!-- Testo opzionale -->
   @if (showText()) {
-    <span [ngClass]="textClasses()">
+    <span [ngClass]="textClasses()" class="font-medium animate-pulse">
       {{ displayText() }}...
     </span>
   }
