@@ -1,5 +1,7 @@
 package com.example.backend.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -81,6 +83,18 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * Utile per statistiche admin.
      */
     long countByIsDeletedByAuthorFalse();
+
+    /**
+     * Tutti i commenti non eliminati, paginati, con user e post eager-loaded (per admin).
+     */
+    @Query("""
+        SELECT c FROM Comment c
+        JOIN FETCH c.user
+        JOIN FETCH c.post
+        WHERE c.isDeletedByAuthor = false
+        ORDER BY c.createdAt DESC
+        """)
+    Page<Comment> findAllForAdmin(Pageable pageable);
 
     /**
      * Trova tutti i commenti figli di un commento parent.

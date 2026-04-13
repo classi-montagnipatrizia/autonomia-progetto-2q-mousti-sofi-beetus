@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service per la gestione delle notifiche utente.
@@ -102,6 +103,10 @@ public class NotificationService {
 
         publishNotificationEvent(receiver.getUsername(), notification);
         pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
+
+        // Informa anche l'admin (moderatore)
+        inviaNotificaAdmin(Set.of(receiverId, triggeredByUserId), NotificationType.LIKE,
+                triggeredBy, post, null, notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -155,6 +160,10 @@ public class NotificationService {
 
         publishNotificationEvent(receiver.getUsername(), notification);
         pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
+
+        // Informa anche l'admin (moderatore)
+        inviaNotificaAdmin(Set.of(receiverId, triggeredByUserId), NotificationType.COMMENT,
+                triggeredBy, post, comment, notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -206,6 +215,10 @@ public class NotificationService {
 
         publishNotificationEvent(receiver.getUsername(), notification);
         pushNotificationService.sendToUser(receiverId, "beetUs", notification.getContent(), notification.getActionUrl());
+
+        // Informa anche l'admin (moderatore)
+        inviaNotificaAdmin(Set.of(receiverId, triggeredByUserId), NotificationType.COMMENT,
+                triggeredBy, post, comment, notification.getContent(), notification.getActionUrl());
     }
 
     /**
@@ -380,6 +393,14 @@ public class NotificationService {
         }
 
         log.info("Notifiche nuovo post inviate (WS + push): {}", savedNotifications.size());
+
+        // Informa anche l'admin se non è già tra i compagni di classe notificati
+        inviaNotificaAdmin(
+                Set.of(authorId),
+                NotificationType.NEW_POST,
+                author, post, null,
+                String.format("%s ha pubblicato un nuovo post", authorFullName),
+                "/post/" + postId);
     }
 
     /**
@@ -731,6 +752,42 @@ public class NotificationService {
                                                NotificationType type, String actionUrl) {
         LocalDateTime since = LocalDateTime.now().minusMinutes(DUPLICATE_CHECK_MINUTES);
         return notificationRepository.existsRecentNotification(userId, triggeredByUserId, type, actionUrl, since);
+    }
+
+    /**
+     * Invia una copia della notifica all'admin (se esiste e non è già coinvolto nell'evento).
+     * L'admin è il moderatore e deve essere informato di tutti i like, commenti e post nuovi.
+     *
+     * @param excludeIds ID da escludere (autore dell'azione e destinatario già notificato)
+     * @param type       Tipo notifica
+     * @param triggeredBy Utente che ha scatenato l'evento
+     * @param post       Post correlato
+     * @param comment    Commento correlato (può essere null)
+     * @param content    Testo della notifica
+     * @param actionUrl  URL della notifica
+     */
+    private void inviaNotificaAdmin(Set<Long> excludeIds, NotificationType type,
+                                    User triggeredBy, Post post, Comment comment,
+                                    String content, String actionUrl) {
+        userRepository.findByIsAdminTrue().ifPresent(admin -> {
+            if (excludeIds.contains(admin.getId())) return;
+
+            Notification n = Notification.builder()
+                    .user(admin)
+                    .type(type)
+                    .triggeredByUser(triggeredBy)
+                    .relatedPost(post)
+                    .relatedComment(comment)
+                    .content(content)
+                    .actionUrl(actionUrl)
+                    .isRead(false)
+                    .build();
+
+            notificationRepository.save(n);
+            publishNotificationEvent(admin.getUsername(), n);
+            pushNotificationService.sendToUser(admin.getId(), "beetUs", content, actionUrl);
+            log.debug("Notifica admin inviata - Tipo: {}, URL: {}", type, actionUrl);
+        });
     }
 
     /**

@@ -185,4 +185,25 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.triggeredByUser.id = :userId")
     int deleteByTriggeredByUserId(@Param("userId") Long userId);
+
+    /**
+     * Elimina notifiche che referenziano commenti figli (risposte) dei commenti indicati.
+     * Necessario prima di cancellare in cascade i child comments di un utente eliminato:
+     * la cascade JPA su Comment.childComments rimuove le risposte di altri, ma le notifiche
+     * su quelle risposte (TO terzi, triggered da terzi) rimangono e causano FK violation.
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.relatedComment.id IN " +
+           "(SELECT c.id FROM Comment c WHERE c.parentComment.id IN :parentIds)")
+    int deleteByRelatedCommentChildrenOf(@Param("parentIds") List<Long> parentIds);
+
+    /**
+     * Elimina notifiche che referenziano qualsiasi commento dei post indicati.
+     * Necessario prima di eliminare i post: la cascade JPA rimuove i commenti altrui
+     * ma le loro notifiche (TO terzi) causano FK violation se non eliminate prima.
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.relatedComment.id IN " +
+           "(SELECT c.id FROM Comment c WHERE c.post.id IN :postIds)")
+    int deleteByRelatedCommentOnPostsIn(@Param("postIds") List<Long> postIds);
 }

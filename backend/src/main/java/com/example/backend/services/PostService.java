@@ -301,8 +301,12 @@ public class PostService {
         String classroom = currentUser.getClassroom();
 
         Page<Post> posts;
-        if (classroom != null && !classroom.isEmpty()) {
-            // Filtra per classe
+        if (Boolean.TRUE.equals(currentUser.getIsAdmin())) {
+            // Admin vede tutti i post di tutte le classi
+            posts = postRepository.findVisiblePostsForUser(userId, pageable);
+            log.debug("Feed admin caricato: {} post trovati", posts.getTotalElements());
+        } else if (classroom != null && !classroom.isEmpty()) {
+            // Studente: filtra per classe
             posts = postRepository.findVisiblePostsForUserByClassroom(userId, classroom, pageable);
             log.debug("Feed caricato: {} post trovati per utente ID: {} nella classe: {}", posts.getTotalElements(), userId, classroom);
         } else {
@@ -346,8 +350,12 @@ public class PostService {
         String classroom = currentUser.getClassroom();
 
         Page<Post> posts;
-        if (classroom != null && !classroom.isEmpty()) {
-            // Filtra per classe
+        if (Boolean.TRUE.equals(currentUser.getIsAdmin())) {
+            // Admin cerca tra tutti i post di tutte le classi
+            posts = postRepository.searchPosts(searchTerm.trim(), pageable);
+            log.debug("Ricerca admin completata: {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
+        } else if (classroom != null && !classroom.isEmpty()) {
+            // Studente: filtra per classe
             posts = postRepository.searchPostsByClassroom(searchTerm.trim(), classroom, pageable);
             log.debug("Ricerca completata: {} risultati per termine '{}' nella classe '{}'", posts.getTotalElements(), searchTerm, classroom);
         } else {
