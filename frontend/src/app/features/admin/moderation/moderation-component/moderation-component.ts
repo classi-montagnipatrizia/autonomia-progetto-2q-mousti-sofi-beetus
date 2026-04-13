@@ -21,7 +21,7 @@ import {
 } from 'lucide-angular';
 import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { AdminService, AdminBookDTO, AdminGroupDTO } from '../../../../core/api/admin-service';
+import { AdminService, AdminBookDTO, AdminCommentDTO, AdminGroupDTO } from '../../../../core/api/admin-service';
 import { PostService } from '../../../../core/api/post-service';
 import { ToastService } from '../../../../core/services/toast-service';
 import { DialogService } from '../../../../core/services/dialog-service';
@@ -76,6 +76,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
   readonly posts = signal<PostResponseDTO[]>([]);
+  readonly comments = signal<AdminCommentDTO[]>([]);
   readonly books = signal<AdminBookDTO[]>([]);
   readonly groups = signal<AdminGroupDTO[]>([]);
   readonly searchQuery = signal('');
@@ -89,11 +90,13 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
   // Computed
   readonly hasPosts = computed(() => this.posts().length > 0);
+  readonly hasComments = computed(() => this.comments().length > 0);
   readonly hasBooks = computed(() => this.books().length > 0);
   readonly hasGroups = computed(() => this.groups().length > 0);
   readonly hasContent = computed(() => {
     const tab = this.activeTab();
     if (tab === 'posts') return this.hasPosts();
+    if (tab === 'comments') return this.hasComments();
     if (tab === 'books') return this.hasBooks();
     if (tab === 'groups') return this.hasGroups();
     return false;
@@ -131,7 +134,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
       )
       .subscribe((query) => {
         this.currentPage.set(0);
-        if (query.trim()) {
+        if (query.trim() && this.activeTab() === 'posts') {
           this.searchContent(query);
         } else {
           this.loadContent();
@@ -146,6 +149,9 @@ export class ModerationComponent implements OnInit, OnDestroy {
     switch (this.activeTab()) {
       case 'posts':
         this.loadPosts();
+        break;
+      case 'comments':
+        this.loadComments();
         break;
       case 'books':
         this.loadBooks();
@@ -177,6 +183,63 @@ export class ModerationComponent implements OnInit, OnDestroy {
         error: () => {
           this.hasError.set(true);
           this.toastService.error('Errore nel caricamento dei post');
+        }
+      });
+  }
+
+  /**
+   * Carica lista commenti
+   */
+  loadComments(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+
+    this.adminService.getAllComments(this.currentPage(), this.pageSize)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading.set(false))
+      )
+      .subscribe({
+        next: (response) => {
+          this.comments.set(response.content);
+          this.totalPages.set(response.totalPages);
+          this.totalElements.set(response.totalElements);
+        },
+        error: () => {
+          this.hasError.set(true);
+          this.toastService.error('Errore nel caricamento dei commenti');
+        }
+      });
+  }
+
+  /**
+   * Elimina commento come admin
+   */
+  async deleteComment(comment: AdminCommentDTO): Promise<void> {
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina commento',
+      message: `Sei sicuro di voler eliminare questo commento di "${comment.autore.username}"? L'azione non può essere annullata.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+
+    if (!confirmed) return;
+
+    this.processingId.set(comment.id);
+
+    this.adminService.deleteComment(comment.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.processingId.set(null))
+      )
+      .subscribe({
+        next: () => {
+          this.toastService.success('Commento eliminato');
+          this.comments.update(comments => comments.filter(c => c.id !== comment.id));
+          this.totalElements.update(n => n - 1);
+        },
+        error: () => {
+          this.toastService.error('Errore durante l\'eliminazione');
         }
       });
   }
