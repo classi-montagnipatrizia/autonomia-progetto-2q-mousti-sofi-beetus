@@ -1,23 +1,19 @@
-import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   LucideAngularModule,
   ArrowLeft,
-  Check,
-  X,
   MessageCircle,
   TriangleAlert,
   BookOpen,
-  Users,
 } from 'lucide-angular';
 
 import { LibraryStore } from '../../../core/stores/library-store';
 import { ToastService } from '../../../core/services/toast-service';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
-import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/spinner-component';
-import { BookCondition, BookStatus, BookRequestStatus } from '../../../models';
+import { BookCondition, BookStatus } from '../../../models';
 
 @Component({
   selector: 'app-book-detail',
@@ -26,7 +22,6 @@ import { BookCondition, BookStatus, BookRequestStatus } from '../../../models';
     LucideAngularModule,
     SkeletonComponent,
     AvatarComponent,
-    SpinnerComponent,
   ],
   templateUrl: './book-detail.html',
   styleUrl: './book-detail.scss',
@@ -39,22 +34,17 @@ export class BookDetail implements OnInit, OnDestroy {
 
   // Icons
   readonly ArrowLeftIcon = ArrowLeft;
-  readonly CheckIcon = Check;
-  readonly XIcon = X;
   readonly MessageCircleIcon = MessageCircle;
   readonly AlertTriangleIcon = TriangleAlert;
   readonly BookOpenIcon = BookOpen;
-  readonly UsersIcon = Users;
 
   // Enums accessibili nel template
   readonly BookCondition = BookCondition;
   readonly BookStatus = BookStatus;
-  readonly BookRequestStatus = BookRequestStatus;
 
   // Dati dal store
   readonly book = this.store.bookDetail;
   readonly loading = this.store.bookDetailLoading;
-  readonly requesting = this.store.bookRequesting;
 
   // =========================================================================
   // Computed
@@ -104,17 +94,33 @@ export class BookDetail implements OnInit, OnDestroy {
 
   readonly annoLabel = computed(() => this.book()?.annoScolastico ?? '');
   readonly subjectLabel = computed(() => this.book()?.materia ?? '');
-  readonly hasRetroImage = computed(() => !!this.book()?.backImageUrl);
+  readonly validBackImageUrl = computed(() => {
+    const rawUrl = this.book()?.backImageUrl;
+    if (!rawUrl) {
+      return null;
+    }
 
-  /** L'utente corrente ha già una richiesta PENDING su questo libro */
-  readonly hoGiaRichiesto = computed(() =>
-    this.book()?.miaRichiesta === BookRequestStatus.PENDING
-  );
+    const normalized = rawUrl.trim();
+    if (!normalized) {
+      return null;
+    }
 
-  /** Il libro è ancora richiedibile (non VENDUTO e non già richiesto da me) */
-  readonly canRequest = computed(() =>
-    this.book()?.stato !== BookStatus.VENDUTO && !this.hoGiaRichiesto()
-  );
+    const invalidPlaceholders = new Set(['null', 'undefined', 'n/a', 'na', '-']);
+    if (invalidPlaceholders.has(normalized.toLowerCase())) {
+      return null;
+    }
+
+    return normalized;
+  });
+
+  readonly hasRetroImage = computed(() => this.validBackImageUrl() !== null);
+
+  readonly showRetroColumn = signal(true);
+  readonly showDualImageLayout = computed(() => this.hasRetroImage() && this.showRetroColumn());
+
+  onRetroImageError(): void {
+    this.showRetroColumn.set(false);
+  }
 
   /** Il libro è venduto */
   readonly isVenduto = computed(() => this.book()?.stato === BookStatus.VENDUTO);
@@ -133,7 +139,10 @@ export class BookDetail implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) this.store.loadBookDetail(id);
+    if (id) {
+      this.showRetroColumn.set(true);
+      this.store.loadBookDetail(id);
+    }
   }
 
   ngOnDestroy(): void {
@@ -146,28 +155,6 @@ export class BookDetail implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/library']);
-  }
-
-  async onRequestBook(): Promise<void> {
-    const book = this.book();
-    if (!book) return;
-    try {
-      await this.store.requestBook(book.id);
-      this.toast.success('Richiesta inviata al venditore!');
-    } catch {
-      this.toast.error('Errore durante la richiesta. Riprova.');
-    }
-  }
-
-  async onAnnullaRichiesta(): Promise<void> {
-    const book = this.book();
-    if (!book) return;
-    try {
-      await this.store.annullaRichiestaLibro(book.id);
-      this.toast.success('Richiesta annullata.');
-    } catch {
-      this.toast.error('Errore durante l\'annullamento. Riprova.');
-    }
   }
 
   onContactSeller(): void {

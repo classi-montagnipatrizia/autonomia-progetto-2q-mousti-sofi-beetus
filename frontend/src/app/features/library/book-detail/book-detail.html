@@ -1,16 +1,16 @@
 <!-- ============================================
      HEADER FISSO
      ============================================ -->
-<header class="book-detail-header fixed top-0 left-0 right-0 z-40 w-full bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
+<header class="book-detail-header fixed top-0 left-0 right-0 z-40 w-full bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
   <div class="max-w-2xl mx-auto px-4">
     <div class="flex items-center h-14">
       <button
         (click)="goBack()"
-        class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
+        class="p-2 -ml-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors text-gray-600 dark:text-gray-400 group"
       >
-        <lucide-icon [img]="ArrowLeftIcon" [size]="20" />
+        <lucide-icon [img]="ArrowLeftIcon" [size]="20" class="group-hover:-translate-x-0.5 transition-transform" />
       </button>
-      <h1 class="ml-2 text-lg font-semibold text-text-light dark:text-text-dark">Dettaglio libro</h1>
+      <h1 class="ml-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Dettaglio libro</h1>
     </div>
   </div>
 </header>
@@ -18,16 +18,13 @@
 <!-- ============================================
      CONTENUTO
      ============================================ -->
-<main class="pt-16 pb-28 px-4 max-w-2xl mx-auto">
+<main class="pt-20 pb-32 px-4 max-w-2xl mx-auto">
 
   <!-- SKELETON LOADING -->
   @if (loading()) {
-    <article class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
-      <div class="grid grid-cols-2 gap-0.5">
-        <div class="aspect-[3/4]"><app-skeleton class="w-full h-full" /></div>
-        <div class="aspect-[3/4]"><app-skeleton class="w-full h-full" /></div>
-      </div>
-      <div class="p-5 space-y-4">
+    <article class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[32px] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+      <div class="aspect-[4/5] max-h-[400px] rounded-[24px] overflow-hidden"><app-skeleton class="w-full h-full" /></div>
+      <div class="p-6 space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex gap-2">
             <app-skeleton class="w-24 h-7 rounded-full" />
@@ -42,7 +39,7 @@
           <app-skeleton class="w-24 h-8 rounded-full" />
         </div>
         <app-skeleton class="w-full h-16" />
-        <div class="border-t border-border-light dark:border-border-dark my-4"></div>
+        <div class="border-t border-gray-100 dark:border-gray-700/50 my-4"></div>
         <div class="flex items-center gap-3">
           <app-skeleton class="w-12 h-12 rounded-full" />
           <div class="flex-1 space-y-2">
@@ -56,90 +53,83 @@
 
   <!-- BOOK DETAIL -->
   @if (!loading() && book()) {
-    <article class="book-detail-card bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm overflow-hidden">
+    <article class="book-detail-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[32px] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-hidden">
 
       <!-- Immagini -->
-      @if (hasRetroImage()) {
-        <div class="grid grid-cols-2 gap-0.5 bg-gray-200 dark:bg-gray-700">
-          <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800">
+      @if (showDualImageLayout()) {
+        <div class="grid grid-cols-2 gap-1 rounded-[24px] overflow-hidden">
+          <div class="relative aspect-[3/4] bg-gray-100/50 dark:bg-gray-900/50">
             <img [src]="book()!.frontImageUrl" alt="Fronte libro" class="w-full h-full object-cover" />
-            <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Fronte</span>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+            <span class="absolute bottom-3 left-3 px-3 py-1.5 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs rounded-xl font-medium tracking-wide">Fronte</span>
           </div>
-          <div class="relative aspect-[3/4] bg-gray-100 dark:bg-gray-800">
-            <img [src]="book()!.backImageUrl" alt="Retro libro" class="w-full h-full object-cover" />
-            <span class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Retro</span>
+          <div class="relative aspect-[3/4] bg-gray-100/50 dark:bg-gray-900/50">
+            <img [src]="validBackImageUrl()!" alt="Retro libro" class="w-full h-full object-cover"
+                 (error)="onRetroImageError()" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+            <span class="absolute bottom-3 left-3 px-3 py-1.5 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs rounded-xl font-medium tracking-wide">Retro</span>
           </div>
         </div>
       } @else {
-        <div class="relative aspect-[4/5] bg-gray-100 dark:bg-gray-800 max-h-[400px]">
-          <img [src]="book()!.frontImageUrl" alt="Copertina libro" class="w-full h-full object-cover" />
-          <span class="absolute bottom-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-lg font-medium">Copertina</span>
+        <div class="book-single-cover relative w-full aspect-[4/5] bg-gray-100/50 dark:bg-gray-900/50 rounded-[28px] overflow-hidden">
+          <img [src]="book()!.frontImageUrl" alt="Copertina libro" class="w-full h-full object-contain" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+          <span class="absolute bottom-4 left-4 px-3 py-1.5 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs rounded-xl font-medium tracking-wide shadow-sm">Copertina</span>
         </div>
       }
 
       <!-- Info libro -->
-      <div class="p-6 space-y-5">
+      <div class="p-6 space-y-6">
 
         <!-- Badge condizione + Stato + Prezzo -->
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-border-light dark:border-border-dark">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="px-3 py-1 text-sm font-medium rounded-full" [ngClass]="conditionColor()">
+        <div class="flex items-center justify-between pb-5 border-b border-gray-100 dark:border-gray-700/50">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="px-3.5 py-1.5 text-xs font-semibold tracking-wide rounded-xl shadow-sm border border-black/5 dark:border-white/5" [ngClass]="conditionColor()">
               {{ conditionLabel() }}
             </span>
-            <span class="px-3 py-1 text-sm font-medium rounded-full flex items-center gap-1.5" [ngClass]="statusColor()">
-              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="statusDotColor()"></span>
+            <span class="px-3.5 py-1.5 text-xs font-semibold tracking-wide rounded-xl flex items-center gap-2 shadow-sm border border-black/5 dark:border-white/5" [ngClass]="statusColor()">
+              <span class="w-2 h-2 rounded-full" [ngClass]="statusDotColor()"></span>
               {{ statusLabel() }}
             </span>
-            @if (book()!.richiesteCount > 0) {
-              <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                <lucide-icon [img]="UsersIcon" [size]="12" />
-                {{ book()!.richiesteCount }} richiest{{ book()!.richiesteCount === 1 ? 'a' : 'e' }}
-              </span>
-            }
           </div>
-          <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">&euro;{{ book()!.prezzo }}</span>
+          <span class="text-3xl font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">&euro;{{ book()!.prezzo }}</span>
         </div>
 
         <!-- Titolo e autore -->
         <div>
-          <h1 class="text-xl font-bold text-text-light dark:text-text-dark mb-1.5">{{ book()!.titolo }}</h1>
-          <p class="text-gray-600 dark:text-gray-400 text-sm">{{ book()!.autore }}</p>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight tracking-tight">{{ book()!.titolo }}</h1>
+          <p class="text-gray-500 dark:text-gray-400 text-base font-medium">{{ book()!.autore }}</p>
         </div>
-
-        <!-- Banner: già richiesto da me -->
-        @if (hoGiaRichiesto()) {
-          <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-xl p-3">
-            <div class="flex items-center gap-2">
-              <lucide-icon [img]="CheckIcon" [size]="18" class="text-primary-600 dark:text-primary-400 shrink-0" />
-              <p class="text-sm text-primary-800 dark:text-primary-300 flex-1">Hai già inviato una richiesta per questo libro.</p>
-            </div>
-          </div>
-        }
 
         <!-- Banner: venduto -->
         @if (isVenduto()) {
-          <div class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
-            <div class="flex items-center gap-2">
-              <lucide-icon [img]="AlertTriangleIcon" [size]="18" class="text-gray-500 shrink-0" />
-              <p class="text-sm text-gray-600 dark:text-gray-400">Questo libro è stato già venduto.</p>
+          <div class="bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200/60 dark:border-gray-700/60 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg shrink-0">
+                <lucide-icon [img]="AlertTriangleIcon" [size]="18" class="text-gray-600 dark:text-gray-400" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-0.5">Libro non disponibile</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Questo libro è stato già venduto.</p>
+              </div>
             </div>
           </div>
         }
 
         <!-- Tags anno + materia + ISBN -->
-        <div class="flex flex-wrap gap-1.5">
+        <div class="flex flex-wrap gap-2 pt-2">
           @if (annoLabel()) {
-            <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
+            <span class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-semibold shadow-sm">
               {{ annoLabel() }}
             </span>
           }
           @if (subjectLabel()) {
-            <span class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
+            <span class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-semibold shadow-sm">
               {{ subjectLabel() }}
             </span>
           }
           @if (book()!.isbn) {
-            <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full text-xs font-mono">
+            <span class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50 text-gray-500 dark:text-gray-400 rounded-2xl text-xs font-mono font-medium shadow-sm flex items-center gap-1.5">
               ISBN: {{ book()!.isbn }}
             </span>
           }
@@ -147,36 +137,37 @@
 
         <!-- Descrizione -->
         @if (book()!.descrizione) {
-          <div class="pt-2 pb-3 border-t border-b border-border-light dark:border-border-dark">
-            <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+          <div class="pt-6 pb-6 mt-4 border-t border-b border-gray-100 dark:border-gray-700/50">
+            <p class="text-gray-600 dark:text-gray-300 text-[15px] leading-relaxed">
               {{ book()!.descrizione }}
             </p>
           </div>
         }
 
         <!-- Venditore -->
-        <div class="seller-card flex items-center gap-3 cursor-pointer" (click)="onViewProfile()">
+        <div class="seller-card flex items-center gap-4 cursor-pointer p-4 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-2xl transition-colors border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50 mt-4" (click)="onViewProfile()">
           <div class="relative">
             <app-avatar
               [src]="book()!.venditore.profilePictureUrl"
               [name]="book()!.venditore.nomeCompleto"
               size="md"
+              class="shadow-sm"
             />
             <span
-              class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-surface-light dark:border-surface-dark rounded-full"
-              [ngClass]="book()!.venditore.isOnline ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"
+              class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 border-2 border-white dark:border-gray-800 rounded-full z-10"
+              [ngClass]="book()!.venditore.isOnline ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-500'"
             ></span>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-text-light dark:text-text-dark">{{ book()!.venditore.nomeCompleto }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-0.5">{{ book()!.venditore.nomeCompleto }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
               &#64;{{ book()!.venditore.username }}
               @if (book()!.venditore.classroom) {
-                &middot; {{ book()!.venditore.classroom }}
+                <span class="inline-block px-1.5 py-0.5 ml-1.5 bg-gray-200/50 dark:bg-gray-700/50 rounded-md text-[10px] tracking-wider uppercase">{{ book()!.venditore.classroom }}</span>
               }
             </p>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ formattedDate() }}</span>
+          <span class="text-xs font-medium text-gray-400 dark:text-gray-500 shrink-0 bg-white/50 dark:bg-gray-900/50 px-2.5 py-1 rounded-lg backdrop-blur-sm">{{ formattedDate() }}</span>
         </div>
       </div>
     </article>
@@ -184,15 +175,15 @@
 
   <!-- EMPTY STATE -->
   @if (!loading() && !book()) {
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-        <lucide-icon [img]="BookOpenIcon" [size]="32" class="text-gray-400" />
+    <div class="flex flex-col items-center justify-center py-24 text-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[32px] px-6">
+      <div class="w-20 h-20 bg-gray-100/80 dark:bg-gray-900/50 border border-gray-200/50 dark:border-gray-700/50 rounded-full flex items-center justify-center mb-6 shadow-sm">
+        <lucide-icon [img]="BookOpenIcon" [size]="36" class="text-gray-400" />
       </div>
-      <p class="text-gray-500 dark:text-gray-400 font-medium mb-1">Libro non trovato</p>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mb-4">L'annuncio potrebbe essere stato rimosso</p>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Libro non trovato</h3>
+      <p class="text-base text-gray-500 dark:text-gray-400 mb-8 max-w-xs">L'annuncio che stai cercando potrebbe essere stato rimosso o venduto.</p>
       <button
         (click)="goBack()"
-        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full text-sm font-medium transition-colors"
+        class="px-8 py-3.5 bg-primary-500/90 hover:bg-primary-600 dark:bg-primary-600/80 dark:hover:bg-primary-500 text-white rounded-2xl font-semibold transition-all shadow-[0_4px_15px_rgb(0,0,0,0.1)] active:scale-95 backdrop-blur-md border border-primary-400/30"
       >
         Torna alla libreria
       </button>
@@ -204,49 +195,16 @@
      FOOTER FISSO — Azioni
      ============================================ -->
 @if (!loading() && book() && !isVenduto()) {
-  <div class="book-detail-footer fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark z-30">
-    <div class="max-w-2xl mx-auto px-4 py-3.5 flex gap-3">
-
-      <!-- Richiedi / Annulla richiesta -->
-      @if (hoGiaRichiesto()) {
-        <button
-          (click)="onAnnullaRichiesta()"
-          [disabled]="requesting()"
-          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-700 text-error-700 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-900/40 disabled:opacity-50 disabled:hover:bg-error-50 dark:disabled:hover:bg-error-900/20 rounded-xl font-semibold transition-colors active:scale-95"
-        >
-          @if (requesting()) {
-            <app-spinner size="sm" />
-            Annullamento...
-          } @else {
-            <lucide-icon [img]="XIcon" [size]="18" />
-            Annulla richiesta
-          }
-        </button>
-      } @else {
-        <button
-          (click)="onRequestBook()"
-          [disabled]="requesting()"
-          class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:hover:bg-primary-500 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg active:scale-95"
-        >
-          @if (requesting()) {
-            <app-spinner size="sm" />
-            <span class="hidden sm:inline">Richiesta in corso...</span>
-            <span class="sm:hidden">In corso...</span>
-          } @else {
-            <lucide-icon [img]="CheckIcon" [size]="18" />
-            <span class="hidden sm:inline">Richiedi libro</span>
-            <span class="sm:hidden">Richiedi</span>
-          }
-        </button>
-      }
+  <div class="book-detail-footer fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-700/50 shadow-[0_-4px_30px_rgba(0,0,0,0.03)] z-40 pb-safe">
+    <div class="max-w-2xl mx-auto px-4 py-4 flex gap-3">
 
       <!-- Contatta venditore -->
       <button
         (click)="onContactSeller()"
-        class="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors active:scale-95"
+        class="flex-1 flex items-center justify-center gap-2.5 px-6 py-4 bg-primary-500/90 hover:bg-primary-600 dark:bg-primary-600/80 dark:hover:bg-primary-500 text-white rounded-[20px] font-bold text-[15px] transition-all shadow-[0_8px_20px_rgb(var(--color-primary-500)/0.25)] hover:shadow-[0_8px_25px_rgb(var(--color-primary-500)/0.35)] active:scale-[0.98] backdrop-blur-md border border-primary-400/30 group"
       >
-        <lucide-icon [img]="MessageCircleIcon" [size]="18" />
-        <span class="hidden sm:inline">Contatta</span>
+        <lucide-icon [img]="MessageCircleIcon" [size]="20" class="group-hover:scale-110 transition-transform" />
+        Contatta il venditore
       </button>
     </div>
   </div>
