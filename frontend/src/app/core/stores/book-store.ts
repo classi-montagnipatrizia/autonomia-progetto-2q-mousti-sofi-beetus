@@ -7,7 +7,6 @@ import {
   BookSummaryDTO,
   BookConversationDTO,
   BookMessageDTO,
-  BookRequestDTO,
 } from '../../models';
 
 export interface BookFilters {
@@ -42,7 +41,6 @@ export class BookStore {
   private readonly _currentPageListings = signal(0);
   private readonly _bookDetail = signal<BookResponseDTO | null>(null);
   private readonly _bookDetailLoading = signal(false);
-  private readonly _bookRequesting = signal(false);
 
   // ============================================================================
   // SIGNALS PUBBLICI READONLY
@@ -59,7 +57,6 @@ export class BookStore {
   readonly hasMoreListings = this._hasMoreListings.asReadonly();
   readonly bookDetail = this._bookDetail.asReadonly();
   readonly bookDetailLoading = this._bookDetailLoading.asReadonly();
-  readonly bookRequesting = this._bookRequesting.asReadonly();
 
   // ============================================================================
   // COMPUTED
@@ -168,74 +165,6 @@ export class BookStore {
     }
   }
 
-  // ── RICHIESTE ────────────────────────────────────────────────────────────────
-
-  async richiediLibro(bookId: number): Promise<void> {
-    try {
-      const updated = await firstValueFrom(this.bookService.richiediLibro(bookId));
-      if (updated) {
-        this._availableBooks.update(list =>
-          list.map(b => b.id === bookId ? { ...b, stato: updated.stato, miaRichiesta: updated.miaRichiesta, richiesteCount: updated.richiesteCount } : b)
-        );
-      }
-    } catch (error) {
-      this.logger.error('Errore richiesta libro', error);
-      throw error;
-    }
-  }
-
-  async annullaRichiesta(bookId: number): Promise<void> {
-    try {
-      const updated = await firstValueFrom(this.bookService.annullaRichiesta(bookId));
-      if (updated) {
-        this._availableBooks.update(list =>
-          list.map(b => b.id === bookId ? { ...b, stato: updated.stato, miaRichiesta: updated.miaRichiesta, richiesteCount: updated.richiesteCount } : b)
-        );
-        if (this._bookDetail()?.id === bookId) this._bookDetail.set(updated);
-      }
-    } catch (error) {
-      this.logger.error('Errore annullamento richiesta', error);
-      throw error;
-    }
-  }
-
-  async getRichiesteLibro(bookId: number): Promise<BookRequestDTO[]> {
-    try {
-      return await firstValueFrom(this.bookService.getRichieste(bookId)) ?? [];
-    } catch (error) {
-      this.logger.error('Errore caricamento richieste libro', error);
-      return [];
-    }
-  }
-
-  async accettaRichiesta(bookId: number, requestId: number): Promise<void> {
-    try {
-      const updated = await firstValueFrom(this.bookService.accettaRichiesta(bookId, requestId));
-      if (updated) {
-        this._myListings.update(list =>
-          list.map(b => (b.id === bookId ? updated : b))
-        );
-      }
-    } catch (error) {
-      this.logger.error('Errore accettazione richiesta', error);
-      throw error;
-    }
-  }
-
-  async rifiutaRichiesta(bookId: number, requestId: number): Promise<void> {
-    try {
-      const updated = await firstValueFrom(this.bookService.rifiutaRichiesta(bookId, requestId));
-      if (updated) {
-        this._myListings.update(list =>
-          list.map(b => (b.id === bookId ? updated : b))
-        );
-      }
-    } catch (error) {
-      this.logger.error('Errore rifiuto richiesta', error);
-      throw error;
-    }
-  }
-
   async eliminaLibro(bookId: number): Promise<void> {
     try {
       await firstValueFrom(this.bookService.eliminaLibro(bookId));
@@ -265,7 +194,6 @@ export class BookStore {
   clearBookDetail(): void {
     this._bookDetail.set(null);
     this._bookDetailLoading.set(false);
-    this._bookRequesting.set(false);
   }
 
   closeConversazione(): void {
@@ -411,24 +339,6 @@ export class BookStore {
     }
   }
 
-  async requestBook(bookId: number): Promise<void> {
-    this._bookRequesting.set(true);
-    try {
-      const updated = await firstValueFrom(this.bookService.richiediLibro(bookId));
-      if (updated) {
-        this._bookDetail.set(updated);
-        this._availableBooks.update(list =>
-          list.map(b => b.id === bookId ? { ...b, stato: updated.stato, miaRichiesta: updated.miaRichiesta, richiesteCount: updated.richiesteCount } : b)
-        );
-      }
-    } catch (error) {
-      this.logger.error('Errore richiesta libro', error);
-      throw error;
-    } finally {
-      this._bookRequesting.set(false);
-    }
-  }
-
   // ============================================================================
   // UTILITY
   // ============================================================================
@@ -447,6 +357,5 @@ export class BookStore {
     this._currentPageListings.set(0);
     this._bookDetail.set(null);
     this._bookDetailLoading.set(false);
-    this._bookRequesting.set(false);
   }
 }

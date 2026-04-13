@@ -42,7 +42,6 @@ export class LibraryStore {
   readonly hasMoreListings = this.bookStore.hasMoreListings;
   readonly bookDetail = this.bookStore.bookDetail;
   readonly bookDetailLoading = this.bookStore.bookDetailLoading;
-  readonly bookRequesting = this.bookStore.bookRequesting;
 
   // ============================================================================
   // COMPUTED
@@ -121,14 +120,6 @@ export class LibraryStore {
 
   clearBookDetail() {
     this.bookStore.clearBookDetail();
-  }
-
-  requestBook(bookId: number) {
-    return this.bookStore.requestBook(bookId);
-  }
-
-  annullaRichiestaLibro(bookId: number) {
-    return this.bookStore.annullaRichiesta(bookId);
   }
 
   inviaMessaggio(bookId: number, contenuto: string, conversationId?: number) {
