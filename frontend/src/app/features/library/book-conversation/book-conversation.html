@@ -1,47 +1,53 @@
-<div class="fixed inset-0 z-50 flex flex-col chat-shell bg-background-light dark:bg-background-dark">
+<div class="fixed inset-0 z-50 flex flex-col chat-shell bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-3xl">
 
   <!-- ============================================
        HEADER
        ============================================ -->
-  <header class="chat-header bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark shrink-0">
-    <div class="max-w-3xl mx-auto px-3 sm:px-4">
+  <header class="chat-header bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] shrink-0 z-40 relative">
+    <div class="max-w-3xl mx-auto px-3 sm:px-4 pt-1.5 pb-2">
       <!-- Riga 1: Indietro + Info utente -->
       <div class="flex items-center gap-3 h-14">
         <button
           (click)="goBack()"
-          class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+          class="p-2 -ml-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-colors text-gray-600 dark:text-gray-400 group"
         >
-          <lucide-angular [img]="ArrowLeftIcon" class="size-5" />
+          <lucide-angular [img]="ArrowLeftIcon" class="size-5 group-hover:-translate-x-0.5 transition-transform" />
         </button>
 
         @if (loading() && !conversation()) {
           <!-- Skeleton header -->
           <app-skeleton class="w-10 h-10 rounded-full" />
           <div class="flex-1 space-y-1.5">
-            <app-skeleton class="w-28 h-4" />
-            <app-skeleton class="w-16 h-3" />
+            <app-skeleton class="w-28 h-4 rounded-full" />
+            <app-skeleton class="w-16 h-3 rounded-full" />
           </div>
         } @else if (conversation()) {
           <!-- Avatar utente -->
           <button
             type="button"
-            class="flex items-center gap-3 flex-1 min-w-0 text-left"
+            class="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-gray-50/50 dark:hover:bg-gray-800/30 p-1.5 -ml-1.5 rounded-2xl transition-colors"
             (click)="goToProfile()"
           >
-            <app-avatar
-              [src]="otherUserAvatar()"
-              [name]="otherUserName()"
-              size="md"
-              [status]="otherUserOnline() ? 'online' : 'offline'"
-            />
+            <div class="relative">
+              <app-avatar
+                [src]="otherUserAvatar()"
+                [name]="otherUserName()"
+                size="md"
+                class="shadow-sm"
+              />
+              <span
+                class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white dark:border-gray-900 rounded-full z-10"
+                [ngClass]="otherUserOnline() ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-500'"
+              ></span>
+            </div>
             <div class="flex-1 min-w-0">
-              <h2 class="font-semibold text-text-light dark:text-text-dark text-sm truncate">
+              <h2 class="font-bold text-gray-900 dark:text-gray-100 text-[15px] leading-tight tracking-tight truncate">
                 {{ otherUserName() }}
               </h2>
               @if (otherUserOnline()) {
-                <p class="text-xs text-success-600 dark:text-success-400">Online</p>
+                <p class="text-[11px] font-medium text-green-600 dark:text-green-400 tracking-wide mt-0.5">Online</p>
               } @else {
-                <p class="text-xs text-gray-500 dark:text-gray-400">Offline</p>
+                <p class="text-[11px] font-medium text-gray-500 dark:text-gray-400 tracking-wide mt-0.5">Offline</p>
               }
             </div>
           </button>
@@ -53,22 +59,22 @@
         <button
           type="button"
           (click)="goToBookDetail()"
-          class="flex items-center gap-3 pb-3 cursor-pointer group w-full text-left"
+          class="flex items-center gap-3 mt-1 p-2 rounded-2xl bg-gray-50/80 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 cursor-pointer group w-full text-left transition-all shadow-sm"
         >
-          <div class="w-10 h-14 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0">
+          <div class="w-10 h-14 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden shrink-0 shadow-inner">
             <img [src]="bookImage()" [alt]="bookTitle()" class="w-full h-full object-cover" />
           </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="font-medium text-gray-900 dark:text-white text-sm truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          <div class="flex-1 min-w-0 pl-1">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors mb-0.5">
               {{ bookTitle() }}
             </h3>
             <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-primary-600 dark:text-primary-400">&euro;{{ bookPrice() }}</span>
-              <span class="text-xs text-gray-400 dark:text-gray-500">&middot;</span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ roleLabel() }}</span>
+              <span class="text-[13px] font-extrabold text-primary-600 dark:text-primary-400 tracking-tight">&euro;{{ bookPrice() }}</span>
+              <span class="text-xs text-gray-300 dark:text-gray-600">&bull;</span>
+              <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-900/50 px-1.5 py-0.5 rounded-md">{{ roleLabel() }}</span>
             </div>
           </div>
-          <lucide-angular [img]="ExternalLinkIcon" class="size-4 text-gray-400 dark:text-gray-500 shrink-0" />
+          <lucide-angular [img]="ExternalLinkIcon" class="size-4 text-gray-400 dark:text-gray-500 shrink-0 mr-1 group-hover:scale-110 group-hover:text-primary-500 transition-all" />
         </button>
       }
     </div>
@@ -79,21 +85,24 @@
        ============================================ -->
   <div
     #messagesContainer
-    class="flex-1 overflow-y-auto bg-gray-50/85 dark:bg-background-dark px-3 sm:px-4 py-4"
+    class="flex-1 overflow-y-auto px-3 sm:px-4 py-6 relative z-10"
   >
-    <div class="max-w-3xl mx-auto space-y-4">
+    <div class="max-w-3xl mx-auto space-y-5">
       <!-- Loading -->
       @if (loading()) {
-        <div class="space-y-4">
+        <div class="space-y-6">
         <!-- Data separatore skeleton -->
         <div class="flex items-center justify-center">
-          <app-skeleton class="w-16 h-6 rounded-full" />
+          <app-skeleton class="w-20 h-6 rounded-full" />
         </div>
         @for (i of [1, 2, 3, 4]; track i) {
-          <div [class]="i % 2 === 0 ? 'flex justify-end' : 'flex justify-start'">
+          <div [class]="i % 2 === 0 ? 'flex justify-end' : 'flex gap-3 justify-start items-end'">
+            @if (i % 2 !== 0) {
+              <app-skeleton class="size-8 rounded-full shrink-0" />
+            }
             <app-skeleton
-              [class]="i % 2 === 0 ? 'w-48' : 'w-56'"
-              class="h-16 rounded-2xl"
+              [class]="i % 2 === 0 ? 'w-[75%] sm:w-[60%]' : 'w-[80%] sm:w-[65%]'"
+              class="h-16 rounded-[24px]"
             />
           </div>
         }
@@ -103,55 +112,67 @@
     <!-- Empty state -->
       @if (!loading() && messages().length === 0) {
         <div class="flex flex-col items-center justify-center text-center min-h-[55vh] py-16">
-        <div class="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mb-4">
-          <lucide-angular [img]="MessageCircleIcon" class="size-8 text-primary-300" />
+        <div class="w-20 h-20 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full flex items-center justify-center mb-5">
+          <lucide-angular [img]="MessageCircleIcon" class="size-9 text-primary-400/80" />
         </div>
-        <p class="text-gray-500 dark:text-gray-400 font-medium mb-1">Nessun messaggio</p>
-        <p class="text-sm text-gray-400 dark:text-gray-500">Inizia la conversazione!</p>
+        <p class="text-gray-900 dark:text-gray-100 font-bold text-lg mb-1.5 tracking-tight">Nessun messaggio</p>
+        <p class="text-[15px] font-medium text-gray-500 dark:text-gray-400">Fai il primo passo, inizia la conversazione!</p>
         </div>
       }
 
     <!-- Messaggi -->
       @if (!loading() && messages().length > 0) {
         <!-- Data separatore -->
-        <div class="flex items-center justify-center">
-          <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs rounded-full">Oggi</span>
+        <div class="flex items-center justify-center mb-6">
+          <span class="px-4 py-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-gray-600 dark:text-gray-300 text-[11px] font-semibold tracking-wider rounded-2xl">OGGI</span>
         </div>
 
         @for (message of messages(); track message.id) {
           @if (message.isDeletedBySender) {
             <!-- Messaggio eliminato -->
-            <div [class]="isMyMessage(message) ? 'flex justify-end' : 'flex justify-start'">
-              <div class="px-4 py-2 rounded-2xl bg-gray-100 dark:bg-gray-800 opacity-60 max-w-[80%]">
-                <p class="text-sm italic text-gray-500 dark:text-gray-400">Messaggio eliminato</p>
+            <div [class]="isMyMessage(message) ? 'flex justify-end mb-4' : 'flex justify-start mb-4'">
+              <div class="px-5 py-3 rounded-[20px] bg-gray-100/50 dark:bg-gray-800/30 border border-gray-200/50 dark:border-gray-700/30 backdrop-blur-sm max-w-[80%]">
+                <div class="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+                  <lucide-angular [img]="Trash2Icon" class="size-3.5" />
+                  <p class="text-[13px] italic font-medium">Messaggio eliminato</p>
+                </div>
               </div>
             </div>
           } @else if (isMyMessage(message)) {
             <!-- Messaggio inviato (destra) -->
-            <div class="flex gap-2.5 justify-end group/msg items-end">
+            <div class="flex gap-2.5 justify-end group/msg items-end mb-4">
               <button
                 (click)="deleteMessage(message.id)"
                 [disabled]="deletingIds().has(message.id)"
-                class="opacity-0 group-hover/msg:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 self-center"
+                class="opacity-0 group-hover/msg:opacity-100 transition-all p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 dark:hover:text-red-400 self-center mb-2"
+                title="Elimina per me"
               >
-                <lucide-angular [img]="Trash2Icon" class="size-3.5" />
+                <lucide-angular [img]="Trash2Icon" class="size-4" />
               </button>
-              <div class="bg-primary-500 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-sm shadow-primary-500/10 max-w-[78%]">
-                <p class="text-sm leading-relaxed">{{ message.contenuto }}</p>
-                <span class="text-xs text-primary-100 mt-1.5 block text-right">{{ formatTime(message.createdAt) }}</span>
+              <div class="bg-primary-500/90 dark:bg-primary-600/80 backdrop-blur-xl border border-primary-400/30 dark:border-primary-500/30 text-white rounded-[24px] rounded-br-[8px] px-5 py-3.5 shadow-[0_8px_20px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_20px_rgb(0,0,0,0.15)] max-w-[80%] sm:max-w-[70%]">
+                <p class="text-[15px] font-medium leading-relaxed">{{ message.contenuto }}</p>
+                <div class="flex justify-end items-center gap-1.5 mt-1.5 opacity-80">
+                  <span class="text-[10px] font-semibold tracking-wider">{{ formatTime(message.createdAt) }}</span>
+                  <!-- Checkmarks finti per UI -->
+                  <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/><path d="m20 12-7 7"/></svg>
+                </div>
               </div>
             </div>
           } @else {
             <!-- Messaggio ricevuto (sinistra) -->
-            <div class="flex gap-2.5 items-end">
-              <app-avatar
-                [src]="message.mittente.profilePictureUrl"
-                [name]="message.mittente.nomeCompleto"
-                size="xs"
-              />
-              <div class="bg-surface-light dark:bg-surface-dark rounded-2xl rounded-bl-md px-4 py-3 border border-border-light dark:border-border-dark shadow-sm max-w-[78%]">
-                <p class="text-text-light dark:text-text-dark text-sm leading-relaxed">{{ message.contenuto }}</p>
-                <span class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 block">{{ formatTime(message.createdAt) }}</span>
+            <div class="flex gap-3 items-end mb-4">
+              <div class="shadow-sm rounded-full bg-white/50 dark:bg-gray-800/50 p-0.5 border border-white/20 dark:border-gray-700/50 shrink-0 mb-1">
+                <app-avatar
+                  [src]="message.mittente.profilePictureUrl"
+                  [name]="message.mittente.nomeCompleto"
+                  size="xs"
+                />
+              </div>
+              <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[24px] rounded-bl-[8px] px-5 py-3.5 shadow-[0_8px_20px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_20px_rgb(0,0,0,0.1)] max-w-[80%] sm:max-w-[70%]">
+                <p class="text-gray-800 dark:text-gray-100 text-[15px] font-medium leading-relaxed">{{ message.contenuto }}</p>
+                <div class="flex justify-start items-center mt-1.5 opacity-60">
+                  <span class="text-[10px] font-semibold tracking-wider">{{ formatTime(message.createdAt) }}</span>
+                </div>
               </div>
             </div>
           }
@@ -163,23 +184,27 @@
   <!-- ============================================
        INPUT MESSAGGIO
        ============================================ -->
-  <div class="chat-composer bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark p-3 shrink-0">
+  <div class="chat-composer p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-700/50 shadow-[0_-4px_30px_rgba(0,0,0,0.03)] shrink-0 relative z-40 pb-safe">
+    <div class="absolute inset-0 bg-gradient-to-t from-gray-50/50 to-transparent dark:from-gray-900/50 pointer-events-none rounded-t-[32px] z-[-1]"></div>
+    
     <div class="max-w-3xl mx-auto">
-      <div class="composer-panel flex items-center gap-2 sm:gap-3">
+      <div class="flex items-end gap-3 relative z-10 bg-gray-100/70 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/60 rounded-[24px] p-2 shadow-inner focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500/30 transition-all">
+        
         <input
           type="text"
           [value]="chatInput()"
           (input)="chatInput.set($any($event.target).value)"
           (keydown)="onKeydown($event)"
           placeholder="Scrivi un messaggio..."
-          class="flex-1 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-text-light dark:text-text-dark placeholder-gray-500 dark:placeholder-gray-400 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+          class="flex-1 px-4 py-3 bg-transparent border-none text-gray-900 dark:text-gray-100 placeholder-gray-500 font-medium text-[15px] focus:outline-none focus:ring-0 transition-all h-12"
         />
+        
         <button
           (click)="onSend()"
           [disabled]="!chatInput().trim()"
-          class="p-3 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white disabled:text-gray-500 dark:disabled:text-gray-400 rounded-xl transition-colors shrink-0 active:scale-95"
+          class="w-12 h-12 bg-primary-500/90 hover:bg-primary-600 dark:bg-primary-600/80 dark:hover:bg-primary-500 rounded-full text-white flex items-center justify-center disabled:opacity-40 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all shrink-0 shadow-[0_4px_15px_rgb(0,0,0,0.1)] active:scale-95 group border border-primary-400/30 self-end"
         >
-          <lucide-angular [img]="SendIcon" class="size-5" />
+          <lucide-angular [img]="SendIcon" class="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </button>
       </div>
     </div>

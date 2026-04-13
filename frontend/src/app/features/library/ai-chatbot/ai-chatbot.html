@@ -3,19 +3,19 @@
   <!-- ============================================
        HEADER
        ============================================ -->
-  <header class="chatbot-header bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-4 flex items-center justify-between shrink-0">
+  <header class="chatbot-header bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 px-5 py-4 flex items-center justify-between shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.03)] z-10 transition-all duration-300">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-        <lucide-angular [img]="LightbulbIcon" class="size-5 text-white" />
+      <div class="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center p-2.5 shadow-sm border border-primary-100 dark:border-primary-800">
+        <lucide-angular [img]="LightbulbIcon" class="size-5 text-primary-500" />
       </div>
       <div>
-        <h2 class="font-semibold text-white text-sm">Assistente Libreria</h2>
-        <p class="text-xs text-white/70">Powered by Gemini AI</p>
+        <h2 class="font-bold text-gray-900 dark:text-white text-sm bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">Assistente Libreria</h2>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Powered by Gemini AI</p>
       </div>
     </div>
     <button
       (click)="onClose()"
-      class="p-2 rounded-full hover:bg-white/10 transition-colors text-white/80 hover:text-white"
+      class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
     >
       <lucide-angular [img]="XIcon" class="size-5" />
     </button>
@@ -26,7 +26,7 @@
        ============================================ -->
   <div
     #messagesContainer
-    class="chatbot-messages flex-1 overflow-y-auto bg-gray-50 dark:bg-background-dark px-4 py-4 space-y-3"
+    class="chatbot-messages flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-900/50 px-4 py-6 space-y-4"
   >
     <!-- Loading iniziale -->
     @if (store.loading()) {
@@ -55,39 +55,39 @@
 
           <!-- Bolla messaggio AI -->
           <div
-            class="rounded-2xl rounded-tl-md px-4 py-3 shadow-sm max-w-[85%]"
+            class="rounded-3xl rounded-tl-xl px-5 py-4 max-w-[85%] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all"
             [class]="message.errore
-              ? 'bg-error-50 dark:bg-error-900/20 border border-error-100 dark:border-error-800'
-              : 'bg-surface-light dark:bg-surface-dark'"
+              ? 'bg-error-50/80 dark:bg-error-900/20 backdrop-blur-xl border border-error-200/50 dark:border-error-800/50'
+              : 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-white/20 dark:border-gray-700/50'"
           >
             <!-- Testo messaggio -->
             <p
-              class="text-sm leading-relaxed whitespace-pre-line"
+              class="text-sm leading-relaxed whitespace-pre-line font-medium"
               [class]="message.errore
                 ? 'text-error-800 dark:text-error-300'
-                : 'text-text-light dark:text-text-dark'"
+                : 'text-gray-700 dark:text-gray-300'"
             >{{ message.contenuto }}</p>
 
             <!-- Libri suggeriti -->
             @if (message.libriSuggeriti.length > 0) {
-              <div class="mt-3 space-y-2">
+              <div class="mt-4 space-y-3">
                 @for (book of message.libriSuggeriti; track book.id) {
                   <div
                     (click)="onBookClick(book)"
-                    class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 transition-all cursor-pointer group"
+                    class="bg-white/50 dark:bg-gray-700/50 rounded-2xl p-3 border border-gray-100/50 dark:border-gray-600/50 hover:bg-primary-50/80 dark:hover:bg-primary-900/20 transition-all cursor-pointer group shadow-sm hover:shadow-md hover:-translate-y-0.5"
                   >
                     <div class="flex gap-3">
-                      <div class="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shrink-0">
+                      <div class="w-14 h-20 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0 shadow-inner">
                         <img [src]="book.frontImageUrl" [alt]="book.titolo" class="w-full h-full object-cover" />
                       </div>
-                      <div class="flex-1 min-w-0">
-                        <h4 class="font-medium text-gray-900 dark:text-white text-sm line-clamp-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      <div class="flex-1 min-w-0 py-1">
+                        <h4 class="font-bold text-gray-900 dark:text-white text-sm line-clamp-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                           {{ book.titolo }}
                         </h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ book.autore }}</p>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">{{ book.autore }}</p>
                         <div class="flex items-center justify-between mt-2">
-                          <span class="text-primary-600 dark:text-primary-400 font-bold text-sm">&euro;{{ book.prezzo }}</span>
-                          <span class="text-xs px-2 py-0.5 rounded-full" [class]="conditionColorClass(book.condizione)">
+                          <span class="text-primary-600 dark:text-primary-400 font-extrabold text-sm">&euro;{{ book.prezzo }}</span>
+                          <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg backdrop-blur-md shadow-sm" [class]="conditionColorClass(book.condizione)">
                             {{ conditionLabel(book.condizione) }}
                           </span>
                         </div>
@@ -95,7 +95,7 @@
                     </div>
                   </div>
                 }
-                <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Clicca su un libro per i dettagli</p>
+                <p class="text-gray-400 dark:text-gray-500 text-xs font-medium mt-2 ml-1">Clicca su un libro per i dettagli</p>
               </div>
             }
 
@@ -115,30 +115,32 @@
 
       <!-- Messaggio utente -->
       @if (message.ruolo === 'user') {
-        <div class="flex gap-2.5 justify-end">
-          <div class="bg-primary-500 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm max-w-[85%]">
-            <p class="text-sm leading-relaxed">{{ message.contenuto }}</p>
+        <div class="flex gap-2.5 justify-end group">
+          <div class="bg-primary-500/90 dark:bg-primary-600/80 backdrop-blur-xl border border-primary-400/30 dark:border-primary-500/30 text-white rounded-[24px] rounded-tr-md px-5 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.15)] max-w-[85%] transition-transform group-hover:-translate-y-0.5">
+            <p class="text-sm font-medium leading-relaxed">{{ message.contenuto }}</p>
           </div>
-          <app-avatar
-            [src]="currentUserAvatar()"
-            [name]="currentUserName()"
-            size="xs"
-          />
+          <div class="shadow-sm rounded-full bg-white/50 dark:bg-gray-800/50 p-0.5 border border-white/20 dark:border-gray-700/50 h-fit">
+            <app-avatar
+              [src]="currentUserAvatar()"
+              [name]="currentUserName()"
+              size="xs"
+            />
+          </div>
         </div>
       }
     }
 
     <!-- Indicatore "sta scrivendo" -->
     @if (store.sending()) {
-      <div class="flex gap-2.5">
-        <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center shrink-0">
-          <lucide-angular [img]="LightbulbIcon" class="size-4 text-primary-600 dark:text-primary-400" />
+      <div class="flex gap-2.5 animate-fade-in-up">
+        <div class="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center shrink-0 p-2.5 shadow-sm border border-primary-100 dark:border-primary-800">
+          <lucide-angular [img]="LightbulbIcon" class="size-5 text-primary-500" />
         </div>
-        <div class="bg-surface-light dark:bg-surface-dark rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
-          <div class="flex gap-1.5 py-1">
-            <span class="typing-dot w-2 h-2 bg-primary-400 rounded-full"></span>
-            <span class="typing-dot w-2 h-2 bg-primary-400 rounded-full"></span>
-            <span class="typing-dot w-2 h-2 bg-primary-400 rounded-full"></span>
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-white/20 dark:border-gray-700/50 rounded-[24px] rounded-tl-xl px-5 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
+          <div class="flex gap-2 py-1.5 items-center">
+            <span class="typing-dot w-2 h-2 bg-primary-400/80 rounded-full animate-bounce"></span>
+            <span class="typing-dot w-2 h-2 bg-primary-400/80 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+            <span class="typing-dot w-2 h-2 bg-primary-400/80 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
           </div>
         </div>
       </div>
@@ -148,32 +150,32 @@
   <!-- ============================================
        INPUT MESSAGGIO
        ============================================ -->
-  <div class="chatbot-composer bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark p-4 shrink-0">
-    <div class="composer-wrapper flex gap-2">
+  <div class="chatbot-composer p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-t border-white/20 dark:border-gray-700/50 shadow-[0_-4px_30px_rgba(0,0,0,0.03)] shrink-0 transition-colors relative z-10">
+    <div class="composer-wrapper flex gap-3 relative z-10">
       <input
         type="text"
         placeholder="Scrivi un messaggio..."
         [value]="inputMessage()"
         (input)="inputMessage.set($any($event.target).value)"
         (keydown)="onKeydown($event)"
-        class="flex-1 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-text-light dark:text-text-dark placeholder-gray-500 dark:placeholder-gray-400 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+        class="flex-1 px-5 py-3.5 bg-gray-100/70 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/60 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-[20px] text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500/50 transition-all shadow-inner"
       />
       <button
         (click)="onSend()"
         [disabled]="!canSend()"
-        class="p-3 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 rounded-xl text-white disabled:text-gray-500 dark:disabled:text-gray-400 transition-colors shrink-0 active:scale-95"
+        class="w-12 h-12 bg-primary-500/90 hover:bg-primary-600 dark:bg-primary-600/80 dark:hover:bg-primary-500 rounded-full text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all shrink-0 shadow-[0_4px_15px_rgb(0,0,0,0.1)] active:scale-95 group backdrop-blur-md border border-primary-400/30"
       >
-        <lucide-angular [img]="SendIcon" class="size-5" />
+        <lucide-angular [img]="SendIcon" class="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
       </button>
     </div>
 
     <!-- Suggerimenti rapidi -->
-    <div class="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
+    <div class="flex gap-2 mt-4 overflow-x-auto pb-1 -mx-1 px-1 custom-scrollbar">
       @for (suggestion of quickSuggestions; track suggestion) {
         <button
           (click)="onSuggestionClick(suggestion)"
           [disabled]="store.sending()"
-          class="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium whitespace-nowrap hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 disabled:opacity-50 transition-all shrink-0"
+          class="px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium whitespace-nowrap hover:border-primary-300/50 dark:hover:border-primary-600/50 hover:bg-primary-50/50 dark:hover:bg-primary-900/30 disabled:opacity-50 transition-all shrink-0 shadow-sm"
         >
           {{ suggestion }}
         </button>
