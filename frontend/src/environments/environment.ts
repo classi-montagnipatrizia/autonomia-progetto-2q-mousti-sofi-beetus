@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://unexpected-julie-recognised-legislation.trycloudflare.com/api',
-  wsUrl: 'https://unexpected-julie-recognised-legislation.trycloudflare.com/ws',
+  apiUrl: 'https://texas-completion-curious-alleged.trycloudflare.com/api',
+  wsUrl: 'https://texas-completion-curious-alleged.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
