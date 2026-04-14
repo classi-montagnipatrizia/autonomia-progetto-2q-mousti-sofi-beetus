@@ -1,6 +1,6 @@
 import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, MapPin, Tag, BookOpen } from 'lucide-angular';
+import { LucideAngularModule, MapPin, Tag, BookOpen, ChevronRight } from 'lucide-angular';
 import { BookSummaryDTO, BookCondition, BookStatus } from '../../../../models';
 
 @Component({
@@ -13,6 +13,7 @@ export class BookCardComponent {
   readonly MapPinIcon = MapPin;
   readonly TagIcon = Tag;
   readonly BookOpenIcon = BookOpen;
+  readonly ChevronRightIcon = ChevronRight;
 
   /**
    * Dati del libro da visualizzare
