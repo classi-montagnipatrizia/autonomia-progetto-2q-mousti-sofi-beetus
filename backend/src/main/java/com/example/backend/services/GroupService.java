@@ -27,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -78,19 +80,38 @@ public class GroupService {
     public List<GroupSummaryDTO> getMieiGruppi(Long userId) {
         List<GroupMembership> memberships = membershipRepository.findByUserIdWithGroup(userId);
 
+        if (memberships.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> groupIds = memberships.stream()
+                .map(m -> m.getGroup().getId())
+                .toList();
+
+        Map<Long, Long> memberCounts = new HashMap<>();
+        for (Object[] row : membershipRepository.countByGroupIds(groupIds)) {
+            memberCounts.put((Long) row[0], (Long) row[1]);
+        }
+
+        Map<Long, GroupMessage> lastMessages = new HashMap<>();
+        for (GroupMessage msg : messageRepository.findLatestByGroupIds(groupIds)) {
+            lastMessages.put(msg.getGroup().getId(), msg);
+        }
+
+        Map<Long, Long> unreadCounts = new HashMap<>();
+        for (Object[] row : membershipRepository.countUnreadMessagesBatch(userId, groupIds)) {
+            unreadCounts.put((Long) row[0], (Long) row[1]);
+        }
+        for (Object[] row : membershipRepository.countUnreadMessagesNeverReadBatch(userId, groupIds)) {
+            unreadCounts.put((Long) row[0], (Long) row[1]);
+        }
+
         return memberships.stream().map(membership -> {
             Group group = membership.getGroup();
-
-            long memberCount = membershipRepository.countByGroup(group);
-            GroupMessage lastMessage = messageRepository.findLatestByGroupId(group.getId()).orElse(null);
-
-            long unreadCount = 0;
-            if (membership.getLastReadAt() != null) {
-                unreadCount = membershipRepository.countUnreadMessages(group.getId(), membership.getLastReadAt());
-            } else if (lastMessage != null) {
-                // Mai letto → tutti i messaggi sono non letti
-                unreadCount = membershipRepository.countUnreadMessages(group.getId(), membership.getJoinedAt());
-            }
+            Long gid = group.getId();
+            long memberCount = memberCounts.getOrDefault(gid, 0L);
+            GroupMessage lastMessage = lastMessages.get(gid);
+            long unreadCount = unreadCounts.getOrDefault(gid, 0L);
 
             return groupMapper.toSummaryDTO(group, membership, unreadCount, lastMessage, memberCount, userId);
         }).toList();
@@ -140,6 +161,13 @@ public class GroupService {
         // Elimina foto profilo da Cloudinary
         if (group.getProfilePictureUrl() != null) {
             imageService.deleteMessageImage(group.getProfilePictureUrl());
+        }
+
+        // Cleanup file media dei messaggi da Cloudinary
+        List<GroupMessage> mediaMessages = messageRepository.findMediaMessagesByGroup(group);
+        for (GroupMessage msg : mediaMessages) {
+            if (msg.getImageUrl() != null) imageService.deleteMessageImage(msg.getImageUrl());
+            if (msg.getAudioUrl() != null) imageService.deleteMessageImage(msg.getAudioUrl());
         }
 
         // Cascade delete: messaggi → membership → gruppo
@@ -358,7 +386,7 @@ public class GroupService {
         // Broadcast a tutti i membri del gruppo via WebSocket
         try {
             messagingTemplate.convertAndSend("/topic/group." + groupId + ".typing",
-                    java.util.Map.of(
+                    (Object) java.util.Map.of(
                             "senderId", senderId,
                             "senderUsername", senderUsername,
                             "isTyping", true
@@ -373,7 +401,7 @@ public class GroupService {
 
         try {
             messagingTemplate.convertAndSend("/topic/group." + groupId + ".typing",
-                    java.util.Map.of(
+                    (Object) java.util.Map.of(
                             "senderId", senderId,
                             "senderUsername", senderUsername,
                             "isTyping", false
