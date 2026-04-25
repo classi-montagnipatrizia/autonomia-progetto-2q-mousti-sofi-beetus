@@ -7,7 +7,7 @@ import lombok.*;
 @Table(name = "likes", 
        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}),
        indexes = {
-        @Index(name = "idx_post_id", columnList = "post_id")
+        @Index(name = "idx_likes_post_id", columnList = "post_id")
     })
 @Data
 @NoArgsConstructor
