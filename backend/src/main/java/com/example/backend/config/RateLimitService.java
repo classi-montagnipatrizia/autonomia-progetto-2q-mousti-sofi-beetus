@@ -82,6 +82,10 @@ public class RateLimitService {
         configurations.put(RateLimitType.AI,
                 new BucketConfiguration(10, Duration.ofMinutes(1)));
 
+        // ADMIN: protegge da account admin compromessi
+        configurations.put(RateLimitType.ADMIN,
+                new BucketConfiguration(30, Duration.ofMinutes(1)));
+
         // API_GENERAL: limite generale per tutte le API
         configurations.put(RateLimitType.API_GENERAL,
                 new BucketConfiguration(100, Duration.ofMinutes(1)));

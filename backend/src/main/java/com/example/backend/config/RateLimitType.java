@@ -47,6 +47,13 @@ public enum RateLimitType {
     AI,
 
     /**
+     * Rate limit per operazioni admin.
+     * Protegge da account admin compromessi.
+     * Default: 30 richieste per minuto
+     */
+    ADMIN,
+
+    /**
      * Rate limit generico per API.
      * Limite base per tutte le richieste API.
      * Default: 100 richieste per minuto

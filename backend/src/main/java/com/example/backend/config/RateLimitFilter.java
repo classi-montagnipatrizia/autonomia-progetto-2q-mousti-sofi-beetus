@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -33,6 +32,12 @@ import java.util.Map;
 @Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private static final String GET_METHOD = "GET";
+    private static final String POST_METHOD = "POST";
+    private static final String PUT_METHOD = "PUT";
+    private static final String DELETE_METHOD = "DELETE";
+    private static final String ANONYMOUS_USER = "anonymousUser";
+
     private final RateLimitService rateLimitService;
 
     // Lista ordinata degli endpoint e i loro limiti specifici.
@@ -44,6 +49,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         ENDPOINT_LIMITS.add(Map.entry("/api/auth/login", RateLimitType.AUTH));
         ENDPOINT_LIMITS.add(Map.entry("/api/auth/register", RateLimitType.AUTH));
         ENDPOINT_LIMITS.add(Map.entry("/api/auth/forgot-password", RateLimitType.AUTH));
+        ENDPOINT_LIMITS.add(Map.entry("/api/auth/resend-verification", RateLimitType.AUTH));
+
+        // Admin - protezione contro account compromessi
+        ENDPOINT_LIMITS.add(Map.entry("/api/admin", RateLimitType.ADMIN));
 
         // AI - limite chiamate servizi AI (prima di pattern più generici)
         ENDPOINT_LIMITS.add(Map.entry("/api/ai", RateLimitType.AI));
@@ -75,9 +84,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                  @NonNull   HttpServletResponse response,
-                                   @NonNull  FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
@@ -112,28 +121,33 @@ public class RateLimitFilter extends OncePerRequestFilter {
      * @return Tipo di rate limit da applicare
      */
     private RateLimitType determineRateLimitType(String path, String method) {
-        // Controlla se c'è un limite specifico per questo endpoint.
         // La lista è ordinata: pattern più specifici vengono prima.
         for (Map.Entry<String, RateLimitType> entry : ENDPOINT_LIMITS) {
-            if (path.startsWith(entry.getKey())) {
-                // Per MESSAGE su gruppi: applica solo su POST (invio messaggi)
-                if (entry.getValue() == RateLimitType.MESSAGE && method.equals("GET")) {
-                    return RateLimitType.API_GENERAL;
-                }
-                // Solo POST/PUT/DELETE per creazione contenuti
-                if (entry.getValue() == RateLimitType.POST_CREATION) {
-                    if (method.equals("POST") || method.equals("PUT") || method.equals("DELETE")) {
-                        return entry.getValue();
-                    }
-                } else {
-                    return entry.getValue();
-                }
-                break; // Primo match vince, esci dal loop
+            if (!path.startsWith(entry.getKey())) {
+                continue;
             }
+
+            return resolveLimitForMethod(entry.getValue(), method);
         }
 
         // Default: limite generale API
         return RateLimitType.API_GENERAL;
+    }
+
+    private RateLimitType resolveLimitForMethod(RateLimitType limitType, String method) {
+        if (limitType == RateLimitType.MESSAGE && GET_METHOD.equals(method)) {
+            return RateLimitType.API_GENERAL;
+        }
+
+        if (limitType == RateLimitType.POST_CREATION && !isWriteMethod(method)) {
+            return RateLimitType.API_GENERAL;
+        }
+
+        return limitType;
+    }
+
+    private boolean isWriteMethod(String method) {
+        return POST_METHOD.equals(method) || PUT_METHOD.equals(method) || DELETE_METHOD.equals(method);
     }
 
     /**
@@ -151,16 +165,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     private String generateKey(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication != null ? authentication.getPrincipal() : null;
 
         if (authentication != null && authentication.isAuthenticated()
-                && !authentication.getPrincipal().equals("anonymousUser")) {
+                && principal != null
+                && !ANONYMOUS_USER.equals(principal)) {
             // Utente autenticato - usa username
             return "user:" + authentication.getName();
         } else {
-            // Utente non autenticato - usa IP + Session ID per maggiore granularità
-            // Questo permette a più utenti dietro lo stesso NAT di avere rate limit separati
-            String sessionId = request.getSession(true).getId();
-            return "ip:" + getClientIP(request) + ":session:" + sessionId;
+            // Utente non autenticato - usa solo IP.
+            // NON creare sessione (getSession(false)): creare una sessione ad ogni request
+            // permetterebbe di bypassare il rate limit ottenendo un nuovo sessionId a ogni chiamata.
+            String ip = getClientIP(request);
+            jakarta.servlet.http.HttpSession existing = request.getSession(false);
+            return existing != null
+                    ? "ip:" + ip + ":session:" + existing.getId()
+                    : "ip:" + ip;
         }
     }
 
@@ -222,13 +242,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             case LIKE -> "30/min";
             case MESSAGE -> "20/min";
             case AI -> "10/min";
+            case ADMIN -> "30/min";
             case API_GENERAL -> "100/min";
             case WEBSOCKET -> "50/min";
         };
     }
 
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
         // Non applicare rate limiting a:
