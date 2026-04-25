@@ -1,6 +1,7 @@
 package com.example.backend.services;
 
 import com.example.backend.dtos.request.CreaCommentoRequestDTO;
+import org.springframework.data.domain.PageRequest;
 import com.example.backend.dtos.response.CommentResponseDTO;
 import com.example.backend.events.CommentCreatedEvent;
 import com.example.backend.events.CommentDeletedEvent;
@@ -367,8 +368,9 @@ public class CommentService {
             throw new ResourceNotFoundException(ENTITY_POST, FIELD_ID, postId);
         }
 
-        // 1. Carica i commenti root con i loro user (JOIN FETCH nel repository)
-        List<Comment> rootComments = commentRepository.findRootCommentsByPostId(postId);
+        // 1. Carica i commenti root con limite per protezione memoria
+        List<Comment> rootComments = commentRepository.findRootCommentsByPostId(
+                postId, PageRequest.of(0, 200));
 
         if (rootComments.isEmpty()) {
             log.debug("Nessun commento trovato per post ID: {}", postId);
@@ -539,20 +541,22 @@ public class CommentService {
     @Transactional
     public void deleteAllCommentsByPostId(Long postId) {
         log.info("Eliminazione di tutti i commenti per post ID: {}", postId);
-        
+
         List<Comment> comments = commentRepository.findByPostId(postId);
-        
+
+        List<Comment> toSave = new java.util.ArrayList<>();
         for (Comment comment : comments) {
             if (!comment.getIsDeletedByAuthor()) {
                 comment.setIsDeletedByAuthor(true);
-                commentRepository.save(comment);
-                
-                // Pubblica evento per eliminare le menzioni del commento
+                toSave.add(comment);
                 eventPublisher.publishEvent(new DeleteMentionsEvent(MentionableType.COMMENT, comment.getId()));
-                log.debug("Evento DeleteMentionsEvent pubblicato per commento ID: {}", comment.getId());
             }
         }
-        
-        log.info("Eliminati {} commenti per post ID: {}", comments.size(), postId);
+
+        if (!toSave.isEmpty()) {
+            commentRepository.saveAll(toSave);
+        }
+
+        log.info("Eliminati {} commenti per post ID: {}", toSave.size(), postId);
     }
 }

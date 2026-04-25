@@ -8,8 +8,8 @@ import java.util.Set;
 @Entity
 @Table(name = "comments",
     indexes = {
-        @Index(name = "idx_post_id", columnList = "post_id"),
-        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_comments_post_id", columnList = "post_id"),
+        @Index(name = "idx_comments_user_id", columnList = "user_id"),
         @Index(name = "idx_comments_post_not_deleted", columnList = "post_id, is_deleted_by_author, created_at")
     })
 @Data
@@ -40,11 +40,11 @@ public class Comment extends BaseEntity {
     private Boolean isDeletedByAuthor = false;
     
     // Relazioni
-    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Comment> childComments = new HashSet<>();
-    
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<HiddenComment> hiddenByUsers = new HashSet<>();
     

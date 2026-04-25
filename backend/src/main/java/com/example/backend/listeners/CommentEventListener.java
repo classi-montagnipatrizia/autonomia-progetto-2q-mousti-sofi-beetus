@@ -67,12 +67,12 @@ public class CommentEventListener {
             payload.put("type", "comment_created");
 
             // Broadcast sul topic specifico del post
-            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", payload);
-            
+            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", (Object) payload);
+
             // Broadcast globale del contatore commenti aggiornato (per il feed)
             broadcastCommentsCount(event.getPostId());
-            
-            log.info("Commento ID: {} broadcast via WebSocket su /topic/posts/{}/comments", 
+
+            log.info("Commento ID: {} broadcast via WebSocket su /topic/posts/{}/comments",
                     event.getCommentId(), event.getPostId());
         } catch (Exception e) {
             log.error("Errore broadcast commento ID: {} via WebSocket: {}", 
@@ -107,8 +107,8 @@ public class CommentEventListener {
             payload.put("comment", commentDTO);
             payload.put("type", "comment_updated");
 
-            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", payload);
-            
+            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", (Object) payload);
+
             log.info("Commento modificato ID: {} broadcast via WebSocket", event.getCommentId());
         } catch (Exception e) {
             log.error("Errore broadcast comment update ID: {} via WebSocket: {}", 
@@ -133,11 +133,11 @@ public class CommentEventListener {
             payload.put("commentId", event.getCommentId());
             payload.put("type", "comment_deleted");
 
-            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", payload);
-            
+            messagingTemplate.convertAndSend("/topic/posts/" + event.getPostId() + "/comments", (Object) payload);
+
             // Broadcast globale del contatore commenti aggiornato (per il feed)
             broadcastCommentsCount(event.getPostId());
-            
+
             log.info("Commento cancellato ID: {} broadcast via WebSocket", event.getCommentId());
         } catch (Exception e) {
             log.error("Errore broadcast comment delete ID: {} via WebSocket: {}", 
@@ -159,7 +159,7 @@ public class CommentEventListener {
             countPayload.put("commentsCount", commentsCount);
             countPayload.put("type", "comments_count_update");
             
-            messagingTemplate.convertAndSend("/topic/posts/comments-count", countPayload);
+            messagingTemplate.convertAndSend("/topic/posts/comments-count", (Object) countPayload);
             
             log.debug("Contatore commenti per post ID: {} broadcast: {}", postId, commentsCount);
         } catch (Exception e) {
