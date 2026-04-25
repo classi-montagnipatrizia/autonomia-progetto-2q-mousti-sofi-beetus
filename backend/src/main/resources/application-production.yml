@@ -53,9 +53,6 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
-app:
-  max-students: 17
-
 # Logging ottimizzato per produzione
 logging:
   level:
