@@ -10,6 +10,7 @@ import com.example.backend.events.PostCreatedEvent;
 import com.example.backend.events.PostDeletedEvent;
 import com.example.backend.events.PostUpdatedEvent;
 import com.example.backend.exception.InvalidInputException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mappers.PostMapper;
@@ -349,18 +350,17 @@ public class PostService {
 
         String classroom = currentUser.getClassroom();
 
+        String safeTerm = SearchUtils.escapeLikeWildcards(searchTerm.trim());
+
         Page<Post> posts;
         if (Boolean.TRUE.equals(currentUser.getIsAdmin())) {
-            // Admin cerca tra tutti i post di tutte le classi
-            posts = postRepository.searchPosts(searchTerm.trim(), pageable);
+            posts = postRepository.searchPosts(safeTerm, pageable);
             log.debug("Ricerca admin completata: {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
         } else if (classroom != null && !classroom.isEmpty()) {
-            // Studente: filtra per classe
-            posts = postRepository.searchPostsByClassroom(searchTerm.trim(), classroom, pageable);
+            posts = postRepository.searchPostsByClassroom(safeTerm, classroom, pageable);
             log.debug("Ricerca completata: {} risultati per termine '{}' nella classe '{}'", posts.getTotalElements(), searchTerm, classroom);
         } else {
-            // Fallback: se l'utente non ha classe, cerca tutti (per retrocompatibilità)
-            posts = postRepository.searchPosts(searchTerm.trim(), pageable);
+            posts = postRepository.searchPosts(safeTerm, pageable);
             log.debug("Ricerca completata (senza filtro classe): {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
         }
 

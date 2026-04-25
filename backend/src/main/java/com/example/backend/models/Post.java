@@ -9,8 +9,8 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @Table(name = "posts",
     indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_created_at", columnList = "created_at"),
+        @Index(name = "idx_posts_user_id", columnList = "user_id"),
+        @Index(name = "idx_posts_created_at", columnList = "created_at"),
         @Index(name = "idx_posts_not_deleted", columnList = "is_deleted_by_author, created_at DESC")
     })
 @Data
@@ -43,16 +43,16 @@ public class Post extends BaseEntity {
     private Boolean isDeletedByAuthor = false;
     
     // Relazioni
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @SQLRestriction("is_deleted_by_author = false")
     @Builder.Default
     private Set<Comment> comments = new HashSet<>();
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Like> likes = new HashSet<>();
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<HiddenPost> hiddenByUsers = new HashSet<>();
     

@@ -94,20 +94,21 @@ public class PostEventListener {
      */
     private void broadcastNewPost(Long postId) {
         try {
-            // Usa findByIdWithUser per caricare anche l'autore (evita LazyInitializationException)
             Post post = postRepository.findByIdWithUser(postId).orElse(null);
             if (post == null) {
                 log.warn("Post non trovato per broadcast - ID: {}", postId);
                 return;
             }
 
-            // Converti in DTO (null per currentUserId perché il like sarà false per tutti di default)
-            PostResponseDTO postDTO = postMapper.toPostResponseDTO(post, null);
+            String classroom = post.getUser().getClassroom();
+            if (classroom == null || classroom.isEmpty()) {
+                log.debug("Post ID: {} autore senza classe: broadcast saltato", postId);
+                return;
+            }
 
-            // Broadcast a tutti gli utenti connessi
-            messagingTemplate.convertAndSend("/topic/posts", postDTO);
-            
-            log.info("Post ID: {} broadcast via WebSocket su /topic/posts", postId);
+            PostResponseDTO postDTO = postMapper.toPostResponseDTO(post, null);
+            messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/posts", postDTO);
+            log.info("Post ID: {} broadcast via WebSocket su /topic/classroom/{}/posts", postId, classroom);
         } catch (Exception e) {
             log.error("Errore broadcast post ID: {} via WebSocket: {}", postId, e.getMessage());
         }
@@ -133,10 +134,12 @@ public class PostEventListener {
                 return;
             }
 
+            String classroom = post.getUser().getClassroom();
+            if (classroom == null || classroom.isEmpty()) return;
+
             PostResponseDTO postDTO = postMapper.toPostResponseDTO(post, null);
-            messagingTemplate.convertAndSend("/topic/posts/updated", postDTO);
-            
-            log.info("Post modificato ID: {} broadcast via WebSocket su /topic/posts/updated", event.getPostId());
+            messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/posts/updated", postDTO);
+            log.info("Post modificato ID: {} broadcast via WebSocket su /topic/classroom/{}/posts/updated", event.getPostId(), classroom);
         } catch (Exception e) {
             log.error("Errore broadcast post update ID: {} via WebSocket: {}", event.getPostId(), e.getMessage());
         }
@@ -158,22 +161,23 @@ public class PostEventListener {
         log.info("Evento PostDeletedEvent ricevuto - Post ID: {}", event.getPostId());
 
         try {
-            // Elimina tutti i like del post
+            // Recupera la classe del post prima di eliminare like/commenti
+            Post post = postRepository.findByIdWithUser(event.getPostId()).orElse(null);
+            String classroom = post != null ? post.getUser().getClassroom() : null;
+
             likeService.deleteAllLikesByPostId(event.getPostId());
             log.info("Like eliminati per post ID: {}", event.getPostId());
-            
-            // Elimina tutti i commenti del post
+
             commentService.deleteAllCommentsByPostId(event.getPostId());
             log.info("Commenti eliminati per post ID: {}", event.getPostId());
-            
-            // Broadcast WebSocket
-            Map<String, Object> deletePayload = new HashMap<>();
-            deletePayload.put("postId", event.getPostId());
-            deletePayload.put("type", "deleted");
-            
-            messagingTemplate.convertAndSend("/topic/posts/deleted", deletePayload);
-            
-            log.info("Post cancellato ID: {} broadcast via WebSocket su /topic/posts/deleted", event.getPostId());
+
+            if (classroom != null && !classroom.isEmpty()) {
+                Map<String, Object> deletePayload = new HashMap<>();
+                deletePayload.put("postId", event.getPostId());
+                deletePayload.put("type", "deleted");
+                messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/posts/deleted", (Object) deletePayload);
+                log.info("Post cancellato ID: {} broadcast su /topic/classroom/{}/posts/deleted", event.getPostId(), classroom);
+            }
         } catch (Exception e) {
             log.error("Errore gestione eliminazione post ID: {} - {}", event.getPostId(), e.getMessage());
         }
@@ -190,19 +194,24 @@ public class PostEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostLiked(PostLikedEvent event) {
-        log.info("Evento PostLikedEvent ricevuto - Post ID: {}, Like count: {}, Liked: {}", 
+        log.info("Evento PostLikedEvent ricevuto - Post ID: {}, Like count: {}, Liked: {}",
                 event.getPostId(), event.getLikesCount(), event.isLiked());
 
         try {
+            Post post = postRepository.findByIdWithUser(event.getPostId()).orElse(null);
+            if (post == null) return;
+
+            String classroom = post.getUser().getClassroom();
+            if (classroom == null || classroom.isEmpty()) return;
+
             Map<String, Object> likePayload = new HashMap<>();
             likePayload.put("postId", event.getPostId());
             likePayload.put("likesCount", event.getLikesCount());
             likePayload.put("liked", event.isLiked());
             likePayload.put("type", "like_update");
-            
-            messagingTemplate.convertAndSend("/topic/posts/liked", likePayload);
-            
-            log.info("Like update per post ID: {} broadcast via WebSocket su /topic/posts/liked", event.getPostId());
+
+            messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/posts/liked", (Object) likePayload);
+            log.info("Like update per post ID: {} broadcast su /topic/classroom/{}/posts/liked", event.getPostId(), classroom);
         } catch (Exception e) {
             log.error("Errore broadcast like update post ID: {} via WebSocket: {}", event.getPostId(), e.getMessage());
         }
