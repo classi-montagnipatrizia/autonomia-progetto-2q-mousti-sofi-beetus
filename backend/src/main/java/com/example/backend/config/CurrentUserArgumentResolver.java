@@ -4,9 +4,6 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.models.User;
 import com.example.backend.repositories.UserRepository;
 
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
@@ -41,16 +38,16 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
     private final UserRepository userRepository;
 
     @Override
-    public boolean supportsParameter(@NonNull MethodParameter parameter) {
+        public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(CurrentUser.class)
                 && parameter.getParameterType().equals(User.class);
     }
 
     @Override
-    public Object resolveArgument(@NonNull MethodParameter parameter,
-           @Nullable ModelAndViewContainer mavContainer,
-          @NonNull  NativeWebRequest webRequest,
-          @Nullable   WebDataBinderFactory binderFactory) {
+        public Object resolveArgument(MethodParameter parameter,
+            ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            WebDataBinderFactory binderFactory) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
