@@ -189,7 +189,7 @@ public class WebSocketController {
 
         messagingTemplate.convertAndSend(
                 "/topic/announcements",
-                announcement
+                (Object) announcement
         );
     }
 
