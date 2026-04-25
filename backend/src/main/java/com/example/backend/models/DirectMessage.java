@@ -10,7 +10,7 @@ import lombok.*;
                columnList = "sender_id, receiver_id, is_deleted_permanently, created_at"),
         @Index(name = "idx_messages_reverse", 
                columnList = "receiver_id, sender_id, is_deleted_permanently, created_at"),
-        @Index(name = "idx_created_at", columnList = "created_at")
+        @Index(name = "idx_direct_messages_created_at", columnList = "created_at")
     })
 @Data
 @NoArgsConstructor

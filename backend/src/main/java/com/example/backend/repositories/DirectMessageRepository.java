@@ -206,4 +206,30 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
     @Query("SELECT dm FROM DirectMessage dm WHERE (dm.sender.id = :userId OR dm.receiver.id = :userId) AND (dm.imageUrl IS NOT NULL OR dm.audioUrl IS NOT NULL)")
     List<DirectMessage> findMediaMessagesByUserId(@Param("userId") Long userId);
 
+    @Query("""
+        SELECT dm.sender.id, COUNT(dm) FROM DirectMessage dm
+        WHERE dm.receiver.id = :receiverId
+        AND dm.sender.id IN :senderIds
+        AND dm.isRead = false
+        AND dm.isDeletedPermanently = false
+        AND dm.isDeletedByReceiver = false
+        GROUP BY dm.sender.id
+        """)
+    List<Object[]> countUnreadMessagesBySenders(@Param("receiverId") Long receiverId,
+                                                @Param("senderIds") List<Long> senderIds);
+
+    @Query("""
+        SELECT dm FROM DirectMessage dm
+        LEFT JOIN FETCH dm.sender
+        LEFT JOIN FETCH dm.receiver
+        WHERE dm.isDeletedPermanently = false
+        AND (
+            (dm.sender.id = :user1Id AND dm.receiver.id = :user2Id)
+            OR
+            (dm.sender.id = :user2Id AND dm.receiver.id = :user1Id)
+        )
+        ORDER BY dm.createdAt ASC
+        """)
+    List<DirectMessage> findConversationWithUsers(@Param("user1Id") Long user1Id, @Param("user2Id") Long user2Id);
+
 }

@@ -5,6 +5,7 @@ import com.example.backend.dtos.response.ConversationResponseDTO;
 import com.example.backend.dtos.response.MessageResponseDTO;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mappers.MessageMapper;
 import com.example.backend.models.DirectMessage;
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -81,13 +84,18 @@ public class DirectMessageService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         ENTITY_USER, FIELD_ID, request.getDestinatarioId()));
 
-        // Verifica che mittente e destinatario siano della stessa classe
+        // Verifica che mittente e destinatario siano della stessa classe.
+        // Se entrambi hanno una classe assegnata, devono coincidere.
+        // Se uno dei due ha classroom null il sistema di isolamento non è configurato: blocca
+        // il messaggio per evitare che un utente senza classe possa raggiungere chiunque.
         String senderClassroom = sender.getClassroom();
         String receiverClassroom = receiver.getClassroom();
 
-        if (senderClassroom != null && !senderClassroom.isEmpty()
-                && receiverClassroom != null && !receiverClassroom.isEmpty()
-                && !senderClassroom.equals(receiverClassroom)) {
+        boolean senderHasClassroom = senderClassroom != null && !senderClassroom.isEmpty();
+        boolean receiverHasClassroom = receiverClassroom != null && !receiverClassroom.isEmpty();
+
+        if (senderHasClassroom != receiverHasClassroom
+                || (senderHasClassroom && !senderClassroom.equals(receiverClassroom))) {
             log.warn("Tentativo di inviare messaggio a utente di altra classe - Mittente: {} ({}), Destinatario: {} ({})",
                     senderId, senderClassroom, request.getDestinatarioId(), receiverClassroom);
             throw new InvalidInputException("Puoi inviare messaggi solo ai compagni della tua classe");
@@ -139,7 +147,6 @@ public class DirectMessageService {
     public List<MessageResponseDTO> ottieniConversazione(Long userId, Long altroUtenteId) {
         log.debug("Caricamento conversazione tra utente {} e utente {}", userId, altroUtenteId);
 
-        // Verifica che entrambi gli utenti esistano
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException(ENTITY_USER, FIELD_ID, userId);
         }
@@ -147,17 +154,19 @@ public class DirectMessageService {
             throw new ResourceNotFoundException(ENTITY_USER, FIELD_ID, altroUtenteId);
         }
 
-        // Carica i messaggi della conversazione
-        List<DirectMessage> messages = messageRepository.findConversation(userId, altroUtenteId);
+        List<DirectMessage> messages = messageRepository.findConversationWithUsers(userId, altroUtenteId);
 
         log.debug("Trovati {} messaggi nella conversazione", messages.size());
 
-        // Mappa i messaggi verificando se sono nascosti per l'utente corrente
+        if (messages.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> messageIds = messages.stream().map(DirectMessage::getId).toList();
+        Set<Long> hiddenIds = new HashSet<>(hiddenMessageRepository.findHiddenMessageIds(userId, messageIds));
+
         return messages.stream()
-                .map(message -> {
-                    boolean isHidden = hiddenMessageRepository.existsByMessageIdAndUserId(message.getId(), userId);
-                    return messageMapper.toMessaggioResponseDTO(message, isHidden);
-                })
+                .map(message -> messageMapper.toMessaggioResponseDTO(message, hiddenIds.contains(message.getId())))
                 .toList();
     }
 
@@ -168,23 +177,31 @@ public class DirectMessageService {
     public Page<ConversationResponseDTO> ottieniConversazioni(Long userId, Pageable pageable) {
         log.debug("Caricamento conversazioni per utente {}", userId);
 
-        // Ottiene gli ultimi messaggi di ogni conversazione
         Page<DirectMessage> lastMessages = messageRepository.findLatestConversations(userId, pageable);
 
-        // Per ogni ultimo messaggio, crea un DTO conversazione
+        if (lastMessages.isEmpty()) {
+            return lastMessages.map(m -> null);
+        }
+
+        List<Long> otherUserIds = lastMessages.stream()
+                .map(m -> m.getSender().getId().equals(userId) ? m.getReceiver().getId() : m.getSender().getId())
+                .toList();
+
+        java.util.Map<Long, Long> unreadMap = new java.util.HashMap<>();
+        for (Object[] row : messageRepository.countUnreadMessagesBySenders(userId, otherUserIds)) {
+            unreadMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        List<Long> messageIds = lastMessages.stream().map(DirectMessage::getId).toList();
+        Set<Long> hiddenIds = new HashSet<>(hiddenMessageRepository.findHiddenMessageIds(userId, messageIds));
+
         return lastMessages.map(lastMessage -> {
-            // Identifica l'altro utente nella conversazione
             User altroUtente = lastMessage.getSender().getId().equals(userId)
                     ? lastMessage.getReceiver()
                     : lastMessage.getSender();
 
-            // Conta messaggi non letti da questo utente
-            int unreadCount = (int) messageRepository.countUnreadMessagesBySender(
-                    userId, altroUtente.getId());
-
-            // Verifica se l'ultimo messaggio è nascosto per l'utente corrente
-            boolean isLastMessageHidden = hiddenMessageRepository
-                    .existsByMessageIdAndUserId(lastMessage.getId(), userId);
+            int unreadCount = unreadMap.getOrDefault(altroUtente.getId(), 0L).intValue();
+            boolean isLastMessageHidden = hiddenIds.contains(lastMessage.getId());
 
             return messageMapper.toConversazioneResponseDTO(
                     altroUtente, lastMessage, unreadCount, isLastMessageHidden);
@@ -293,8 +310,10 @@ public class DirectMessageService {
 
         int count = 0;
         for (DirectMessage message : messages) {
-            // Se è il mittente -> soft delete
+            // Se è il mittente -> soft delete + cleanup Cloudinary
             if (message.getSender().getId().equals(userId)) {
+                if (message.getImageUrl() != null) imageService.deleteMessageImage(message.getImageUrl());
+                if (message.getAudioUrl() != null) imageService.deleteMessageImage(message.getAudioUrl());
                 message.setDeletedBySender(true);
             } else {
                 // Se è il destinatario -> hide (se non già nascosto)
@@ -331,9 +350,9 @@ public class DirectMessageService {
             throw new InvalidInputException("Il termine di ricerca non può essere vuoto");
         }
 
-        // Usa la query ottimizzata con LIKE
+        String safeTerm = SearchUtils.escapeLikeWildcards(searchTerm.trim());
         List<DirectMessage> messages = messageRepository
-                .searchMessagesByContent(userId, searchTerm.trim());
+                .searchMessagesByContent(userId, safeTerm);
 
         log.debug("Trovati {} messaggi con termine '{}'", messages.size(), searchTerm);
 

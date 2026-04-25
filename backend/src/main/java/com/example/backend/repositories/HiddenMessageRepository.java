@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.backend.models.HiddenMessage;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -40,4 +41,7 @@ public interface HiddenMessageRepository extends JpaRepository<HiddenMessage, Lo
     @Modifying
     @Query("DELETE FROM HiddenMessage hm WHERE hm.message.id IN (SELECT dm.id FROM DirectMessage dm WHERE dm.sender.id = :userId OR dm.receiver.id = :userId)")
     void deleteByMessageUserId(@Param("userId") Long userId);
+
+    @Query("SELECT hm.message.id FROM HiddenMessage hm WHERE hm.user.id = :userId AND hm.message.id IN :messageIds")
+    List<Long> findHiddenMessageIds(@Param("userId") Long userId, @Param("messageIds") List<Long> messageIds);
 }
