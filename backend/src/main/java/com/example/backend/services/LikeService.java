@@ -125,11 +125,13 @@ public class LikeService {
                 return true;
 
             } catch (DataIntegrityViolationException e) {
-                // Race condition: un altro thread ha appena aggiunto il like
-                // Il like è già presente (constraint violation su UNIQUE user_id, post_id)
-                log.debug("Like già presente (race condition gestita) - Post ID: {}, Utente ID: {}",
+                // Race condition: un altro thread ha appena aggiunto il like.
+                // L'utente voleva fare toggle → il like ora esiste → questo toggle lo rimuove.
+                likeRepository.deleteByUserIdAndPostId(userId, postId);
+                postRepository.updateLikesCount(postId, -1);
+                log.debug("Race condition gestita (like rimosso) - Post ID: {}, Utente ID: {}",
                         postId, userId);
-                return true; // Consideriamo il like come aggiunto
+                return false;
             }
         }
     }
