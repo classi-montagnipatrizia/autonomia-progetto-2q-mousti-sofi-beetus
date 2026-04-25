@@ -8,6 +8,8 @@ import com.example.backend.mappers.NotificationMapper;
 import com.example.backend.models.*;
 import com.example.backend.repositories.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -83,9 +85,14 @@ public class NotificationService {
             return;
         }
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User triggeredBy = userRepository.getReferenceById(triggeredByUserId);
-        Post post = postRepository.getReferenceById(postId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User triggeredBy = userRepository.findById(triggeredByUserId).orElse(null);
+        Post post = postRepository.findById(postId).orElse(null);
+        if (receiver == null || triggeredBy == null || post == null) {
+            log.warn("Entità non trovata per notifica like - receiver:{}, triggeredBy:{}, post:{}",
+                    receiverId, triggeredByUserId, postId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -138,10 +145,15 @@ public class NotificationService {
             return;
         }
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User triggeredBy = userRepository.getReferenceById(triggeredByUserId);
-        Post post = postRepository.getReferenceById(postId);
-        Comment comment = commentRepository.getReferenceById(commentId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User triggeredBy = userRepository.findById(triggeredByUserId).orElse(null);
+        Post post = postRepository.findById(postId).orElse(null);
+        Comment comment = commentRepository.findById(commentId).orElse(null);
+        if (receiver == null || triggeredBy == null || post == null || comment == null) {
+            log.warn("Entità non trovata per notifica commento - receiver:{}, triggeredBy:{}, post:{}, comment:{}",
+                    receiverId, triggeredByUserId, postId, commentId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -193,10 +205,15 @@ public class NotificationService {
             return;
         }
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User triggeredBy = userRepository.getReferenceById(triggeredByUserId);
-        Post post = postRepository.getReferenceById(postId);
-        Comment comment = commentRepository.getReferenceById(commentId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User triggeredBy = userRepository.findById(triggeredByUserId).orElse(null);
+        Post post = postRepository.findById(postId).orElse(null);
+        Comment comment = commentRepository.findById(commentId).orElse(null);
+        if (receiver == null || triggeredBy == null || post == null || comment == null) {
+            log.warn("Entità non trovata per notifica risposta - receiver:{}, triggeredBy:{}, post:{}, comment:{}",
+                    receiverId, triggeredByUserId, postId, commentId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -246,8 +263,13 @@ public class NotificationService {
             return;
         }
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User triggeredBy = userRepository.getReferenceById(triggeredByUserId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User triggeredBy = userRepository.findById(triggeredByUserId).orElse(null);
+        if (receiver == null || triggeredBy == null) {
+            log.warn("Entità non trovata per notifica menzione - receiver:{}, triggeredBy:{}",
+                    receiverId, triggeredByUserId);
+            return;
+        }
 
         String content;
         String actionUrl;
@@ -260,7 +282,11 @@ public class NotificationService {
                 actionUrl = "/post/" + relatedId;
             }
             case COMMENT -> {
-                Comment comment = commentRepository.getReferenceById(relatedId);
+                Comment comment = commentRepository.findById(relatedId).orElse(null);
+                if (comment == null) {
+                    log.warn("Commento non trovato per notifica menzione - commentId:{}", relatedId);
+                    return;
+                }
                 content = String.format("%s ti ha menzionato in un commento",
                         triggeredBy.getFullName());
                 actionUrl = "/post/" + comment.getPost().getId();
@@ -303,9 +329,14 @@ public class NotificationService {
         log.debug("Creazione notifica messaggio - Ricevente: {}, Mittente: {}",
                 receiverId, senderId);
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User sender = userRepository.getReferenceById(senderId);
-        DirectMessage message = directMessageRepository.getReferenceById(messageId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User sender = userRepository.findById(senderId).orElse(null);
+        DirectMessage message = directMessageRepository.findById(messageId).orElse(null);
+        if (receiver == null || sender == null || message == null) {
+            log.warn("Entità non trovata per notifica messaggio - receiver:{}, sender:{}, message:{}",
+                    receiverId, senderId, messageId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -612,8 +643,12 @@ public class NotificationService {
             return;
         }
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User sender = userRepository.getReferenceById(senderId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User sender = userRepository.findById(senderId).orElse(null);
+        if (receiver == null || sender == null) {
+            log.warn("Entità non trovata per notifica libro - receiver:{}, sender:{}", receiverId, senderId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -637,8 +672,12 @@ public class NotificationService {
     public void creaNotificaInvitoGruppo(Long receiverId, Long adminId, Long groupId, String groupName) {
         log.debug("Notifica invito gruppo - Ricevente: {}, Admin: {}, Gruppo: {}", receiverId, adminId, groupId);
 
-        User receiver = userRepository.getReferenceById(receiverId);
-        User admin = userRepository.getReferenceById(adminId);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        User admin = userRepository.findById(adminId).orElse(null);
+        if (receiver == null || admin == null) {
+            log.warn("Entità non trovata per notifica invito gruppo - receiver:{}, admin:{}", receiverId, adminId);
+            return;
+        }
 
         Notification notification = Notification.builder()
                 .user(receiver)
@@ -671,12 +710,22 @@ public class NotificationService {
 
         String senderName = sender.getFullName();
 
-        List<Notification> toSave = new ArrayList<>();
-        for (Long memberId : memberIds) {
-            if (memberId.equals(senderId)) continue;
-            if (isNotificaDuplicataRecente(memberId, senderId, NotificationType.GROUP_MESSAGE, actionUrl)) continue;
+        List<Long> recipientIds = memberIds.stream()
+                .filter(id -> !id.equals(senderId))
+                .filter(id -> !isNotificaDuplicataRecente(id, senderId, NotificationType.GROUP_MESSAGE, actionUrl))
+                .toList();
 
-            User member = userRepository.getReferenceById(memberId);
+        if (recipientIds.isEmpty()) return;
+
+        Map<Long, User> membersMap = new HashMap<>();
+        for (User u : userRepository.findByIdIn(recipientIds)) {
+            membersMap.put(u.getId(), u);
+        }
+
+        List<Notification> toSave = new ArrayList<>();
+        for (Long memberId : recipientIds) {
+            User member = membersMap.get(memberId);
+            if (member == null) continue;
             toSave.add(Notification.builder()
                     .user(member)
                     .type(NotificationType.GROUP_MESSAGE)
@@ -772,22 +821,39 @@ public class NotificationService {
         userRepository.findByIsAdminTrue().ifPresent(admin -> {
             if (excludeIds.contains(admin.getId())) return;
 
+            String adminContent = buildAdminNotificationContent(type, triggeredBy, post);
+
             Notification n = Notification.builder()
                     .user(admin)
                     .type(type)
                     .triggeredByUser(triggeredBy)
                     .relatedPost(post)
                     .relatedComment(comment)
-                    .content(content)
+                    .content(adminContent)
                     .actionUrl(actionUrl)
                     .isRead(false)
                     .build();
 
             notificationRepository.save(n);
             publishNotificationEvent(admin.getUsername(), n);
-            pushNotificationService.sendToUser(admin.getId(), "beetUs", content, actionUrl);
+            pushNotificationService.sendToUser(admin.getId(), "beetUs", adminContent, actionUrl);
             log.debug("Notifica admin inviata - Tipo: {}, URL: {}", type, actionUrl);
         });
+    }
+
+    private String buildAdminNotificationContent(NotificationType type, User triggeredBy, Post post) {
+        String trigger = triggeredBy.getFullName();
+        String postAuthor = post != null ? post.getUser().getFullName() : null;
+        return switch (type) {
+            case LIKE    -> postAuthor != null
+                            ? String.format("%s ha messo mi piace al post di %s", trigger, postAuthor)
+                            : String.format("%s ha messo mi piace a un post", trigger);
+            case COMMENT -> postAuthor != null
+                            ? String.format("%s ha commentato il post di %s", trigger, postAuthor)
+                            : String.format("%s ha aggiunto un commento", trigger);
+            case NEW_POST -> String.format("%s ha pubblicato un nuovo post", trigger);
+            default      -> String.format("%s ha eseguito un'azione", trigger);
+        };
     }
 
     /**

@@ -17,11 +17,21 @@ import java.util.Map;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // Notifiche per utente
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    @Query("""
+        SELECT n FROM Notification n
+        LEFT JOIN FETCH n.triggeredByUser
+        WHERE n.user.id = :userId
+        ORDER BY n.createdAt DESC
+        """)
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 
-    // Notifiche non lette
-    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId);
+    @Query("""
+        SELECT n FROM Notification n
+        LEFT JOIN FETCH n.triggeredByUser
+        WHERE n.user.id = :userId AND n.isRead = false
+        ORDER BY n.createdAt DESC
+        """)
+    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(@Param("userId") Long userId);
 
     // Conta notifiche non lette per tipo
     @Query("""

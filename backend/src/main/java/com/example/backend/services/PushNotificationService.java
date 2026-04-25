@@ -4,7 +4,7 @@ import com.example.backend.models.PushSubscription;
 import com.example.backend.models.User;
 import com.example.backend.repositories.PushSubscriptionRepository;
 import com.example.backend.repositories.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -7,7 +7,7 @@ import lombok.*;
 @Table(name = "notifications",
     indexes = {
         @Index(name = "idx_notifications_unread", columnList = "user_id, is_read, created_at DESC"),
-        @Index(name = "idx_created_at", columnList = "created_at")
+        @Index(name = "idx_notifications_created_at", columnList = "created_at")
     })
 @Data
 @NoArgsConstructor
