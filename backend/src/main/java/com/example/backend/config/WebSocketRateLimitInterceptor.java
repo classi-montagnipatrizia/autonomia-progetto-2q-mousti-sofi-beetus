@@ -3,7 +3,7 @@ package com.example.backend.config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -33,7 +33,7 @@ public class WebSocketRateLimitInterceptor implements ChannelInterceptor {
     private final RateLimitService rateLimitService;
 
     @Override
-    public Message<?> preSend(@NonNull Message<?> message,@NonNull MessageChannel channel) {
+    public @Nullable Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.SEND.equals(accessor.getCommand())) {

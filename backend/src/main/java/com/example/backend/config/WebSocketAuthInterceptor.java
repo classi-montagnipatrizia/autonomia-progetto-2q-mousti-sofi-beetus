@@ -4,7 +4,7 @@ import com.example.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -49,7 +49,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
      * @return Il messaggio o null per bloccare
      */
     @Override
-    public Message<?> preSend(@NonNull Message<?> message,@NonNull MessageChannel channel) {
+    public @Nullable Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
@@ -115,18 +115,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
      * @return Il token JWT estratto, o null se non trovato
      */
     private String extractToken(StompHeaderAccessor accessor) {
-        // Tenta di estrarre da query parameter (passato durante l'handshake)
-        String token = accessor.getFirstNativeHeader("token");
-
-        if (token != null && !token.isEmpty()) {
-            log.debug("Token estratto da query parameter");
-            return token;
-        }
-
-        // Tenta di estrarre da Authorization header
+        // Estrae solo da Authorization header (non da query parameter per evitare token nei log)
         String authHeader = accessor.getFirstNativeHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
+            String token = authHeader.substring(7);
             log.debug("Token estratto da Authorization header");
             return token;
         }

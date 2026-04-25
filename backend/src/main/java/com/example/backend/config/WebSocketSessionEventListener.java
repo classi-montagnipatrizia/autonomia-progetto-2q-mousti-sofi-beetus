@@ -17,6 +17,8 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -49,8 +51,19 @@ public class WebSocketSessionEventListener {
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    // Mappa sessionId -> username per tracciare utenti connessi (per performance)
-    private final Map<String, String> activeUsers = new ConcurrentHashMap<>();
+    // Mappa bidirezionale per tracciare utenti connessi (O(1) lookup in entrambe le direzioni)
+    private final Map<String, String> sessionToUsername = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> usernameToSessions = new ConcurrentHashMap<>();
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void resetAllSessionsOnStartup() {
+        long count = userSessionRepository.count();
+        if (count > 0) {
+            userSessionRepository.markAllOffline();
+            log.info("Startup: marcate {} sessioni come offline", count);
+        }
+    }
 
     /**
      * Gestisce l'evento di connessione WebSocket.
@@ -70,10 +83,11 @@ public class WebSocketSessionEventListener {
 
         if (user != null) {
             String username = user.getName();
-            activeUsers.put(sessionId, username);
+            sessionToUsername.put(sessionId, username);
+            usernameToSessions.computeIfAbsent(username, k -> ConcurrentHashMap.newKeySet()).add(sessionId);
 
             log.info("WebSocket Connected - User: {}, SessionId: {}", username, sessionId);
-            log.debug("Utenti attualmente connessi: {}", activeUsers.size());
+            log.debug("Utenti attualmente connessi: {}", usernameToSessions.size());
 
             // Aggiorna o crea UserSession nel database (con transazione separata)
             updateUserSessionOnConnect(username, sessionId);
@@ -88,7 +102,6 @@ public class WebSocketSessionEventListener {
     /**
      * Aggiorna la sessione utente nel database quando si connette
      */
-    @Transactional
     private void updateUserSessionOnConnect(String username, String sessionId) {
         try {
             Optional<UserSession> existingSession = userSessionRepository.findBySessionId(sessionId);
@@ -124,7 +137,6 @@ public class WebSocketSessionEventListener {
     /**
      * Aggiorna la sessione utente nel database quando si disconnette
      */
-    @Transactional
     private void updateUserSessionOnDisconnect(String username, String sessionId) {
         try {
             Optional<UserSession> session = userSessionRepository.findBySessionId(sessionId);
@@ -158,11 +170,15 @@ public class WebSocketSessionEventListener {
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
-        String username = activeUsers.remove(sessionId);
+        String username = sessionToUsername.remove(sessionId);
 
         if (username != null) {
+            usernameToSessions.computeIfPresent(username, (k, sessions) -> {
+                sessions.remove(sessionId);
+                return sessions.isEmpty() ? null : sessions;
+            });
             log.info("WebSocket Disconnected - User: {}, SessionId: {}", username, sessionId);
-            log.debug("Utenti rimanenti connessi: {}", activeUsers.size());
+            log.debug("Utenti rimanenti connessi: {}", usernameToSessions.size());
 
             // Aggiorna UserSession nel database (con transazione separata)
             updateUserSessionOnDisconnect(username, sessionId);
@@ -221,7 +237,7 @@ public class WebSocketSessionEventListener {
      * @return true se l'utente è connesso, false altrimenti
      */
     public boolean isUserConnected(String username) {
-        return activeUsers.containsValue(username);
+        return usernameToSessions.containsKey(username);
     }
 
     /**
@@ -230,7 +246,7 @@ public class WebSocketSessionEventListener {
      * @return Il numero di connessioni WebSocket attive
      */
     public int getActiveConnectionsCount() {
-        return activeUsers.size();
+        return sessionToUsername.size();
     }
 
     /**
@@ -239,7 +255,7 @@ public class WebSocketSessionEventListener {
      * @return Set di username connessi
      */
     public Set<String> getActiveUsernames() {
-        return new HashSet<>(activeUsers.values());
+        return new HashSet<>(usernameToSessions.keySet());
     }
 
     /**
@@ -252,13 +268,23 @@ public class WebSocketSessionEventListener {
      */
     private void broadcastUserOnlineStatus(String username, boolean isOnline) {
         try {
-            // Cerca l'utente nel database per ottenere i dati completi
             Optional<User> userOpt = userRepository.findByUsernameAndIsActiveTrue(username);
 
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
 
-                // Crea il payload dell'evento
+                // Gli admin sono invisibili: la loro presenza non viene mai broadcast
+                if (Boolean.TRUE.equals(user.getIsAdmin())) {
+                    log.debug("Admin user {}: presenza non trasmessa", username);
+                    return;
+                }
+
+                String classroom = user.getClassroom();
+                if (classroom == null || classroom.isEmpty()) {
+                    log.debug("Utente {} senza classe: presenza non trasmessa", username);
+                    return;
+                }
+
                 Map<String, Object> presenceEvent = new HashMap<>();
                 presenceEvent.put("type", isOnline ? "user_online" : "user_offline");
                 presenceEvent.put("userId", user.getId());
@@ -266,20 +292,12 @@ public class WebSocketSessionEventListener {
                 presenceEvent.put("nomeCompleto", user.getFullName());
                 presenceEvent.put("profilePictureUrl", user.getProfilePictureUrl());
                 presenceEvent.put("isOnline", isOnline);
-                presenceEvent.put("classroom", user.getClassroom());
+                presenceEvent.put("classroom", classroom);
                 presenceEvent.put("timestamp", System.currentTimeMillis());
 
-                // Broadcast al topic specifico della classe (se l'utente ha una classe)
-                String classroom = user.getClassroom();
-                if (classroom != null && !classroom.isEmpty()) {
-                    messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/presence", presenceEvent);
-                    log.debug("Broadcast user {} status: {} to classroom {}", username, isOnline ? "online" : "offline", classroom);
-                }
-
-                // Broadcast anche al topic globale per retrocompatibilità
-                messagingTemplate.convertAndSend("/topic/user-presence", presenceEvent);
-
-                log.debug("Broadcast user {} status: {}", username, isOnline ? "online" : "offline");
+                // Broadcast solo al topic della classe: gli studenti vedono solo i propri compagni
+                messagingTemplate.convertAndSend("/topic/classroom/" + classroom + "/presence", (Object) presenceEvent);
+                log.debug("Broadcast user {} status: {} to classroom {}", username, isOnline ? "online" : "offline", classroom);
             }
         } catch (Exception e) {
             log.error("Errore durante broadcast presenza utente {}: {}", username, e.getMessage());

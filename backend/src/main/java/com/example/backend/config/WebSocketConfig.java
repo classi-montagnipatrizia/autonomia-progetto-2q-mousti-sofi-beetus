@@ -3,12 +3,12 @@ package com.example.backend.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 import java.util.Arrays;
 
@@ -53,7 +53,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * @param config il registry del message broker
      */
     @Override
-    public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
+    public void configureMessageBroker(MessageBrokerRegistry config) {
         // Abilita un simple broker in-memory per gestire le sottoscrizioni
         // /topic -> per messaggi broadcast a tutti gli utenti sottoscritti
         // /queue -> per messaggi diretti a specifici utenti
@@ -78,7 +78,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * @param registry il registry degli endpoint STOMP
      */
     @Override
-    public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
 
         // Trim degli spazi bianchi da ogni origin e converti in array
         String[] origins = Arrays.stream(allowedOrigins.split(","))
@@ -106,9 +106,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * @param registration La registrazione del canale
      */
     @Override
-    public void configureClientInboundChannel(@NonNull ChannelRegistration registration) {
+    public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(
                 webSocketAuthInterceptor,
                 webSocketRateLimitInterceptor);
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        registration.setMessageSizeLimit(64 * 1024);     // 64 KB max per messaggio
+        registration.setSendBufferSizeLimit(512 * 1024);  // 512 KB buffer di invio
+        registration.setSendTimeLimit(20 * 1000);         // 20 secondi timeout invio
     }
 }
