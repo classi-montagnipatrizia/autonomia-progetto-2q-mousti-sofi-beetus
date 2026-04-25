@@ -1,11 +1,14 @@
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth-service';
 import { TokenService } from '../services/token-service';
 import { ToastService } from '../../services/toast-service';
+import { AuthStore } from '../../stores/auth-store';
 import { OnlineUsersStore } from '../../stores/online-users-store';
 import { LoggerService } from '../../services/logger.service';
+import { WebsocketService } from '../../services/websocket-service';
 
 /**
  * Interceptor per gestire errori HTTP e refresh token automatico
@@ -29,24 +32,27 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const tokenService = inject(TokenService);
   const toastService = inject(ToastService);
+  const authStore = inject(AuthStore);
   const onlineUsersStore = inject(OnlineUsersStore);
+  const websocketService = inject(WebsocketService);
+  const router = inject(Router);
   const logger = inject(LoggerService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Gestisce errori di rete (timeout, no connection)
       if (error.status === 0) {
         return handleNetworkError(error, toastService, logger);
       }
 
-      // Gestisce errori 400 Bad Request
       if (error.status === 400) {
         return handle400Error(error, toastService, logger);
       }
 
-      // Gestisce errori 401 Unauthorized
       if (error.status === 401) {
-        return handle401Error(req, next, authService, tokenService, toastService, onlineUsersStore, logger);
+        return handle401Error(req, next, {
+          authService, tokenService, toastService,
+          authStore, onlineUsersStore, websocketService, router, logger,
+        });
       }
 
       // Gestisce errori 403 Forbidden
@@ -108,59 +114,52 @@ function handle400Error(error: HttpErrorResponse, toastService: ToastService, lo
   return throwError(() => error);
 }
 
-/**
- * Gestisce errore 401 con tentativo di refresh token
- */
-function handle401Error(
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-  authService: AuthService,
-  tokenService: TokenService,
-  toastService: ToastService,
-  onlineUsersStore: OnlineUsersStore,
-  logger: LoggerService
-) {
-  // Non tentare refresh se siamo già sulla chiamata di refresh, logout o su endpoint pubblici
-  if (
-    req.url.includes('/auth/refresh-token') ||
-    req.url.includes('/auth/login') ||
-    req.url.includes('/auth/register') ||
-    req.url.includes('/auth/logout')
-  ) {
-    // Effettua logout locale se refresh token invalido (senza chiamare il backend)
-    if (req.url.includes('/auth/refresh-token')) {
-      tokenService.clearTokens();
-      onlineUsersStore.stopPolling();
-      toastService.warning('Sessione scaduta. Effettua nuovamente il login.', { duration: 7000 });
+interface Handle401Deps {
+  authService: AuthService;
+  tokenService: TokenService;
+  toastService: ToastService;
+  authStore: AuthStore;
+  onlineUsersStore: OnlineUsersStore;
+  websocketService: WebsocketService;
+  router: Router;
+  logger: LoggerService;
+}
+
+function forceLogout(deps: Handle401Deps, reason: string): void {
+  deps.tokenService.clearTokens();
+  deps.authStore.clearUser();
+  deps.onlineUsersStore.stopPolling();
+  deps.websocketService.disconnect();
+  deps.toastService.warning(reason, { duration: 7000 });
+  deps.router.navigate(['/auth/login']);
+}
+
+function handle401Error(req: HttpRequest<unknown>, next: HttpHandlerFn, deps: Handle401Deps) {
+  const url = req.url;
+  const isAuthEndpoint =
+    url.includes('/auth/refresh-token') ||
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/logout');
+
+  if (isAuthEndpoint) {
+    if (url.includes('/auth/refresh-token')) {
+      forceLogout(deps, 'Sessione scaduta. Effettua nuovamente il login.');
     }
     return throwError(() => new Error('Token non valido'));
   }
 
-  // Tenta il refresh del token silenziosamente
-  return authService.refreshToken().pipe(
+  return deps.authService.refreshToken().pipe(
     switchMap(() => {
-      // Refresh riuscito, riprova la richiesta originale con nuovo token
-      const token = tokenService.getAccessToken();
-      
+      const token = deps.tokenService.getAccessToken();
       const clonedRequest = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
+        setHeaders: { Authorization: `Bearer ${token}` },
       });
-
       return next(clonedRequest);
     }),
     catchError((refreshError) => {
-      // Refresh fallito, pulisci i token localmente (senza chiamare il backend per evitare loop)
-      tokenService.clearTokens();
-      onlineUsersStore.stopPolling();
-
-      logger.error('Errore refresh token', refreshError);
-      toastService.warning(
-        'La tua sessione è scaduta. Effettua nuovamente il login.',
-        { duration: 7000 }
-      );
-
+      deps.logger.error('Errore refresh token', refreshError);
+      forceLogout(deps, 'La tua sessione è scaduta. Effettua nuovamente il login.');
       return throwError(() => new Error('Sessione scaduta'));
     })
   );

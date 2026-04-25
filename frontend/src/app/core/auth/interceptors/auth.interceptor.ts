@@ -10,22 +10,31 @@ import { TokenService } from '../services/token-service';
  * 2. Se sì, recupera il token e lo aggiunge all'header Authorization
  * 3. Le richieste agli endpoint pubblici vengono ignorate
  */
+const PUBLIC_ENDPOINT_PATHS: readonly string[] = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/reset-password',
+  '/api/auth/confirm-reset-password',
+  '/api/auth/validate-reset-token',
+  '/api/auth/verify-email',
+  '/api/auth/resend-verification',
+  '/api/auth/refresh-token',
+];
+
+function isPublicUrl(url: string): boolean {
+  let pathname: string;
+  try {
+    pathname = new URL(url, globalThis.location?.origin ?? 'http://localhost').pathname;
+  } catch {
+    pathname = url.split('?')[0];
+  }
+  return PUBLIC_ENDPOINT_PATHS.some(path => pathname === path || pathname.endsWith(path));
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
 
-  // Endpoint pubblici che non richiedono autenticazione
-  const publicEndpoints = [
-    '/auth/login',
-    '/auth/register',
-    '/auth/reset-password',
-    '/auth/confirm-reset-password',
-    '/auth/validate-reset-token'
-  ];
-
-  // Verifica se l'URL è pubblico
-  const isPublicEndpoint = publicEndpoints.some(endpoint => 
-    req.url.includes(endpoint)
-  );
+  const isPublicEndpoint = isPublicUrl(req.url);
 
   // Header comuni (necessario per Ngrok free tier)
   const commonHeaders: Record<string, string> = {
