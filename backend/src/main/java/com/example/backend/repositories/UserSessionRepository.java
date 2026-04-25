@@ -72,4 +72,8 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
     @Modifying
     @Query("DELETE FROM UserSession us WHERE us.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE UserSession us SET us.isOnline = false")
+    void markAllOffline();
 }

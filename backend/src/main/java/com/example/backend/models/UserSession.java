@@ -7,8 +7,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_sessions",
     indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_session_id", columnList = "session_id")
+        @Index(name = "idx_user_sessions_user_id", columnList = "user_id"),
+        @Index(name = "idx_user_sessions_session_id", columnList = "session_id"),
+        @Index(name = "idx_user_sessions_online_activity", columnList = "is_online, last_activity")
     })
 @Data
 @NoArgsConstructor

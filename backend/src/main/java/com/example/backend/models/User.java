@@ -71,7 +71,7 @@ public class User extends BaseEntity {
     @Builder.Default
     private Set<DirectMessage> sentMessages = new HashSet<>();
     
-    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "receiver", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<DirectMessage> receivedMessages = new HashSet<>();
     

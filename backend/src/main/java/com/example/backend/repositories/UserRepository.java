@@ -33,6 +33,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Conta solo utenti attivi (ottimizzato - evita N+1 query)
     long countByIsActiveTrue();
 
+    long countByIsAdminTrue();
+
     // Trova l'admin
     Optional<User> findByIsAdminTrue();
 
@@ -73,7 +75,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @param pageable Parametri di paginazione (usa PageRequest.of(0, 10) per primi 10)
      * @return Lista di utenti che matchano il prefisso
      */
-    @Query("SELECT u FROM User u WHERE u.isActive = true AND LOWER(u.username) LIKE LOWER(CONCAT(:prefix, '%')) ORDER BY u.username")
+    @Query("SELECT u FROM User u WHERE u.isActive = true AND u.isAdmin = false AND LOWER(u.username) LIKE LOWER(CONCAT(:prefix, '%')) ORDER BY u.username")
     List<User> findByUsernameStartingWith(@Param("prefix") String prefix, Pageable pageable);
 
     /**
@@ -96,6 +98,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
         SELECT u FROM User u
         WHERE u.isActive = true
+        AND u.isAdmin = false
         AND (
             LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
             OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
@@ -122,14 +125,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Ordinati alfabeticamente per username.
      * Utile per mostrare la lista completa degli studenti della classe.
      */
-    @Query("SELECT u FROM User u WHERE u.isActive = true ORDER BY u.username ASC")
+    @Query("SELECT u FROM User u WHERE u.isActive = true AND u.isAdmin = false ORDER BY u.username ASC")
     Page<User> findAllActiveUsers(Pageable pageable);
 
     /**
      * Trova tutti gli utenti attivi della stessa classe con paginazione.
      * Filtra per classroom per garantire isolamento tra classi.
      */
-    @Query("SELECT u FROM User u WHERE u.isActive = true AND u.classroom = :classroom ORDER BY u.username ASC")
+    @Query("SELECT u FROM User u WHERE u.isActive = true AND u.isAdmin = false AND u.classroom = :classroom ORDER BY u.username ASC")
     Page<User> findAllActiveUsersByClassroom(@Param("classroom") String classroom, Pageable pageable);
 
     /**
@@ -139,6 +142,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
         SELECT u FROM User u
         WHERE u.isActive = true
+        AND u.isAdmin = false
         AND u.classroom = :classroom
         AND (
             LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
