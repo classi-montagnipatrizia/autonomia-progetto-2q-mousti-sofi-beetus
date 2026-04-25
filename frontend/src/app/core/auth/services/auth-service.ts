@@ -253,6 +253,9 @@ export class AuthService {
     // Salva i token
     this.tokenService.saveTokens(response.accessToken, response.refreshToken);
 
+    // Salva i dati utente in localStorage per il ripristino al reload
+    this.tokenService.saveUserData(response.user);
+
     // Aggiorna lo store
     this.authStore.setUser(response.user);
     // Connetti WebSocket dopo login

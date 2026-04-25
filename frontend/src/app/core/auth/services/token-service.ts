@@ -9,6 +9,7 @@ export class TokenService {
   private readonly logger = inject(LoggerService);
   private readonly ACCESS_TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly USER_DATA_KEY = 'user_data';
 
   /**
    * Salva i token nel localStorage
@@ -33,52 +34,84 @@ export class TokenService {
   }
 
   /**
-   * Rimuove tutti i token (logout)
+   * Salva i dati utente in localStorage (per il ripristino al reload)
+   */
+  saveUserData(user: UserResponseDTO): void {
+    // Non persistere l'email: l'autenticazione è nel JWT, non serve in session storage
+    const { email: _email, ...safeData } = user;
+    sessionStorage.setItem(this.USER_DATA_KEY, JSON.stringify(safeData));
+  }
+
+  /**
+   * Recupera i dati utente salvati in localStorage
+   */
+  getSavedUserData(): UserResponseDTO | null {
+    const data = sessionStorage.getItem(this.USER_DATA_KEY);
+    if (!data) return null;
+    try {
+      return JSON.parse(data) as UserResponseDTO;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Rimuove tutti i token e i dati utente (logout)
    */
   clearTokens(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(this.USER_DATA_KEY);
   }
 
   /**
-   * Decodifica il JWT e estrae le informazioni dell'utente
+   * Ripristina le informazioni utente dal localStorage + JWT.
+   * Il JWT contiene solo userId, username, isAdmin (dati minimi per sicurezza).
+   * I dati completi (email, nome, foto...) vengono da localStorage.
    */
   getUserFromToken(): UserResponseDTO | null {
     const token = this.getAccessToken();
-    
+
     if (!token) {
       return null;
     }
 
     try {
-      // Il JWT è composto da: header.payload.signature
       const payload = token.split('.')[1];
-      
+
       if (!payload) {
         return null;
       }
 
-      // Decodifica Base64URL
       const decodedPayload = this.base64UrlDecode(payload);
       const data = JSON.parse(decodedPayload);
 
-      // Verifica se il token è scaduto
       if (data.exp && Date.now() >= data.exp * 1000) {
         return null;
       }
 
-      // Estrae i dati utente dal payload
+      // Recupera i dati completi salvati in localStorage
+      const savedUser = this.getSavedUserData();
+
+      if (savedUser && savedUser.id === data.userId) {
+        // Aggiorna isAdmin dal JWT (fonte di verità per l'autorizzazione)
+        savedUser.isAdmin = data.isAdmin || false;
+        savedUser.isOnline = true;
+        return savedUser;
+      }
+
+      // Fallback: dati minimi dal JWT (primo accesso o dati corrotti)
       return {
         id: data.userId,
-        username: data.sub, // "subject" del JWT è l'username
-        email: data.email,
-        nomeCompleto: data.nomeCompleto,
-        bio: data.bio || null,
-        profilePictureUrl: data.profilePictureUrl || null,
+        username: data.sub,
+        email: '',
+        nomeCompleto: data.sub,
+        bio: null,
+        profilePictureUrl: null,
         isAdmin: data.isAdmin || false,
-        isActive: data.isActive !== false,
-        lastSeen: data.lastSeen || new Date().toISOString(),
-        isOnline: true, // Assume online se ha token valido
+        isActive: true,
+        lastSeen: new Date().toISOString(),
+        isOnline: true,
       } as UserResponseDTO;
 
     } catch (error) {

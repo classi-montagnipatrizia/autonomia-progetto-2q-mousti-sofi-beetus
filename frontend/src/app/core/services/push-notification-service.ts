@@ -4,6 +4,7 @@ import { Observable, from, of } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { PushApiService } from '../api/push-api-service';
+import { LoggerService } from './logger.service';
 
 const STORAGE_KEY = 'push_subscribed';
 const STORAGE_ENDPOINT_KEY = 'push_endpoint';
@@ -14,6 +15,7 @@ const STORAGE_ENDPOINT_KEY = 'push_endpoint';
 export class PushNotificationService {
   private readonly swPush = inject(SwPush);
   private readonly pushApiService = inject(PushApiService);
+  private readonly logger = inject(LoggerService);
 
   /** true se il browser supporta nativamente le push notifications */
   get isSupported(): boolean {
@@ -62,7 +64,7 @@ export class PushNotificationService {
         localStorage.setItem(STORAGE_KEY, 'true');
       }),
       catchError((err) => {
-        console.error('Errore attivazione push notifications:', err);
+        this.logger.error('Errore attivazione push notifications', err);
         throw err;
       })
     );
@@ -88,7 +90,7 @@ export class PushNotificationService {
         localStorage.removeItem(STORAGE_ENDPOINT_KEY);
       }),
       catchError((err) => {
-        console.error('Errore disattivazione push notifications:', err);
+        this.logger.error('Errore disattivazione push notifications', err);
         // Pulisce localStorage anche in caso di errore
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STORAGE_ENDPOINT_KEY);

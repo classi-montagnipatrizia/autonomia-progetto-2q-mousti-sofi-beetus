@@ -56,17 +56,15 @@ export class TokenRefreshService {
       return;
     }
 
-    // Rinfresca 5 minuti (300 secondi) prima della scadenza
     const REFRESH_MARGIN_SECONDS = 300;
-    const refreshInSeconds = Math.max(expirationTime - REFRESH_MARGIN_SECONDS, 10);
+    const refreshInSeconds = expirationTime - REFRESH_MARGIN_SECONDS;
 
-    // Se il token scade tra meno di 10 secondi, rinfresca immediatamente
-    if (refreshInSeconds <= 10) {
+    // Token già scaduto o dentro il margine: refresh immediato
+    if (refreshInSeconds <= 0) {
       this.performRefresh();
       return;
     }
 
-    // Imposta il timer per il refresh
     this.refreshTimerId = setTimeout(() => {
       this.performRefresh();
     }, refreshInSeconds * 1000);

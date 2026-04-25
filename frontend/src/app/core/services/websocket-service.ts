@@ -127,9 +127,10 @@ export class WebsocketService implements OnDestroy {
         this.onConnected();
       },
 
-      // Callback errore connessione
+      // Log STOMP error — reconnect è gestito da onWebSocketClose (evita doppio schedule)
       onStompError: (frame) => {
-        this.onError(frame);
+        this.logger.error('[WebSocket] Errore STOMP', frame);
+        this.connected.set(false);
       },
 
       // Callback disconnessione
@@ -137,7 +138,7 @@ export class WebsocketService implements OnDestroy {
         this.onDisconnected();
       },
 
-      // Callback cambio stato WebSocket
+      // Unico punto di schedule reconnect: copre sia errori STOMP che chiusure socket
       onWebSocketClose: () => {
         this.connected.set(false);
         this.scheduleReconnect();
@@ -196,15 +197,6 @@ export class WebsocketService implements OnDestroy {
   }
 
   /**
-   * Callback chiamato quando si verifica un errore
-   */
-  private onError(frame: unknown): void {
-    this.logger.error('[WebSocket] Errore STOMP', frame);
-    this.connected.set(false);
-    this.scheduleReconnect();
-  }
-
-  /**
    * Callback chiamato quando la connessione viene chiusa
    */
   private onDisconnected(): void {
@@ -239,6 +231,12 @@ export class WebsocketService implements OnDestroy {
     );
 
     this.reconnectTimeoutId = globalThis.setTimeout(() => {
+      // Se il token non è più valido saltiamo: TokenRefreshService riconnetterà
+      // al prossimo cambio di isAuthenticated.
+      if (!this.tokenService.isTokenValid()) {
+        this.logger.warn('[WebSocket] Token non valido, riconnessione rimandata');
+        return;
+      }
       this.connect();
     }, delay);
   }
@@ -298,23 +296,19 @@ export class WebsocketService implements OnDestroy {
     // Sottoscrizione agli annunci broadcast
     this.subscribeToChannel('/topic/announcements', this.announcementsSubject);
 
-    // Sottoscrizione ai nuovi post (broadcast a tutti gli utenti)
-    this.subscribeToChannel('/topic/posts', this.newPostsSubject);
-
-    // Sottoscrizione ai post aggiornati
-    this.subscribeToChannel('/topic/posts/updated', this.postUpdatedSubject);
-
-    // Sottoscrizione ai post cancellati
-    this.subscribeToChannel('/topic/posts/deleted', this.postDeletedSubject);
-
-    // Sottoscrizione agli aggiornamenti like
-    this.subscribeToChannel('/topic/posts/liked', this.postLikedSubject);
-
-    // Sottoscrizione agli aggiornamenti conteggio commenti (globale)
+    // Sottoscrizione al contatore commenti (topic globale: solo metadati, nessun contenuto sensibile)
     this.subscribeToChannel('/topic/posts/comments-count', this.commentsCountSubject);
 
-    // Sottoscrizione agli eventi di presenza utenti (online/offline)
-    this.subscribeToChannel('/topic/user-presence', this.userPresenceSubject);
+    // Topic per classe: post e presenza sono isolati per garantire che ogni studente
+    // veda solo i contenuti e lo stato online dei propri compagni di classe.
+    const classroom = this.tokenService.getSavedUserData()?.classroom;
+    if (classroom) {
+      this.subscribeToChannel(`/topic/classroom/${classroom}/presence`, this.userPresenceSubject);
+      this.subscribeToChannel(`/topic/classroom/${classroom}/posts`, this.newPostsSubject);
+      this.subscribeToChannel(`/topic/classroom/${classroom}/posts/updated`, this.postUpdatedSubject);
+      this.subscribeToChannel(`/topic/classroom/${classroom}/posts/deleted`, this.postDeletedSubject);
+      this.subscribeToChannel(`/topic/classroom/${classroom}/posts/liked`, this.postLikedSubject);
+    }
   }
 
   /**

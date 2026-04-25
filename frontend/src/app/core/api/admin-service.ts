@@ -411,7 +411,7 @@ export interface DeleteCountResponse {
  * Statistiche di sistema
  */
 export interface SystemStatsResponse {
-  [key: string]: any; // Struttura dinamica in base alle statistiche disponibili
+  [key: string]: number; // Statistiche numeriche (totalUsers, totalPosts, ecc.)
 }
 
 /**
@@ -443,7 +443,7 @@ export interface CleanupResponse {
  * Statistiche rate limiting
  */
 export interface RateLimitStatsResponse {
-  cacheStats: any;
+  cacheStats: Record<string, unknown>;
   rateLimitTypes: string[];
   message: string;
 }
@@ -467,7 +467,8 @@ export type RateLimitType =
   | 'MESSAGE'
   | 'AI'
   | 'API_GENERAL'
-  | 'WEBSOCKET';
+  | 'WEBSOCKET'
+  | 'ADMIN';
 
 /**
  * DTO utente per pagina admin con informazioni estese
