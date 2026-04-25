@@ -9,10 +9,10 @@
  * Intervalli di polling (in millisecondi)
  */
 export const POLLING_INTERVALS = {
-  /** Polling messaggi chat */
-  MESSAGES: 3000,
+  /** Polling messaggi chat (backup — WebSocket gestisce il real-time) */
+  MESSAGES: 15000,
   /** Polling conversazioni */
-  CONVERSATIONS: 5000,
+  CONVERSATIONS: 30000,
   /** Polling typing indicator */
   TYPING: 2000,
   /** Polling notifiche */
