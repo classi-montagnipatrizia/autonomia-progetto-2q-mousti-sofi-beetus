@@ -6,6 +6,7 @@ import com.example.backend.dtos.response.UserSummaryDTO;
 import com.example.backend.events.PasswordChangedEmailEvent;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.mappers.UserMapper;
 import com.example.backend.models.User;
 import com.example.backend.repositories.*;
@@ -93,7 +94,11 @@ public class UserService {
             throw new ResourceNotFoundException(ENTITY_USER, FIELD_ID, userId);
         }
 
-        return userMapper.toUtenteResponseDTO(user);
+        UserResponseDTO dto = userMapper.toUtenteResponseDTO(user);
+        // Il profilo pubblico non deve esporre email né il flag admin
+        dto.setEmail(null);
+        dto.setIsAdmin(null);
+        return dto;
     }
 
     /**
@@ -195,19 +200,19 @@ public class UserService {
             throw new InvalidInputException("Il termine di ricerca non può essere vuoto");
         }
 
+        String safeTerm = SearchUtils.escapeLikeWildcards(searchTerm.trim());
+
         Page<User> users;
         if (allClasses) {
-            // Gruppi cross-class: cerca tutti gli utenti senza filtro classe
-            users = userRepository.searchUsers(searchTerm.trim(), pageable);
+            users = userRepository.searchUsers(safeTerm, pageable);
         } else {
-            // Chat normale: filtra per stessa classe
             User currentUser = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new ResourceNotFoundException(ENTITY_USER, FIELD_ID, currentUserId));
             String classroom = currentUser.getClassroom();
             if (classroom != null && !classroom.isEmpty()) {
-                users = userRepository.searchUsersByClassroom(searchTerm.trim(), classroom, pageable);
+                users = userRepository.searchUsersByClassroom(safeTerm, classroom, pageable);
             } else {
-                users = userRepository.searchUsers(searchTerm.trim(), pageable);
+                users = userRepository.searchUsers(safeTerm, pageable);
             }
         }
 
