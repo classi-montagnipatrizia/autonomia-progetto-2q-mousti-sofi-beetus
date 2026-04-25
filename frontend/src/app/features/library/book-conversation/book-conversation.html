@@ -122,12 +122,15 @@
 
     <!-- Messaggi -->
       @if (!loading() && messages().length > 0) {
-        <!-- Data separatore -->
-        <div class="flex items-center justify-center mb-6">
-          <span class="px-4 py-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-gray-600 dark:text-gray-300 text-[11px] font-semibold tracking-wider rounded-2xl">OGGI</span>
-        </div>
-
-        @for (message of messages(); track message.id) {
+        @for (message of messages(); track message.id; let i = $index) {
+          <!-- Separatore data per giorno -->
+          @if (shouldShowDateSeparator(messages(), i)) {
+            <div class="flex items-center justify-center mb-6" [class.mt-0]="i === 0" [class.mt-4]="i > 0">
+              <span class="px-4 py-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-gray-600 dark:text-gray-300 text-[11px] font-semibold tracking-wider rounded-2xl select-none">
+                {{ getDateLabel(message.createdAt) }}
+              </span>
+            </div>
+          }
           @if (message.isDeletedBySender) {
             <!-- Messaggio eliminato -->
             <div [class]="isMyMessage(message) ? 'flex justify-end mb-4' : 'flex justify-start mb-4'">

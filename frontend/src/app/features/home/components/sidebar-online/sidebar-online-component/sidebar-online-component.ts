@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, MessageSquare } from 'lucide-angular';
 import { UserListItemComponent } from '../../../../../shared/components/user-list-item/user-list-item-component/user-list-item-component';
@@ -12,12 +12,7 @@ import { LoggerService } from '../../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-sidebar-online-component',
-  imports: [CommonModule,
-    RouterLink,
-    LucideAngularModule,
-    UserListItemComponent,
-    SkeletonComponent,
-    ],
+  imports: [RouterLink, LucideAngularModule, UserListItemComponent, SkeletonComponent],
   templateUrl: './sidebar-online-component.html',
   styleUrl: './sidebar-online-component.scss',
 })

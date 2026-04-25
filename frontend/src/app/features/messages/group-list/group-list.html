@@ -111,9 +111,9 @@
 
               <div class="flex-1 min-w-0 pr-2">
                 <div class="flex items-center justify-between mb-1">
-                  <p class="font-bold text-[15px] text-gray-900 dark:text-white truncate pr-2">{{ group.name }}</p>
+                  <p class="font-bold text-[15px] text-gray-900 dark:text-white truncate pr-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ group.name }}</p>
                   @if (group.lastMessageAt) {
-                    <span class="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-black/5 dark:bg-white/5 py-1 px-2 rounded-lg shrink-0">
+                    <span class="text-xs text-gray-400 flex-shrink-0">
                       {{ group.lastMessageAt | timeAgo }}
                     </span>
                   }
@@ -121,14 +121,14 @@
                 <!-- Anteprima ultimo messaggio -->
                 <div class="flex items-center justify-between mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                   @if (group.lastMessageContent) {
-                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ group.lastMessageContent }}</p>
+                    <p class="text-[13px] truncate transition-colors" [class]="group.unreadCount > 0 ? 'text-gray-900 dark:text-gray-100 font-semibold' : 'text-gray-500 dark:text-gray-400 font-medium group-hover:text-gray-600 dark:group-hover:text-gray-300'">{{ group.lastMessageContent }}</p>
                   } @else {
-                    <p class="text-sm text-gray-400 dark:text-gray-500 italic truncate">Nessun messaggio</p>
+                    <p class="text-[13px] text-gray-400 dark:text-gray-500 italic truncate transition-colors">Nessun messaggio</p>
                   }
                   
                   <!-- Badge unread spostato qui a destra del messaggio per layout più pulito -->
                   @if (group.unreadCount > 0) {
-                    <span class="ml-2 px-2 py-0.5 bg-gradient-to-br from-primary-500 to-primary-600 shadow-sm text-white text-[11px] font-bold rounded-full flex items-center justify-center shrink-0">
+                    <span class="ml-2 px-2 py-0.5 bg-primary-500 shadow-sm text-white text-[11px] font-bold rounded-full flex items-center justify-center shrink-0">
                       {{ group.unreadCount > 9 ? '9+' : group.unreadCount }}
                     </span>
                   }

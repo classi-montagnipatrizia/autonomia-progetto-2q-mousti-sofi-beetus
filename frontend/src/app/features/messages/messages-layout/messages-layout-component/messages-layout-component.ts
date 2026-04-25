@@ -1,34 +1,34 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
-import { Subscription, filter } from 'rxjs';
+import { filter } from 'rxjs';
 import { ConversationsComponent } from '../../conversations/conversations-component/conversations-component';
 import { GroupList } from '../../group-list/group-list';
 import { GroupStore } from '../../../../core/stores/group-store';
 
 @Component({
   selector: 'app-messages-layout-component',
-  imports: [CommonModule, RouterOutlet, ConversationsComponent, GroupList],
+  imports: [RouterOutlet, ConversationsComponent, GroupList],
   templateUrl: './messages-layout-component.html',
   styleUrl: './messages-layout-component.scss',
 })
-export class MessagesLayoutComponent implements OnInit, OnDestroy {
+export class MessagesLayoutComponent implements OnInit {
   private readonly router = inject(Router);
   readonly groupStore = inject(GroupStore);
-  private routerSub?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly hasChatOpen = signal(false);
   readonly activeTab = signal<'chat' | 'gruppi'>('chat');
 
   ngOnInit(): void {
     this.checkChatOpen();
-    this.routerSub = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(() => this.checkChatOpen());
-  }
-
-  ngOnDestroy(): void {
-    this.routerSub?.unsubscribe();
   }
 
   switchTab(tab: 'chat' | 'gruppi'): void {

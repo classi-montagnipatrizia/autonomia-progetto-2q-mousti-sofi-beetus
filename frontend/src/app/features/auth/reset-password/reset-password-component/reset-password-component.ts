@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule, MailCheck, CircleCheck, ArrowLeft, LockKeyhole } from 'lucide-angular';
@@ -20,12 +20,7 @@ type ResetStep = 'request' | 'sent' | 'reset' | 'success';
 
 @Component({
   selector: 'app-reset-password-component',
-  imports: [ CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    LucideAngularModule,
-    InputComponent,
-    ButtonComponent,],
+  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule, InputComponent, ButtonComponent],
   templateUrl: './reset-password-component.html',
   styleUrl: './reset-password-component.scss',
 })

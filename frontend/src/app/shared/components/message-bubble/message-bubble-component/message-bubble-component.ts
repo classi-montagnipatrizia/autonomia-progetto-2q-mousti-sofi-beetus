@@ -1,4 +1,4 @@
-import { Component, input, computed } from '@angular/core';
+import { Component, input, computed, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TimeAgoComponent } from '../../time-ago/time-ago-component/time-ago-component';
 import { AudioPlayerComponent } from '../../audio-player/audio-player-component/audio-player-component';
@@ -63,6 +63,8 @@ export class MessageBubbleComponent {
    * @default true
    */
   readonly showReadStatus = input<boolean>(true);
+
+  readonly onImageClick = output<string>();
 
   /**
    * Posizione calcolata in base a isMine

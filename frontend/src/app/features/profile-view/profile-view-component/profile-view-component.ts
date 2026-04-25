@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule, Settings, ImageIcon, ArrowLeft, X } from 'lucide-angular';
-import { Subject, takeUntil, forkJoin, finalize } from 'rxjs';
+import { forkJoin, finalize } from 'rxjs';
 
 import { UserService } from '../../../core/api/user-service';
 import { PostService } from '../../../core/api/post-service';
@@ -26,18 +27,17 @@ type ProfileTab = 'posts' | 'media';
 @Component({
   selector: 'app-profile-component',
   imports: [
-    CommonModule,
     LucideAngularModule,
     AvatarComponent,
     SkeletonComponent,
     PostCardComponent,
     InfiniteScroll,
-    SpinnerComponent,
-  ],
+    SpinnerComponent
+],
   templateUrl: './profile-view-component.html',
   styleUrl: './profile-view-component.scss',
 })
-export class ProfileComponent implements OnInit, OnDestroy {
+export class ProfileComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   private readonly userService = inject(UserService);
@@ -45,7 +45,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private readonly authStore = inject(AuthStore);
   private readonly onlineUsersStore = inject(OnlineUsersStore);
   private readonly logger = inject(LoggerService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   // Icons
   readonly SettingsIcon = Settings;
@@ -110,7 +110,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const userId = params.get('id');
       if (userId) {
         const parsedId = Number(userId);
@@ -135,11 +135,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   private loadProfile(userId: number): void {
     this.isLoading.set(true);
     this.error.set(null);
@@ -151,7 +146,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       stats: this.userService.getUserStats(userId),
     })
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -177,7 +172,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.postService
       .getUserPosts(userId, this.postsPage(), 10)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoadingPosts.set(false);
           this.isLoadingMore.set(false);

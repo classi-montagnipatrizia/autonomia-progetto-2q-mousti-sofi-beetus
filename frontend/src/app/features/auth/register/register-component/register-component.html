@@ -149,6 +149,46 @@
           size="lg"
         />
 
+        <!-- Accettazione Termini -->
+        <div class="mt-2">
+          <label class="flex items-start gap-3 cursor-pointer group">
+            <div class="relative mt-0.5 shrink-0">
+              <input
+                type="checkbox"
+                formControlName="termsAccepted"
+                class="sr-only peer"
+              />
+              <div
+                class="w-5 h-5 rounded-md border-2 transition-all
+                       border-gray-300 dark:border-gray-600
+                       peer-checked:bg-primary-500 peer-checked:border-primary-500
+                       group-hover:border-primary-400
+                       flex items-center justify-center"
+              >
+                @if (registerForm.get('termsAccepted')?.value) {
+                  <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                }
+              </div>
+            </div>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400 leading-snug">
+              Ho letto e accetto i
+              <button
+                type="button"
+                (click)="showTermsModal.set(true)"
+                class="text-primary-600 dark:text-primary-400 font-semibold hover:underline focus:outline-none"
+              >Termini di Utilizzo</button>
+              di beetUs
+            </span>
+          </label>
+          @if (getFieldError('termsAccepted')) {
+            <span class="block text-[13px] text-error-500 mt-1.5 ml-8 font-medium">
+              {{ getFieldError('termsAccepted') }}
+            </span>
+          }
+        </div>
+
         <!-- Pulsante registrazione -->
         <app-button
           type="submit"
@@ -157,7 +197,7 @@
           [fullWidth]="true"
           [loading]="isLoading()"
           [disabled]="!isFormValid() && registerForm.touched"
-          class="mt-6 active:scale-[0.98] transition-transform"
+          class="mt-4 active:scale-[0.98] transition-transform"
         >
           Registrati
         </app-button>
@@ -176,3 +216,81 @@
     </p>
   </div>
 </div>
+
+<!-- Modale Termini di Utilizzo -->
+<app-modal-component
+  [isOpen]="showTermsModal()"
+  title="Termini di Utilizzo"
+  size="lg"
+  (closed)="showTermsModal.set(false)"
+>
+  <div class="p-6 space-y-5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed overflow-y-auto max-h-[65vh]">
+
+    <p class="text-gray-500 dark:text-gray-400 text-xs">Ultimo aggiornamento: aprile 2025</p>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">1. Cos'è beetUs</h3>
+      <p>beetUs è una piattaforma scolastica riservata esclusivamente agli studenti dell'istituto. Permette di condividere post, scambiarsi messaggi con i compagni di classe, comprare e vendere libri scolastici e partecipare a chat di gruppo.</p>
+    </section>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">2. Accesso e account</h3>
+      <ul class="space-y-1.5 list-disc list-inside">
+        <li>L'accesso è riservato agli studenti con email scolastica dell'istituto.</li>
+        <li>Sei responsabile della sicurezza del tuo account e di tutte le attività svolte con esso.</li>
+        <li>Non condividere la tua password con nessuno.</li>
+        <li>In caso di accesso non autorizzato, contatta immediatamente un amministratore.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">3. Cosa è permesso</h3>
+      <ul class="space-y-1.5 list-disc list-inside">
+        <li>Condividere contenuti legati alla vita scolastica e agli interessi comuni.</li>
+        <li>Comunicare in modo rispettoso con i compagni di classe.</li>
+        <li>Vendere e acquistare libri scolastici tramite la sezione Libreria.</li>
+        <li>Creare o partecipare a gruppi di studio e coordinamento.</li>
+        <li>Segnalare comportamenti scorretti agli amministratori.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">4. Cosa è vietato</h3>
+      <ul class="space-y-1.5 list-disc list-inside text-gray-700 dark:text-gray-300">
+        <li>Utilizzare linguaggio offensivo, insulti, parolacce o contenuti discriminatori.</li>
+        <li>Molestare, minacciare o intimidire altri utenti.</li>
+        <li>Pubblicare contenuti inappropriati, violenti o illegali.</li>
+        <li>Fare spam o inviare messaggi ripetitivi non richiesti.</li>
+        <li>Diffondere dati personali di altri utenti senza il loro consenso.</li>
+        <li>Impersonare altri utenti o creare account falsi.</li>
+        <li>Qualsiasi comportamento che possa ledere la comunità scolastica o la reputazione di altri studenti.</li>
+      </ul>
+    </section>
+
+    <section class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-4">
+      <h3 class="font-bold text-amber-800 dark:text-amber-300 text-base mb-2">5. Moderazione e contatti</h3>
+      <p class="text-amber-700 dark:text-amber-400">Gli amministratori della piattaforma hanno la facoltà di <strong>rimuovere post, commenti e messaggi</strong> che violano questi termini — inclusi contenuti con linguaggio offensivo o inappropriato — e di <strong>sospendere o eliminare gli account</strong> che non rispettano le regole, senza preavviso.</p>
+      <p class="text-amber-700 dark:text-amber-400 mt-2">Per segnalazioni o problemi, contatta l'admin: <a href="mailto:moustapha.mbaye@marconirovereto.it" class="font-semibold underline">moustapha.mbaye&#64;marconirovereto.it</a></p>
+    </section>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">6. Privacy</h3>
+      <p>I tuoi dati (nome, username, classe) sono visibili ai tuoi compagni di classe all'interno della piattaforma. Non condividiamo informazioni con terze parti. Utilizzando beetUs accetti il trattamento dei tuoi dati per le finalità descritte.</p>
+    </section>
+
+    <section>
+      <h3 class="font-bold text-gray-900 dark:text-gray-100 text-base mb-2">7. Modifiche ai termini</h3>
+      <p>Ci riserviamo il diritto di aggiornare questi termini in qualsiasi momento. Le modifiche rilevanti saranno comunicate tramite la piattaforma.</p>
+    </section>
+
+    <div class="pt-2">
+      <button
+        type="button"
+        (click)="showTermsModal.set(false)"
+        class="w-full py-3 rounded-2xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
+      >
+        Ho capito
+      </button>
+    </div>
+  </div>
+</app-modal-component>

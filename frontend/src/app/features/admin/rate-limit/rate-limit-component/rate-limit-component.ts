@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +15,7 @@ import {
   Shield,
   Info,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdminService, RateLimitType, UserTokensResponse, RateLimitStatsResponse } from '../../../../core/api/admin-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -33,12 +34,12 @@ import { LoggerService } from '../../../../core/services/logger.service';
   templateUrl: './rate-limit-component.html',
   styleUrl: './rate-limit-component.scss',
 })
-export class RateLimitComponent implements OnInit, OnDestroy {
+export class RateLimitComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggerService);
 
   // Icone
@@ -82,11 +83,6 @@ export class RateLimitComponent implements OnInit, OnDestroy {
     this.loadStats();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Carica statistiche rate limit
    */
@@ -96,7 +92,7 @@ export class RateLimitComponent implements OnInit, OnDestroy {
 
     this.adminService.getRateLimitStats()
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoadingStats.set(false))
       )
       .subscribe({
@@ -131,7 +127,7 @@ export class RateLimitComponent implements OnInit, OnDestroy {
     this.isResettingUser.set(true);
     this.adminService.resetUserRateLimit(user, this.selectedType())
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isResettingUser.set(false))
       )
       .subscribe({
@@ -160,7 +156,7 @@ export class RateLimitComponent implements OnInit, OnDestroy {
     this.isCheckingTokens.set(true);
     this.adminService.getUserRateLimitTokens(user, this.checkType())
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isCheckingTokens.set(false))
       )
       .subscribe({

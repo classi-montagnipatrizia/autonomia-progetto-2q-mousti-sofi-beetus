@@ -1,8 +1,8 @@
-import { Component, computed, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import {
   LucideAngularModule,
   ArrowLeft,
@@ -53,7 +53,7 @@ import {
   templateUrl: './library-page.html',
   styleUrl: './library-page.scss',
 })
-export class LibraryPage implements OnInit, OnDestroy {
+export class LibraryPage implements OnInit {
   readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authStore = inject(AuthStore);
@@ -61,8 +61,7 @@ export class LibraryPage implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly websocketService = inject(WebsocketService);
   private readonly dialogService = inject(DialogService);
-
-  private wsBookMessagesSub?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
 
   // Icons
   readonly ArrowLeftIcon = ArrowLeft;
@@ -182,15 +181,13 @@ export class LibraryPage implements OnInit, OnDestroy {
     }
 
     // Sottoscrizione WebSocket per aggiornare la lista conversazioni in real-time
-    this.wsBookMessagesSub = this.websocketService.bookMessages$.subscribe({
-      next: (message) => {
-        this.store.handleIncomingBookMessage(message);
-      },
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.wsBookMessagesSub?.unsubscribe();
+    this.websocketService.bookMessages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (message) => {
+          this.store.handleIncomingBookMessage(message);
+        },
+      });
   }
 
   // =========================================================================

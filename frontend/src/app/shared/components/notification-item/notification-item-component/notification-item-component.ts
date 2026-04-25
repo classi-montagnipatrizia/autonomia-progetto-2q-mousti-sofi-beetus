@@ -109,6 +109,7 @@ export class NotificationItemComponent {
       [NotificationType.NEW_POST]: this.FileTextIcon,
       [NotificationType.BOOK_MESSAGE]: this.MessageSquareIcon,
       [NotificationType.GROUP_MESSAGE]: this.UsersIcon,
+      [NotificationType.GROUP_INVITE]: this.UsersIcon,
     };
     return iconMap[this.tipo()];
   });
@@ -125,6 +126,7 @@ export class NotificationItemComponent {
       [NotificationType.NEW_POST]: 'text-warning-500',
       [NotificationType.BOOK_MESSAGE]: 'text-teal-500',
       [NotificationType.GROUP_MESSAGE]: 'text-indigo-500',
+      [NotificationType.GROUP_INVITE]: 'text-indigo-500',
     };
     return colorMap[this.tipo()];
   });

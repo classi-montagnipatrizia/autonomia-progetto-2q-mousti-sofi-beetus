@@ -14,6 +14,7 @@ import { OnlineDrawerService } from '../../../core/services/online-drawer.servic
 
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SearchDropdownComponent } from '../../../shared/components/search-dropdown/search-dropdown-component/search-dropdown-component';
+import { NotificationResponseDTO } from '../../../models';
 
 @Component({
   selector: 'app-header',
@@ -254,7 +255,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   /**
    * Clicca su una notifica
    */
-  onNotificationClick(notification: any): void {
+  onNotificationClick(notification: NotificationResponseDTO): void {
     // Marca come letta
     if (!notification.isRead) {
       this.notificationStore.markAsRead(notification.id);

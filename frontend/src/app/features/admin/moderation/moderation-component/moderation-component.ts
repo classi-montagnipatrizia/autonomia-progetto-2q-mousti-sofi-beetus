@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ import {
   BookOpen,
   UsersRound,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AdminService, AdminBookDTO, AdminCommentDTO, AdminGroupDTO } from '../../../../core/api/admin-service';
 import { PostService } from '../../../../core/api/post-service';
@@ -46,13 +47,13 @@ type ContentTab = 'posts' | 'comments' | 'books' | 'groups';
   templateUrl: './moderation-component.html',
   styleUrl: './moderation-component.scss',
 })
-export class ModerationComponent implements OnInit, OnDestroy {
+export class ModerationComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly postService = inject(PostService);
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchSubject$ = new Subject<string>();
 
   // Icone
@@ -117,11 +118,6 @@ export class ModerationComponent implements OnInit, OnDestroy {
     this.loadContent();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Configura debounce sulla ricerca
    */
@@ -130,7 +126,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((query) => {
         this.currentPage.set(0);
@@ -171,7 +167,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.postService.getFeed(this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -196,7 +192,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.getAllComments(this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -229,7 +225,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.deleteComment(comment.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingId.set(null))
       )
       .subscribe({
@@ -253,7 +249,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.postService.searchPosts(query, this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -305,7 +301,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.deletePost(post.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingId.set(null))
       )
       .subscribe({
@@ -337,7 +333,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.deleteAllUserPosts(post.autore.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingId.set(null))
       )
       .subscribe({
@@ -366,7 +362,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.getAllBooks(this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -399,7 +395,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.deleteBook(book.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingId.set(null))
       )
       .subscribe({
@@ -427,7 +423,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.getAllGroups(this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -460,7 +456,7 @@ export class ModerationComponent implements OnInit, OnDestroy {
 
     this.adminService.deleteGroup(group.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingId.set(null))
       )
       .subscribe({

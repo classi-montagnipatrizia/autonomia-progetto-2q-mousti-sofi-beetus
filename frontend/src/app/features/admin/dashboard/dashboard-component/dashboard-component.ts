@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -19,7 +20,7 @@ import {
   BookOpen,
   UsersRound,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdminService, SystemStatsResponse } from '../../../../core/api/admin-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -45,11 +46,11 @@ interface StatCard {
   templateUrl: './dashboard-component.html',
   styleUrl: './dashboard-component.scss',
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly toastService = inject(ToastService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   // Icone
   readonly ArrowLeftIcon = ArrowLeft;
@@ -147,11 +148,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadStats();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Carica le statistiche dal server
    */
@@ -161,7 +157,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.adminService.getSystemStats()
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({

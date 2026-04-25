@@ -1,5 +1,5 @@
 import { Component, input, output, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -27,15 +27,14 @@ import { PostService } from '../../../../core/api/post-service';
 @Component({
   selector: 'app-post-card-component',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AvatarComponent,
     DropdownComponent,
     PostActionsComponent,
     TimeAgoComponent,
-    SafeMentionTextComponent,
-  ],
+    SafeMentionTextComponent
+],
   templateUrl: './post-card-component.html',
   styleUrl: './post-card-component.scss',
 })
@@ -150,11 +149,11 @@ export class PostCardComponent {
   }
 
   /**
-   * Apre i commenti (naviga al dettaglio)
+   * Apre i commenti (naviga al dettaglio, ma non apre la tastiera)
    */
-  openComments(event: Event): void {
+  openCommentsList(event: Event): void {
     event.stopPropagation();
-    this.router.navigate(['/post', this.post().id], { fragment: 'comments' });
+    this.router.navigate(['/post', this.post().id], { fragment: 'comments-list' });
   }
 
   /**

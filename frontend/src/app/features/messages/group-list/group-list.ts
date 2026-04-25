@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { LucideAngularModule, ArrowLeft, Plus, Users } from 'lucide-angular';
 import { GroupStore } from '../../../core/stores/group-store';
@@ -19,7 +19,7 @@ const AVATAR_COLORS = [
 
 @Component({
   selector: 'app-group-list',
-  imports: [CommonModule, LucideAngularModule, CreateGroupModal, TimeAgoPipe],
+  imports: [LucideAngularModule, CreateGroupModal, TimeAgoPipe],
   templateUrl: './group-list.html',
   styleUrl: './group-list.scss',
 })
@@ -69,10 +69,9 @@ export class GroupList implements OnInit {
   async onGroupCreated(event: { request: CreaGruppoRequestDTO; memberIds: number[] }): Promise<void> {
     try {
       const group = await this.groupStore.creaGruppo(event.request);
-      // Aggiungi membri
-      for (const userId of event.memberIds) {
-        await this.groupStore.aggiungiMembro(group.id, userId);
-      }
+      await Promise.all(
+        event.memberIds.map(userId => this.groupStore.aggiungiMembro(group.id, userId))
+      );
       this.showCreateModal.set(false);
       this.router.navigate(['/messages', 'group', group.id]);
     } catch {

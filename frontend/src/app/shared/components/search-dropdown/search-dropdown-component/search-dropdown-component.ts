@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   input,
   output,
   signal,
@@ -8,12 +9,12 @@ import {
   effect,
   ElementRef,
   viewChild,
-  OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 import { LucideAngularModule, Search, X, User, FileText } from 'lucide-angular';
 import { SearchService, GlobalSearchResults } from '../../../../core/services/search-service';
 import { UserSummaryDTO, PostResponseDTO } from '../../../../models';
@@ -23,20 +24,14 @@ import { ClickOutside } from '../../../directives/click-outside';
 
 @Component({
   selector: 'app-search-dropdown-component',
-  imports: [CommonModule,
-    FormsModule,
-    LucideAngularModule,
-    AvatarComponent,
-    ButtonComponent,
-    ClickOutside,
-    ],
+  imports: [FormsModule, LucideAngularModule, AvatarComponent, ButtonComponent, ClickOutside],
   templateUrl: './search-dropdown-component.html',
   styleUrl: './search-dropdown-component.scss',
 })
-export class SearchDropdownComponent implements OnDestroy{
-private readonly searchService = inject(SearchService);
+export class SearchDropdownComponent {
+  private readonly searchService = inject(SearchService);
   private readonly router = inject(Router);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   // Riferimento all'input di ricerca
   readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInputRef');
@@ -104,7 +99,7 @@ private readonly searchService = inject(SearchService);
   private setupSearch(): void {
     this.searchService
       .searchWithDebounce(this.searchTermSubject.asObservable())
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (results) => {
           this.results.set(results);
@@ -252,8 +247,4 @@ private readonly searchService = inject(SearchService);
     return content.slice(0, maxLength) + '...';
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
 }

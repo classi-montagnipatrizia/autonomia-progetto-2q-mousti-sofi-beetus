@@ -1,9 +1,9 @@
-import { Component, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, ArrowLeft, Ellipsis, Pencil, Trash2, X, Check, Heart, MessageCircle, Share2 } from 'lucide-angular';
-import { Subscription } from 'rxjs';
 
 import { PostDettaglioResponseDTO, CommentResponseDTO, UserSummaryDTO } from '../../../../models';
 import { PostService } from '../../../../core/api/post-service';
@@ -11,7 +11,7 @@ import { CommentService } from '../../../../core/api/comment-service';
 import { LikeService } from '../../../../core/api/like-service';
 import { DialogService } from '../../../../core/services/dialog-service';
 import { ToastService } from '../../../../core/services/toast-service';
-import { WebsocketService } from '../../../../core/services/websocket-service';
+import { WebsocketService, CommentUpdate } from '../../../../core/services/websocket-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { LoggerService } from '../../../../core/services/logger.service';
 
@@ -52,8 +52,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private readonly websocketService = inject(WebsocketService);
   private readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
-
-  private readonly subscriptions: Subscription[] = [];
+  private readonly destroyRef = inject(DestroyRef);
 
   // Riferimento al form commenti
   readonly commentFormRef = viewChild<CommentFormComponent>('commentForm');
@@ -140,12 +139,15 @@ export class PostDetailComponent implements OnInit, OnDestroy {
         // Focus sull'input commenti
         this.commentFormRef()?.focus();
       }, 500);
+    } else if (fragment === 'comments-list') {
+      setTimeout(() => {
+        document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
     }
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-    // Cancella sottoscrizione commenti
+    // Cancella sottoscrizione commenti via WebSocket
     const postId = Number(this.route.snapshot.paramMap.get('id'));
     if (postId) {
       this.websocketService.unsubscribeFromPostComments(postId);
@@ -172,19 +174,17 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   }
 
   private setupWebSocketSubscriptions(postId: number): void {
-    // Aggiornamenti like
-    this.subscriptions.push(
-      this.websocketService.postLiked$.subscribe((update) => {
+    this.websocketService.postLiked$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
         if (update.postId === postId) {
-          // Aggiorna il conteggio like dal server
           this.localLikesCount.set(update.likesCount);
         }
-      })
-    );
+      });
 
-    // Post modificato
-    this.subscriptions.push(
-      this.websocketService.postUpdated$.subscribe((updatedPost) => {
+    this.websocketService.postUpdated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((updatedPost) => {
         if (updatedPost.id === postId) {
           this.post.update(current => current ? {
             ...current,
@@ -193,22 +193,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
             updatedAt: updatedPost.updatedAt,
           } : current);
         }
-      })
-    );
+      });
 
-    // Post eliminato
-    this.subscriptions.push(
-      this.websocketService.postDeleted$.subscribe((event) => {
+    this.websocketService.postDeleted$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
         if (event.postId === postId) {
           this.toastService.warning('Il post è stato eliminato');
           this.goBack();
         }
-      })
-    );
+      });
 
-    // Aggiornamenti commenti in tempo reale
-    this.subscriptions.push(
-      this.websocketService.commentUpdates$.subscribe((update) => {
+    this.websocketService.commentUpdates$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
         if (update.postId !== postId) return;
 
         switch (update.type) {
@@ -226,19 +224,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
             }
             break;
         }
-      })
-    );
+      });
   }
 
   /**
    * Gestisce un commento creato da un altro utente via WebSocket
    */
-  private handleRemoteCommentCreated(update: any): void {
+  private handleRemoteCommentCreated(update: CommentUpdate): void {
     const currentUserId = this.authStore.userId();
-    
+    const newComment = update.comment;
+    if (!newComment) return;
+
     // Ignora se il commento è stato creato dall'utente corrente
     // (già gestito localmente da onCommentCreated)
-    if (update.comment?.autore?.id === currentUserId) {
+    if (newComment.autore?.id === currentUserId) {
       return;
     }
 
@@ -252,20 +251,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
         updatedCommenti = current.commenti.map(c => {
           if (c.id === update.parentCommentId) {
             // Evita duplicati
-            if (c.risposte.some(r => r.id === update.comment.id)) {
+            if (c.risposte.some(r => r.id === newComment.id)) {
               return c;
             }
-            return { ...c, risposte: [...c.risposte, update.comment] };
+            return { ...c, risposte: [...c.risposte, newComment] };
           }
           return c;
         });
       } else {
         // È un nuovo commento principale
         // Evita duplicati
-        if (current.commenti.some(c => c.id === update.comment.id)) {
+        if (current.commenti.some(c => c.id === newComment.id)) {
           return current;
         }
-        updatedCommenti = [update.comment, ...current.commenti];
+        updatedCommenti = [newComment, ...current.commenti];
       }
 
       return {
@@ -476,7 +475,6 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     });
 
     this.replyingTo.set(null);
-    this.toastService.success(replyTo ? 'Risposta inviata' : 'Commento aggiunto');
   }
 
   /**

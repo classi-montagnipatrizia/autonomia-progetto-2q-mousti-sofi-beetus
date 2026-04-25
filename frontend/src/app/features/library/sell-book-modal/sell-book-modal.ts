@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
@@ -31,12 +31,11 @@ type AiStatus = 'idle' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-sell-book-modal',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     ModalComponent,
-    SpinnerComponent,
-  ],
+    SpinnerComponent
+],
   templateUrl: './sell-book-modal.html',
   styleUrl: './sell-book-modal.scss',
 })

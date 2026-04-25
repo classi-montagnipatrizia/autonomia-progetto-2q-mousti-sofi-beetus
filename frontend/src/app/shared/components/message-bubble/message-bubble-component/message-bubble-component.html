@@ -19,6 +19,7 @@
               alt="Immagine allegata"
               class="rounded-xl max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
               loading="lazy"
+              (click)="onImageClick.emit(imageUrl()!)"
             />
           </div>
         }

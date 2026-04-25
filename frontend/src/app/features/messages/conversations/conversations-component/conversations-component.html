@@ -27,7 +27,7 @@
       >
         Gruppi
         @if (groupStore.totalUnread() > 0) {
-          <span class="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-primary-500 to-primary-600 shadow-md text-white text-xs font-bold rounded-full flex items-center justify-center">{{ groupStore.totalUnread() }}</span>
+          <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 bg-primary-500 shadow-sm text-white text-[11px] font-bold rounded-full flex items-center justify-center">{{ groupStore.totalUnread() > 99 ? '99+' : groupStore.totalUnread() }}</span>
         }
       </button>
     </div>
@@ -39,14 +39,14 @@
       <lucide-icon
         [img]="SearchIcon"
         [size]="18"
-        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+        class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"
       />
       <input
         type="text"
         [ngModel]="searchQuery()"
         (ngModelChange)="onSearchChange($event)"
         placeholder="Cerca messaggi..."
-        class="search-input w-full pl-12 pr-10 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-[16px] text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all shadow-sm"
+        class="search-input w-full pl-14 pr-10 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-[16px] text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all shadow-sm"
       />
       @if (searchQuery()) {
         <button
@@ -159,27 +159,31 @@
             <button
               type="button"
               (click)="onSearchResultClick(message)"
-              class="w-full flex items-start gap-4 p-4 rounded-[20px] bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 dark:hover:bg-gray-700/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 transition-all text-left shadow-sm hover:shadow-md active:scale-[0.98]"
+              class="group w-full flex items-start gap-4 p-4 rounded-[20px] bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 dark:hover:bg-gray-700/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 transition-all text-left shadow-sm hover:shadow-md active:scale-[0.98]"
             >
               <app-avatar
                 [src]="message.mittente.profilePictureUrl"
                 [name]="message.mittente.nomeCompleto"
                 size="md"
-                [status]="isUserOnline(message.mittente.id) ? 'online' : 'offline'"
               />
               <div class="flex-1 min-w-0 pt-0.5">
                 <div class="flex items-center justify-between gap-3 mb-1.5">
-                  <span class="font-bold text-[15px] text-gray-900 dark:text-white truncate">
+                  <span class="font-bold text-[15px] text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                     {{ message.mittente.nomeCompleto }}
                   </span>
-                  <span class="text-[11px] font-medium text-gray-500 whitespace-nowrap bg-black/5 dark:bg-white/5 py-1 px-2 rounded-lg">
+                  <span class="text-xs text-gray-400 flex-shrink-0">
                     {{ message.createdAt | timeAgo }}
                   </span>
                 </div>
-                <p
-                  class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 line-clamp-2 bg-white/30 dark:bg-gray-900/30 p-2.5 rounded-xl text-[13px]"
-                  [innerHTML]="highlightText(message.contenuto ?? '', searchQuery())"
-                ></p>
+                <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 line-clamp-2 bg-white/30 dark:bg-gray-900/30 p-2.5 rounded-xl text-[13px] transition-colors group-hover:text-gray-700 dark:group-hover:text-gray-300">
+                  @for (segment of highlightSegments(message.contenuto, searchQuery()); track $index) {
+                    @if (segment.match) {
+                      <mark class="bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-100 rounded px-1 font-medium">{{ segment.text }}</mark>
+                    } @else {
+                      {{ segment.text }}
+                    }
+                  }
+                </p>
               </div>
             </button>
           }
@@ -202,7 +206,7 @@
                  [nomeCompleto]="conversation.altroUtente.nomeCompleto"
                  [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
                  [isOnline]="isUserOnline(conversation.altroUtente.id)"
-                 [isTyping]="isUserTyping(conversation.altroUtente.id)"
+                 [isTyping]="isUserTyping(conversation.altroUtente.username)"
                  [lastMessage]="getLastMessagePreview(conversation)"
                  [lastActivityAt]="conversation.ultimaAttivita"
                  [unreadCount]="conversation.messaggiNonLetti"
@@ -231,7 +235,7 @@
               [nomeCompleto]="conversation.altroUtente.nomeCompleto"
               [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
               [isOnline]="isUserOnline(conversation.altroUtente.id)"
-              [isTyping]="isUserTyping(conversation.altroUtente.id)"
+              [isTyping]="isUserTyping(conversation.altroUtente.username)"
               [lastMessage]="getLastMessagePreview(conversation)"
               [lastActivityAt]="conversation.ultimaAttivita"
               [unreadCount]="conversation.messaggiNonLetti"

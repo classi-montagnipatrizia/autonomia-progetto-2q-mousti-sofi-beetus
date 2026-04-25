@@ -1,109 +1,106 @@
-import { Component, input, signal, computed, HostListener, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, signal, HostListener, ElementRef, inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
-/**
- * Posizionamento del menu dropdown
- */
 export type DropdownPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
+
+interface MenuPosition {
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+}
 
 @Component({
   selector: 'app-dropdown',
   imports: [CommonModule],
   templateUrl: './dropdown-component.html',
   styleUrl: './dropdown-component.scss',
- 
 })
 export class DropdownComponent {
-  /**
-   * Posizionamento del menu dropdown
-   * @default 'bottom-start'
-   */
   readonly placement = input<DropdownPlacement>('bottom-start');
-
-  /**
-   * Larghezza minima del dropdown (in rem)
-   * @default 12 (192px)
-   */
   readonly minWidth = input<number>(12);
-
-  /**
-   * Mostra una freccia che punta al trigger
-   * @default false
-   */
   readonly showArrow = input<boolean>(false);
+  readonly strategy = input<'fixed' | 'absolute'>('fixed');
 
-  /**
-   * Controlla se il dropdown è aperto
-   */
   readonly isOpen = signal<boolean>(false);
+  readonly menuStyle = signal<MenuPosition>({});
 
-  /**
-   * Classi CSS per il posizionamento del dropdown
-   */
-  readonly placementClasses = computed(() => {
-    const placement = this.placement();
+  private readonly elementRef = inject(ElementRef);
+  private readonly platformId = inject(PLATFORM_ID);
 
-    const placementMap: Record<DropdownPlacement, string> = {
-      'bottom-start': 'top-full left-0 mt-2',
-      'bottom-end': 'top-full right-0 mt-2',
-      'top-start': 'bottom-full left-0 mb-2',
-      'top-end': 'bottom-full right-0 mb-2',
-    };
+  readonly minWidthStyle = `${this.minWidth()}rem`;
 
-    return placementMap[placement];
-  });
-
-  /**
-   * Stile inline per la larghezza minima
-   */
-  readonly minWidthStyle = computed(() => {
-    return `${this.minWidth()}rem`;
-  });
-
-  constructor(private readonly elementRef: ElementRef) {}
-
-  /**
-   * Chiude il dropdown quando si clicca fuori
-   */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.isOpen()) return;
-
-    const clickedInside = this.elementRef.nativeElement.contains(event.target);
-
-    if (!clickedInside) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
       this.close();
     }
   }
 
-  /**
-   * Gestisce la pressione del tasto Escape per chiudere
-   */
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
-    if (this.isOpen()) {
-      this.close();
-    }
+    if (this.isOpen()) this.close();
   }
 
-  /**
-   * Apre il dropdown
-   */
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onScrollOrResize(): void {
+    if (this.isOpen()) this.recalculatePosition();
+  }
+
   open(): void {
+    this.recalculatePosition();
     this.isOpen.set(true);
   }
 
-  /**
-   * Chiude il dropdown
-   */
   close(): void {
     this.isOpen.set(false);
   }
 
-  /**
-   * Toggle del dropdown (apri/chiudi)
-   */
   toggle(): void {
-    this.isOpen.update((value) => !value);
+    if (this.isOpen()) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  private recalculatePosition(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const trigger = this.elementRef.nativeElement.querySelector('.dropdown-trigger');
+    if (!trigger) return;
+
+    const rect: DOMRect = trigger.getBoundingClientRect();
+    const placement = this.placement();
+    const pos: MenuPosition = {};
+    const minW = this.minWidth() * 16; // rem → px
+
+    if (placement === 'bottom-start' || placement === 'bottom-end') {
+      pos.top = `${rect.bottom + 4}px`;
+    } else {
+      pos.bottom = `${window.innerHeight - rect.top + 4}px`;
+    }
+
+    if (placement === 'bottom-end' || placement === 'top-end') {
+      // Anchor to the right edge of the trigger
+      const rightOffset = window.innerWidth - rect.right;
+      pos.right = `${rightOffset}px`;
+      // Clamp so it doesn't go off the left edge
+      const estimatedLeft = rect.right - minW;
+      if (estimatedLeft < 8) {
+        delete pos.right;
+        pos.left = '8px';
+      }
+    } else {
+      pos.left = `${rect.left}px`;
+      // Clamp so it doesn't go off the right edge
+      if (rect.left + minW > window.innerWidth - 8) {
+        pos.left = `${window.innerWidth - minW - 8}px`;
+      }
+    }
+
+    this.menuStyle.set(pos);
   }
 }

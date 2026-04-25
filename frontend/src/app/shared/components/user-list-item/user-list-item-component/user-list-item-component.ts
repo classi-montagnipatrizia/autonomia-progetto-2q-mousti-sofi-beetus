@@ -1,4 +1,4 @@
-import { Component, input, output, computed } from '@angular/core';
+import { Component, input, output, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AvatarComponent, AvatarSize } from '../../../ui/avatar/avatar-component/avatar-component';
@@ -75,7 +75,7 @@ export class UserListItemComponent {
    */
   readonly userClick = output<number>();
 
-  constructor(private readonly router: Router) {}
+  private readonly router = inject(Router);
 
   /**
    * Dimensione avatar in base alla variante

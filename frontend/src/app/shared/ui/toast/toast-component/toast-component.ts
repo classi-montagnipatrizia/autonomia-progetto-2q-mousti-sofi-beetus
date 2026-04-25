@@ -34,20 +34,20 @@ export class ToastComponent {
    * Restituisce le classi CSS per il tipo di toast
    */
   getToastClasses(type: ToastType): string {
-    const base = 'flex items-start gap-3 p-4 rounded-lg shadow-lg border backdrop-blur-sm';
+    const base = 'p-5 rounded-[24px] shadow-xl shadow-black/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border backdrop-blur-xl';
 
     switch (type) {
       case 'success':
-        return `${base} bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200`;
+        return `${base} bg-success-50/80 dark:bg-success-900/30 border-success-200/50 dark:border-success-700/30 text-success-800 dark:text-success-100 ring-1 ring-inset ring-white/20`;
 
       case 'error':
-        return `${base} bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200`;
+        return `${base} bg-error-50/80 dark:bg-error-900/30 border-error-200/50 dark:border-error-700/30 text-error-800 dark:text-error-100 ring-1 ring-inset ring-white/20`;
 
       case 'warning':
-        return `${base} bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200`;
+        return `${base} bg-warning-50/80 dark:bg-warning-900/30 border-warning-200/50 dark:border-warning-700/30 text-warning-800 dark:text-warning-100 ring-1 ring-inset ring-white/20`;
 
       case 'info':
-        return `${base} bg-info-50 dark:bg-info-900/20 border-info-200 dark:border-info-800 text-info-800 dark:text-info-200`;
+        return `${base} bg-info-50/80 dark:bg-info-900/30 border-info-200/50 dark:border-info-700/30 text-info-800 dark:text-info-100 ring-1 ring-inset ring-white/20`;
 
       default:
         return base;
@@ -58,7 +58,7 @@ export class ToastComponent {
    * Restituisce le classi CSS per l'icona
    */
   getIconClasses(type: ToastType): string {
-    const base = 'shrink-0';
+    const base = 'shrink-0 transition-colors';
 
     switch (type) {
       case 'success':

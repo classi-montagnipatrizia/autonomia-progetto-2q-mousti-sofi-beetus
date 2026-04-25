@@ -1,5 +1,5 @@
 import { Component, input, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LucideAngularModule, LoaderCircle } from 'lucide-angular';
 
 export type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -7,7 +7,7 @@ export type SpinnerColor = 'primary' | 'white' | 'gray' | 'current';
 
 @Component({
   selector: 'app-spinner',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   templateUrl: './spinner-component.html',
   styleUrl: './spinner-component.scss',
 })

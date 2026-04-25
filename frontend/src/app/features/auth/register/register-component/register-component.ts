@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputComponent } from '../../../../shared/ui/input/input-component/input-component';
 import { ButtonComponent } from '../../../../shared/ui/button/button-component/button-component';
+import { ModalComponent } from '../../../../shared/ui/modal/modal-component/modal-component';
 import { AuthService } from '../../../../core/auth/services/auth-service';
 import { UserService } from '../../../../core/api/user-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -14,11 +15,7 @@ import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-register-component',
-  imports: [CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    InputComponent,
-    ButtonComponent,],
+  imports: [ReactiveFormsModule, RouterLink, InputComponent, ButtonComponent, ModalComponent],
   templateUrl: './register-component.html',
   styleUrl: './register-component.scss',
 })
@@ -36,6 +33,7 @@ export class RegisterComponent {
   readonly emailAvailable = signal<boolean | null>(null);
   readonly checkingUsername = signal<boolean>(false);
   readonly checkingEmail = signal<boolean>(false);
+  readonly showTermsModal = signal<boolean>(false);
 
   // Classi disponibili per la registrazione
   readonly availableClassrooms = [
@@ -54,6 +52,7 @@ export class RegisterComponent {
     classroom: ['', [Validators.required]],
     password: ['', [Validators.required, passwordValidator()]],
     confirmPassword: ['', [Validators.required, matchPasswordValidator('password')]],
+    termsAccepted: [false, Validators.requiredTrue],
   });
 
   constructor() {
@@ -154,6 +153,11 @@ export class RegisterComponent {
       return '';
     }
 
+    // Errore terms
+    if (fieldName === 'termsAccepted' && control.errors['required']) {
+      return 'Devi accettare i Termini di Utilizzo per continuare';
+    }
+
     // Errore required
     if (control.errors['required']) {
       return `${this.getFieldLabel(fieldName)} è obbligatorio`;
@@ -200,6 +204,7 @@ export class RegisterComponent {
       classroom: 'Classe',
       password: 'Password',
       confirmPassword: 'Conferma password',
+      termsAccepted: 'L\'accettazione dei termini',
     };
     return labels[fieldName] || fieldName;
   }

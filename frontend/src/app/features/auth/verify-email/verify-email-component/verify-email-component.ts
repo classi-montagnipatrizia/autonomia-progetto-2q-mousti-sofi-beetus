@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/auth/services/auth-service';
@@ -11,7 +11,7 @@ import { schoolEmailValidator } from '../../../../core/utils/validators';
 
 @Component({
   selector: 'app-verify-email',
-  imports: [CommonModule, RouterLink, ButtonComponent, InputComponent, ReactiveFormsModule],
+  imports: [RouterLink, ButtonComponent, InputComponent, ReactiveFormsModule],
   templateUrl: './verify-email-component.html',
   styleUrl: './verify-email-component.scss',
 })

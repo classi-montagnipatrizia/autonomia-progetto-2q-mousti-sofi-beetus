@@ -1,15 +1,17 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, OnDestroy, signal, computed, ElementRef, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, ArrowLeft, Send, Image, Trash, EyeOff, X, Eye, Mic } from 'lucide-angular';
-import { Subscription, interval, Subject } from 'rxjs';
-import { switchMap, startWith, takeUntil, finalize } from 'rxjs/operators';
+import { interval, Subject } from 'rxjs';
+import { switchMap, takeUntil, finalize } from 'rxjs/operators';
 import { MessageService } from '../../../../core/api/message-service';
 import { UserService } from '../../../../core/api/user-service';
 import { WebsocketService } from '../../../../core/services/websocket-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { OnlineUsersStore } from '../../../../core/stores/online-users-store';
+import { TypingStore } from '../../../../core/stores/typing-store';
 import { MessageResponseDTO, UserSummaryDTO } from '../../../../models';
 import { AvatarComponent } from '../../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-component/skeleton-component';
@@ -20,6 +22,8 @@ import { TimeAgoComponent } from '../../../../shared/components/time-ago/time-ag
 import { AudioRecorderComponent } from '../../../../shared/components/audio-recorder/audio-recorder-component/audio-recorder-component';
 import { AudioPlayerComponent } from '../../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../core/config/app.config';
+import { HighlightSegment, splitHighlight } from '../../../../core/utils/highlight.utils';
+import { getChatDateLabel, isSameDay } from '../../../../core/utils/chat-date.utils';
 
 /**
  * Chat view per una singola conversazione.
@@ -30,7 +34,6 @@ import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../cor
   selector: 'app-chat-component',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AvatarComponent,
@@ -38,10 +41,11 @@ import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../cor
     DropdownComponent,
     TimeAgoComponent,
     AudioRecorderComponent,
-    AudioPlayerComponent,
-  ],
+    AudioPlayerComponent
+],
   templateUrl: './chat-component.html',
   styleUrl: './chat-component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent implements OnInit, OnDestroy {
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
@@ -54,21 +58,20 @@ export class ChatComponent implements OnInit, OnDestroy {
   private readonly websocketService = inject(WebsocketService);
   private readonly authStore = inject(AuthStore);
   private readonly onlineUsersStore = inject(OnlineUsersStore);
+  private readonly typingStore = inject(TypingStore);
   private readonly cloudinaryService = inject(CloudinaryStorageService);
   private readonly toastService = inject(ToastService);
-  
-  private routeSub?: Subscription;
-  private queryParamSub?: Subscription;
-  private wsMessagesSub?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
+
   private readonly pollingStop$ = new Subject<void>();
   private pendingScrollToMessageId: number | null = null;
   private isFirstLoad = true;
   private currentOtherUserId: number | null = null;
   private lastTypingSent = 0;
+  private highlightTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // Usa costanti centralizzate da app.config.ts
   private readonly MESSAGE_POLLING_INTERVAL = POLLING_INTERVALS.MESSAGES;
-  private readonly TYPING_POLLING_INTERVAL = POLLING_INTERVALS.TYPING;
   private readonly TYPING_THROTTLE = TIMEOUTS.TYPING_THROTTLE;
   private readonly HIGHLIGHT_DURATION = TIMEOUTS.MESSAGE_HIGHLIGHT;
   private readonly SCROLL_DELAY = TIMEOUTS.SCROLL_DELAY;
@@ -94,7 +97,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   readonly deletingIds = signal<Set<number>>(new Set());
   readonly error = signal<string | null>(null);
   readonly messageText = signal('');
-  readonly isOtherUserTyping = signal(false);
+
+  readonly isOtherUserTyping = computed(() => {
+    const user = this.otherUser();
+    if (!user) return false;
+    return this.typingStore.isUserTypingByUsername(user.username);
+  });
 
   // Stato immagine
   readonly imagePreviewUrl = signal<string | null>(null);
@@ -133,18 +141,18 @@ export class ChatComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    // Gestisce i cambiamenti di userId (nuova conversazione)
-    this.routeSub = this.route.paramMap.subscribe(params => {
-      const userIdParam = params.get('userId');
-      if (userIdParam) {
-        const userId = Number.parseInt(userIdParam, 10);
+    // Cambiamenti di userId (nuova conversazione)
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const userIdParam = params.get('userId');
+        if (!userIdParam) return;
 
-        // Leggi i query params correnti
+        const userId = Number.parseInt(userIdParam, 10);
         const queryParams = this.route.snapshot.queryParamMap;
         const messageIdParam = queryParams.get('messageId');
         const highlightParam = queryParams.get('highlight');
 
-        // Imposta i parametri di ricerca PRIMA di switchToConversation
         if (messageIdParam) {
           const messageId = Number.parseInt(messageIdParam, 10);
           this.pendingScrollToMessageId = messageId;
@@ -155,67 +163,61 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
 
         this.switchToConversation(userId);
-      }
-    });
+      });
 
-    // Gestisce i cambiamenti dei query params (stesso userId ma messaggio diverso)
-    this.queryParamSub = this.route.queryParamMap.subscribe(params => {
-      const messageIdParam = params.get('messageId');
-      const highlightParam = params.get('highlight');
+    // Cambiamenti dei query params (stesso userId, messaggio diverso)
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const messageIdParam = params.get('messageId');
+        const highlightParam = params.get('highlight');
 
-      if (messageIdParam && this.currentOtherUserId !== null) {
+        if (!messageIdParam || this.currentOtherUserId === null) return;
+
         const messageId = Number.parseInt(messageIdParam, 10);
 
-        // Se i messaggi sono già caricati, scrolla subito
         if (this.messages().length > 0) {
           this.setHighlight(messageId, highlightParam);
           this.scrollToMessage(messageId);
         } else {
-          // Altrimenti salva per dopo
           this.pendingScrollToMessageId = messageId;
           this.setHighlight(messageId, highlightParam);
         }
-      }
-    });
+      });
 
-    // Sottoscrizione ai messaggi WebSocket real-time
-    this.wsMessagesSub = this.websocketService.messages$.subscribe({
-      next: (newMessage: MessageResponseDTO) => {
-        
-        // Verifica se il messaggio appartiene alla conversazione corrente
-        const isRelevant = 
-          (newMessage.mittente.id === this.currentOtherUserId && newMessage.destinatario.id === this.currentUserId()) ||
-          (newMessage.destinatario.id === this.currentOtherUserId && newMessage.mittente.id === this.currentUserId());
-        
-        if (isRelevant) {
-          // Aggiungi il messaggio se non esiste già (evita duplicati dal polling)
+    // Messaggi WebSocket real-time
+    this.websocketService.messages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (newMessage: MessageResponseDTO) => {
+          const isRelevant =
+            (newMessage.mittente.id === this.currentOtherUserId && newMessage.destinatario.id === this.currentUserId()) ||
+            (newMessage.destinatario.id === this.currentOtherUserId && newMessage.mittente.id === this.currentUserId());
+
+          if (!isRelevant) return;
+
           const currentMessages = this.messages();
-          const exists = currentMessages.some(m => m.id === newMessage.id);
-          
-          if (!exists) {
-            this.messages.set([...currentMessages, newMessage]);
-            // Scrolla in basso per nuovi messaggi
-            this.scrollToBottom();
-          }
-        }
-      },
-      error: () => {
-        // Ignora errori WebSocket
-      }
-    });
+          if (currentMessages.some(m => m.id === newMessage.id)) return;
+
+          this.messages.set([...currentMessages, newMessage]);
+          this.scrollToBottom();
+        },
+        error: () => {
+          // ignora errori WebSocket
+        },
+      });
   }
 
   ngOnDestroy(): void {
-    // Clear typing quando lascia la chat
-    if (this.currentOtherUserId) {
-      this.messageService.clearTyping(this.currentOtherUserId).subscribe();
+    const user = this.otherUser();
+    if (user) {
+      this.websocketService.sendTypingIndicator(user.username, false);
     }
-    
     this.stopPolling();
     this.pollingStop$.complete();
-    this.routeSub?.unsubscribe();
-    this.queryParamSub?.unsubscribe();
-    this.wsMessagesSub?.unsubscribe();
+    if (this.highlightTimeoutId !== null) {
+      clearTimeout(this.highlightTimeoutId);
+    }
   }
 
   /**
@@ -224,7 +226,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   private setHighlight(messageId: number, term: string | null): void {
     this.highlightedMessageId.set(messageId);
     this.highlightTerm.set(term);
-    setTimeout(() => {
+    if (this.highlightTimeoutId !== null) {
+      clearTimeout(this.highlightTimeoutId);
+    }
+    this.highlightTimeoutId = setTimeout(() => {
+      this.highlightTimeoutId = null;
       this.clearHighlight();
     }, this.HIGHLIGHT_DURATION);
   }
@@ -255,12 +261,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.otherUser.set(null);
     this.isLoading.set(true);
     this.error.set(null);
-    this.isOtherUserTyping.set(false);
     this.messageText.set('');
     this.isFirstLoad = true;
 
-    // Carica nuova conversazione
+    // Carica nuova conversazione: prima richiesta immediata, poi polling periodico
     this.loadUserInfo(userId);
+    this.loadMessages(userId);
     this.startPolling(userId);
   }
 
@@ -298,74 +304,73 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Avvia polling per messaggi e typing
+   * Carica i messaggi una volta sola (prima apertura conversazione).
+   * Separato dal polling periodico per non bloccare il rendering del skeleton.
+   */
+  private loadMessages(userId: number): void {
+    this.messageService.getConversation(userId).subscribe({
+      next: (messages) => this.applyMessages(messages, userId),
+      error: () => {
+        if (this.currentOtherUserId !== userId) return;
+        this.error.set('Impossibile caricare i messaggi');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Avvia il polling periodico (backup al WebSocket, non sostituisce il caricamento iniziale).
    */
   private startPolling(userId: number): void {
-    // Polling messaggi
     interval(this.MESSAGE_POLLING_INTERVAL)
       .pipe(
-        startWith(0),
         takeUntil(this.pollingStop$),
         switchMap(() => this.messageService.getConversation(userId))
       )
       .subscribe({
-        next: (messages) => {
-          // Verifica che sia ancora la stessa conversazione
-          if (this.currentOtherUserId !== userId) return;
-
-          const currentMessages = this.messages();
-          const newMessagesCount = messages.length - currentMessages.length;
-
-          this.messages.set(messages);
-          this.isLoading.set(false);
-
-          // Gestisce lo scroll dopo il caricamento
-          if (this.isFirstLoad && messages.length > 0) {
-            this.isFirstLoad = false;
-            // Se c'è un messaggio specifico da cercare, scrolla a quello SENZA ANIMAZIONE
-            if (this.pendingScrollToMessageId !== null) {
-              const messageId = this.pendingScrollToMessageId;
-              this.pendingScrollToMessageId = null;
-              this.scrollToMessage(messageId, true); // instant scroll
-            } else {
-              // Altrimenti scrolla in basso
-              this.scrollToBottom();
-            }
-          } else if (newMessagesCount > 0) {
-            // Nuovi messaggi arrivati, scrolla in basso
-            this.scrollToBottom();
-          }
-          
-          // Marca come letti
-          if (messages.length > 0) {
-            this.messageService.markConversationAsRead(userId).subscribe();
-          }
-        },
-        error: () => {
-          if (this.currentOtherUserId !== userId) return;
-          if (this.isLoading()) {
-            this.error.set('Impossibile caricare i messaggi');
-            this.isLoading.set(false);
-          }
-        },
+        next: (messages) => this.applyMessages(messages, userId),
+        error: () => { /* errori di polling non critici, WebSocket gestisce il real-time */ },
       });
+  }
 
-    // Polling typing
-    interval(this.TYPING_POLLING_INTERVAL)
-      .pipe(
-        startWith(0),
-        takeUntil(this.pollingStop$),
-        switchMap(() => this.messageService.isTyping(userId))
-      )
-      .subscribe({
-        next: (response) => {
-          if (this.currentOtherUserId !== userId) return;
-          this.isOtherUserTyping.set(response.isTyping);
-        },
-        error: () => {
-          // Ignora errori di typing
-        },
-      });
+  /**
+   * Applica la risposta del server alla lista messaggi locale.
+   * Merge con eventuali messaggi aggiunti via WebSocket non ancora persistiti.
+   */
+  private applyMessages(messages: MessageResponseDTO[], userId: number): void {
+    if (this.currentOtherUserId !== userId) return;
+
+    const currentMessages = this.messages();
+
+    // Merge: preserve any locally-added messages (from WS) that the poll
+    // response hasn't persisted yet. Order by id ascending.
+    const serverIds = new Set(messages.map(m => m.id));
+    const localOnly = currentMessages.filter(m => !serverIds.has(m.id));
+    const merged = localOnly.length > 0
+      ? [...messages, ...localOnly].sort((a, b) => a.id - b.id)
+      : messages;
+
+    const newMessagesCount = merged.length - currentMessages.length;
+
+    this.messages.set(merged);
+    this.isLoading.set(false);
+
+    if (this.isFirstLoad && messages.length > 0) {
+      this.isFirstLoad = false;
+      if (this.pendingScrollToMessageId !== null) {
+        const messageId = this.pendingScrollToMessageId;
+        this.pendingScrollToMessageId = null;
+        this.scrollToMessage(messageId, true);
+      } else {
+        this.scrollToBottom();
+      }
+    } else if (newMessagesCount > 0) {
+      this.scrollToBottom();
+    }
+
+    if (messages.length > 0) {
+      this.messageService.markConversationAsRead(userId).subscribe();
+    }
   }
 
   /**
@@ -373,12 +378,14 @@ export class ChatComponent implements OnInit, OnDestroy {
    */
   onMessageInput(value: string): void {
     this.messageText.set(value);
-    
-    // Invia typing indicator (throttled)
+
+    const user = this.otherUser();
+    if (!user) return;
+
     const now = Date.now();
-    if (this.currentOtherUserId && now - this.lastTypingSent > this.TYPING_THROTTLE) {
+    if (now - this.lastTypingSent > this.TYPING_THROTTLE) {
       this.lastTypingSent = now;
-      this.messageService.setTyping(this.currentOtherUserId).subscribe();
+      this.websocketService.sendTypingIndicator(user.username, true);
     }
   }
 
@@ -392,8 +399,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.isSending.set(true);
     const targetUserId = user.id;
 
-    // Clear typing quando invia
-    this.messageService.clearTyping(targetUserId).subscribe();
+    this.websocketService.sendTypingIndicator(user.username, false);
 
     this.messageService.sendMessage({
       destinatarioId: targetUserId,
@@ -514,28 +520,13 @@ export class ChatComponent implements OnInit, OnDestroy {
     }, instant ? 0 : this.SCROLL_DELAY);
   }
 
-  trackByMessageId(index: number, message: MessageResponseDTO): number {
-    return message.id;
-  }
-
-  /**
-   * Evidenzia il termine di ricerca nel testo del messaggio
-   */
-  getHighlightedContent(message: MessageResponseDTO): string {
-    const content = message.contenuto;
-    if (!content) return '';
-
+  getContentSegments(message: MessageResponseDTO): readonly HighlightSegment[] {
+    const content = message.contenuto ?? '';
+    if (!content) return [];
     const term = this.highlightTerm();
     const isHighlighted = this.highlightedMessageId() === message.id;
-
-    if (!term || !isHighlighted) return content;
-
-    const regex = new RegExp(`(${this.escapeRegex(term)})`, 'gi');
-    return content.replace(regex, '<mark class="bg-yellow-400 text-gray-900 rounded px-0.5">$1</mark>');
-  }
-
-  private escapeRegex(string: string): string {
-    return string.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+    if (!term || !isHighlighted) return [{ text: content, match: false }];
+    return splitHighlight(content, term);
   }
 
   /**
@@ -595,6 +586,15 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   isDeleting(messageId: number): boolean {
     return this.deletingIds().has(messageId);
+  }
+
+  shouldShowDateSeparator(messages: MessageResponseDTO[], index: number): boolean {
+    if (index === 0) return true;
+    return !isSameDay(messages[index - 1].createdAt, messages[index].createdAt);
+  }
+
+  getDateLabel(dateStr: string): string {
+    return getChatDateLabel(dateStr);
   }
 
   /**

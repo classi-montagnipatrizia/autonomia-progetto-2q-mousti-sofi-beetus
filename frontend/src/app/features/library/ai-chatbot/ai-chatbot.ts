@@ -1,5 +1,5 @@
-import { Component, computed, ElementRef, inject, OnInit, output, signal, ViewChild, AfterViewChecked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, ElementRef, inject, OnInit, output, signal, viewChild, AfterViewChecked } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -21,12 +21,11 @@ import { BookCondition, BookSummaryDTO } from '../../../models';
 @Component({
   selector: 'app-ai-chatbot',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AvatarComponent,
-    SpinnerComponent,
-  ],
+    SpinnerComponent
+],
   templateUrl: './ai-chatbot.html',
   styleUrl: './ai-chatbot.scss',
 })
@@ -35,7 +34,7 @@ export class AiChatbot implements OnInit, AfterViewChecked {
   readonly store = inject(AiChatbotStore);
   readonly authStore = inject(AuthStore);
 
-  @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
+  private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
   // Icons
   readonly closed = output<void>();
@@ -135,8 +134,9 @@ export class AiChatbot implements OnInit, AfterViewChecked {
 
   private scrollToBottom(): void {
     try {
-      if (this.messagesContainer) {
-        const el = this.messagesContainer.nativeElement;
+      const container = this.messagesContainer();
+      if (container) {
+        const el = container.nativeElement;
         el.scrollTop = el.scrollHeight;
       }
     } catch { /* scroll non critico */ }

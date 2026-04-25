@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import {
   LucideAngularModule,
@@ -25,13 +25,12 @@ import {
 @Component({
   selector: 'app-create-group-modal',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     ModalComponent,
     AvatarComponent,
-    SpinnerComponent,
-  ],
+    SpinnerComponent
+],
   templateUrl: './create-group-modal.html',
   styleUrl: './create-group-modal.scss',
 })
@@ -162,7 +161,8 @@ export class CreateGroupModal {
     this.searchDebounce = setTimeout(() => {
       this.userService.searchUsers(value.trim(), 0, 20, 'username', true).subscribe({
         next: (page) => {
-          this.searchResults.set(page.content);
+          const myId = this.authStore.userId();
+          this.searchResults.set(page.content.filter(u => u.id !== myId));
           this.searchLoading.set(false);
         },
         error: () => {

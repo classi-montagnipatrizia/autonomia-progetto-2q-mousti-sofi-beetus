@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -19,8 +20,9 @@ import {
   Moon,
   Monitor,
   Bell,
+  Mail,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize, Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 
 import { UserService } from '../../../core/api/user-service';
 import { AuthStore } from '../../../core/stores/auth-store';
@@ -35,23 +37,22 @@ import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avat
 import { ButtonComponent } from '../../../shared/ui/button/button-component/button-component';
 import { AggiornaProfiloRequestDTO, CambiaPasswordRequestDTO, DisattivaAccountRequestDTO } from '../../../models';
 
-type SettingsSection = 'profile' | 'password' | 'theme' | 'notifications' | 'account';
+type SettingsSection = 'profile' | 'password' | 'theme' | 'notifications' | 'account' | 'support';
 type PushStatus = 'ios-not-installed' | 'not-supported' | 'sw-disabled' | 'denied' | 'normal';
 type ThemeMode = Theme | 'system';
 
 @Component({
   selector: 'app-settings-component',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AvatarComponent,
-    ButtonComponent,
-  ],
+    ButtonComponent
+],
   templateUrl: './settings-component.html',
   styleUrl: './settings-component.scss',
 })
-export class SettingsComponent implements OnInit, OnDestroy {
+export class SettingsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly userService = inject(UserService);
@@ -61,7 +62,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly cloudinaryService = inject(CloudinaryStorageService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggerService);
   private readonly pushService = inject(PushNotificationService);
 
@@ -81,6 +82,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   readonly MoonIcon = Moon;
   readonly MonitorIcon = Monitor;
   readonly BellIcon = Bell;
+  readonly MailIcon = Mail;
 
   // State
   readonly activeSection = signal<SettingsSection>('profile');
@@ -154,16 +156,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'theme', label: 'Tema', icon: Palette },
     { id: 'notifications', label: 'Notifiche', icon: Bell },
     { id: 'account', label: 'Account', icon: Power },
+    { id: 'support', label: 'Supporto', icon: Mail },
   ];
 
   ngOnInit(): void {
     this.loadUserData();
     this.loadThemePreference();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /**
@@ -223,7 +221,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
         this.userService.updateProfile(request)
           .pipe(
-            takeUntil(this.destroy$),
+            takeUntilDestroyed(this.destroyRef),
             finalize(() => this.isSaving.set(false))
           )
           .subscribe({
@@ -257,13 +255,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
       // Caso 1: Nuova immagine da uploadare
       if (this.pendingImageFile) {
         this.cloudinaryService.uploadImage(this.pendingImageFile, 'profile', () => {})
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: (response) => {
               // Se c'era una vecchia immagine su Cloudinary, eliminala
               if (this.originalProfilePictureUrl?.includes('cloudinary.com')) {
                 this.cloudinaryService.deleteImage(this.originalProfilePictureUrl)
-                  .pipe(takeUntil(this.destroy$))
+                  .pipe(takeUntilDestroyed(this.destroyRef))
                   .subscribe({
                     next: () => observer.next(response.secureUrl),
                     error: () => {
@@ -284,7 +282,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       // Caso 2: Immagine marcata per eliminazione (senza nuova immagine)
       else if (this.imageMarkedForDeletion && this.originalProfilePictureUrl?.includes('cloudinary.com')) {
         this.cloudinaryService.deleteImage(this.originalProfilePictureUrl)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: () => {
               observer.next(null);
@@ -390,7 +388,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     this.userService.changePassword(request)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isSaving.set(false))
       )
       .subscribe({
@@ -454,7 +452,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     this.userService.deactivateAccount(request)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isSaving.set(false))
       )
       .subscribe({
@@ -500,7 +498,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     if (this.isPushSubscribed()) {
       this.pushService.unsubscribe()
-        .pipe(takeUntil(this.destroy$), finalize(() => this.isTogglingPush.set(false)))
+        .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.isTogglingPush.set(false)))
         .subscribe({
           next: () => {
             this.isPushSubscribed.set(false);
@@ -510,7 +508,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         });
     } else {
       this.pushService.requestPermissionAndSubscribe()
-        .pipe(takeUntil(this.destroy$), finalize(() => this.isTogglingPush.set(false)))
+        .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.isTogglingPush.set(false)))
         .subscribe({
           next: () => {
             this.isPushSubscribed.set(true);

@@ -1,5 +1,5 @@
 import { Component, input, output, signal, inject, computed, viewChild, ElementRef, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LucideAngularModule, Send, X, Reply } from 'lucide-angular';
 import { CommentService } from '../../../../core/api/comment-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -10,11 +10,7 @@ import { MentionAutocompleteComponent } from '../../mention-autocomplete/mention
 import { CommentResponseDTO, CreaCommentoRequestDTO, UserSummaryDTO } from '../../../../models';
 @Component({
   selector: 'app-comment-form-component',
-  imports: [CommonModule,
-    LucideAngularModule,
-    AvatarComponent,
-    AutoResize,
-    MentionAutocompleteComponent,],
+  imports: [LucideAngularModule, AvatarComponent, AutoResize, MentionAutocompleteComponent],
   templateUrl: './comment-form-component.html',
   styleUrl: './comment-form-component.scss',
 })

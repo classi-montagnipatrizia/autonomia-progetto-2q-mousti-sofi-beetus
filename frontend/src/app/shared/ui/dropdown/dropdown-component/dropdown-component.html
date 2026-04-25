@@ -1,23 +1,29 @@
 <div class="relative inline-block">
-  <!-- Trigger Button -->
-  <div (click)="toggle()" class="cursor-pointer">
+  <!-- Trigger -->
+  <div class="dropdown-trigger cursor-pointer" (click)="toggle()">
     <ng-content select="[trigger]"></ng-content>
   </div>
 
-  <!-- Dropdown Menu -->
+  <!-- Menu (fixed or absolute) -->
   @if (isOpen()) {
-  <div
-    class="absolute z-50 animate-slide-up"
-    [ngClass]="placementClasses()"
-    [style.min-width]="minWidthStyle()"
-  >
-    <!-- Menu Content -->
     <div
-      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+      [class]="strategy() === 'fixed' ? 'fixed z-[9999] animate-slide-up' : 'absolute z-[9999] animate-slide-up'"
+      [class.top-full]="strategy() === 'absolute' && (placement() === 'bottom-start' || placement() === 'bottom-end')"
+      [class.bottom-full]="strategy() === 'absolute' && (placement() === 'top-start' || placement() === 'top-end')"
+      [class.left-0]="strategy() === 'absolute' && (placement() === 'bottom-start' || placement() === 'top-start')"
+      [class.right-0]="strategy() === 'absolute' && (placement() === 'bottom-end' || placement() === 'top-end')"
+      [class.mt-1]="strategy() === 'absolute' && (placement() === 'bottom-start' || placement() === 'bottom-end')"
+      [class.mb-1]="strategy() === 'absolute' && (placement() === 'top-start' || placement() === 'top-end')"
+      [style.top]="strategy() === 'fixed' ? menuStyle().top ?? 'auto' : null"
+      [style.bottom]="strategy() === 'fixed' ? menuStyle().bottom ?? 'auto' : null"
+      [style.left]="strategy() === 'fixed' ? menuStyle().left ?? 'auto' : null"
+      [style.right]="strategy() === 'fixed' ? menuStyle().right ?? 'auto' : null"
+      [style.min-width]="minWidth() + 'rem'"
     >
-      <ng-content select="[content]"></ng-content>
-      <ng-content select="[menu]"></ng-content>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+        <ng-content select="[content]"></ng-content>
+        <ng-content select="[menu]"></ng-content>
+      </div>
     </div>
-  </div>
   }
 </div>

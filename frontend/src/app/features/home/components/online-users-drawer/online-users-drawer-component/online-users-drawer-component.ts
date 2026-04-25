@@ -1,5 +1,5 @@
 import { Component, inject, computed, HostListener,signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, Users, X, MessageSquare } from 'lucide-angular';
 import { UserListItemComponent } from '../../../../../shared/components/user-list-item/user-list-item-component/user-list-item-component';
@@ -18,10 +18,7 @@ import { LoggerService } from '../../../../../core/services/logger.service';
  */
 @Component({
   selector: 'app-online-users-drawer',
-  imports: [ CommonModule,
-    RouterLink,
-    LucideAngularModule,
-    UserListItemComponent,],
+  imports: [RouterLink, LucideAngularModule, UserListItemComponent],
   templateUrl: './online-users-drawer-component.html',
   styleUrl: './online-users-drawer-component.scss',
 })

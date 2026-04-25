@@ -96,7 +96,7 @@
           [disabled]="isLoadingMore() || !hasMore()"
           (scrolled)="loadMorePosts()"
         >
-          @for (post of posts(); track trackByPostId($index, post)) {
+          @for (post of posts(); track post.id) {
             <app-post-card-component
               [post]="post"
               (deleted)="onPostDeleted($event)"

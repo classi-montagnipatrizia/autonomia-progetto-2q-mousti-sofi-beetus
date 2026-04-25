@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LucideAngularModule, ChevronRight } from 'lucide-angular';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,13 +11,7 @@ import { schoolEmailValidator, usernameValidator } from '../../../../core/utils/
 
 @Component({
   selector: 'app-login-component',
-  imports: [ CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    InputComponent,
-    ButtonComponent,
-    LucideAngularModule,
-],
+  imports: [ReactiveFormsModule, RouterLink, InputComponent, ButtonComponent, LucideAngularModule],
   templateUrl: './login-component.html',
   styleUrl: './login-component.scss',
 })

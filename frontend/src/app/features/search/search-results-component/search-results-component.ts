@@ -1,9 +1,10 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, ArrowLeft, Search, Users, FileText, X } from 'lucide-angular';
-import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { UserService } from '../../../core/api/user-service';
 import { PostService } from '../../../core/api/post-service';
@@ -20,25 +21,24 @@ type SearchTab = 'users' | 'posts';
 @Component({
   selector: 'app-search-results-component',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AvatarComponent,
     SkeletonComponent,
     ButtonComponent,
-    PostCardComponent,
-  ],
+    PostCardComponent
+],
   templateUrl: './search-results-component.html',
   styleUrl: './search-results-component.scss',
 })
-export class SearchResultsComponent implements OnInit, OnDestroy {
+export class SearchResultsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
   private readonly postService = inject(PostService);
   private readonly websocketService = inject(WebsocketService);
   private readonly onlineUsersStore = inject(OnlineUsersStore);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchSubject = new Subject<string>();
 
   // Icone
@@ -74,7 +74,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Leggi query params
     this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         const q = params['q'] || '';
         const tab = params['tab'] as SearchTab || 'users';
@@ -92,7 +92,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(query => {
         this.updateUrl(query, this.activeTab());
@@ -105,11 +105,6 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
     // Subscribe to WebSocket updates for posts
     this.subscribeToPostUpdates();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /**
@@ -166,7 +161,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
     this.userService.searchUsers(query, this.usersPage(), 20)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading.set(false);
           this.isLoadingMore.set(false);
@@ -195,7 +190,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
     this.postService.searchPosts(query, this.postsPage(), 20)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading.set(false);
           this.isLoadingMore.set(false);
@@ -303,7 +298,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   private subscribeToPostUpdates(): void {
     // Aggiornamenti like in tempo reale
     this.websocketService.postLiked$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((likeUpdate) => {
         this.posts.update(posts =>
           posts.map(p => {
@@ -317,7 +312,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
     // Aggiornamenti conteggio commenti in tempo reale
     this.websocketService.commentsCount$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((countUpdate) => {
         this.posts.update(posts =>
           posts.map(p => {
@@ -331,14 +326,14 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
 
     // Post eliminato
     this.websocketService.postDeleted$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((event) => {
         this.posts.update(posts => posts.filter(p => p.id !== event.postId));
       });
 
     // Post modificato
     this.websocketService.postUpdated$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((updatedPost) => {
         this.posts.update(posts =>
           posts.map(p => {

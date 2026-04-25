@@ -6,13 +6,13 @@ import {
   ElementRef,
   viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonComponent } from '../../button/button-component/button-component';
 import { DialogService } from '../../../../core/services/dialog-service';
 
 @Component({
   selector: 'app-dialog-component',
-  imports: [CommonModule, ButtonComponent],
+  imports: [ButtonComponent],
   templateUrl: './dialog-component.html',
   styleUrl: './dialog-component.scss',
 })

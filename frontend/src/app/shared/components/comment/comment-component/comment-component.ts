@@ -1,5 +1,6 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { LucideAngularModule, Ellipsis, Pencil, Trash2, EyeOff, Flag, Reply, ChevronDown, ChevronUp } from 'lucide-angular';
 import { map } from 'rxjs/operators';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
@@ -15,17 +16,13 @@ import { CommentResponseDTO } from '../../../../models';
 
 @Component({
   selector: 'app-comment',
-  imports: [CommonModule,
-    LucideAngularModule,
-    AvatarComponent,
-    DropdownComponent,
-    TimeAgoComponent,
-    SafeMentionTextComponent,],
+  imports: [LucideAngularModule, AvatarComponent, DropdownComponent, TimeAgoComponent, SafeMentionTextComponent],
   templateUrl: './comment-component.html',
   styleUrl: './comment-component.scss',
 })
 export class CommentComponent {
- private readonly commentService = inject(CommentService);
+  private readonly router = inject(Router);
+  private readonly commentService = inject(CommentService);
   private readonly adminService = inject(AdminService);
   private readonly dialogService = inject(DialogService);
   private readonly toastService = inject(ToastService);
@@ -200,6 +197,16 @@ export class CommentComponent {
         this.toastService.error('Errore nell\'eliminazione');
       },
     });
+  }
+
+  /**
+   * Naviga al profilo dell'autore
+   */
+  goToAuthorProfile(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.router.navigate(['/profile', this.comment().autore.id]);
   }
 
   /**

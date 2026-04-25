@@ -1,4 +1,5 @@
-import { Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, DestroyRef, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild, AfterViewChecked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,7 +19,7 @@ import { WebsocketService } from '../../../core/services/websocket-service';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton-component/skeleton-component';
 import { BookMessageDTO } from '../../../models';
-import { Subscription } from 'rxjs';
+import { getChatDateLabel, isSameDay } from '../../../core/utils/chat-date.utils';
 
 @Component({
   selector: 'app-book-conversation',
@@ -38,8 +39,9 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
   readonly store = inject(LibraryStore);
   private readonly authStore = inject(AuthStore);
   private readonly websocketService = inject(WebsocketService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
+  private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
 
   // Icons
   readonly ArrowLeftIcon = ArrowLeft;
@@ -54,7 +56,6 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
   readonly deletingIds = signal<Set<number>>(new Set());
   private shouldScrollToBottom = false;
   private bookIdFromRoute = 0;
-  private wsSubscription?: Subscription;
 
   // Computed
   readonly conversation = this.store.currentConversation;
@@ -92,19 +93,20 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     // Sottoscrizione WebSocket per messaggi libro real-time
-    this.wsSubscription = this.websocketService.bookMessages$.subscribe({
-      next: (message: BookMessageDTO) => {
-        this.store.handleIncomingBookMessage(message);
-        if (message.conversationId === this.conversation()?.id) {
-          this.shouldScrollToBottom = true;
-        }
-      },
-    });
+    this.websocketService.bookMessages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (message: BookMessageDTO) => {
+          this.store.handleIncomingBookMessage(message);
+          if (message.conversationId === this.conversation()?.id) {
+            this.shouldScrollToBottom = true;
+          }
+        },
+      });
   }
 
   ngOnDestroy(): void {
     this.store.closeConversazione();
-    this.wsSubscription?.unsubscribe();
   }
 
   ngAfterViewChecked(): void {
@@ -174,12 +176,22 @@ export class BookConversation implements OnInit, OnDestroy, AfterViewChecked {
     return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   }
 
+  shouldShowDateSeparator(messages: BookMessageDTO[], index: number): boolean {
+    if (index === 0) return true;
+    return !isSameDay(messages[index - 1].createdAt, messages[index].createdAt);
+  }
+
+  getDateLabel(dateStr: string): string {
+    return getChatDateLabel(dateStr);
+  }
+
   private scrollToBottom(): void {
     try {
-      if (this.messagesContainer) {
-        const el = this.messagesContainer.nativeElement;
+      const container = this.messagesContainer();
+      if (container) {
+        const el = container.nativeElement;
         el.scrollTop = el.scrollHeight;
       }
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 }

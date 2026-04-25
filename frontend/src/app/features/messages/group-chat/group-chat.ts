@@ -1,9 +1,10 @@
-import { Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { getChatDateLabel, isSameDay } from '../../../core/utils/chat-date.utils';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, ArrowLeft, Send, Info, Mic, Image, X, Trash } from 'lucide-angular';
-import { Subscription } from 'rxjs';
 import { GroupStore } from '../../../core/stores/group-store';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { WebsocketService } from '../../../core/services/websocket-service';
@@ -21,16 +22,16 @@ const AVATAR_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orang
 @Component({
   selector: 'app-group-chat',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     AudioPlayerComponent,
     AudioRecorderComponent,
     TimeAgoComponent,
-    GroupInfoPanel,
-  ],
+    GroupInfoPanel
+],
   templateUrl: './group-chat.html',
   styleUrl: './group-chat.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupChat implements OnInit, OnDestroy {
   private readonly messagesContainer = viewChild<ElementRef<HTMLDivElement>>('messagesContainer');
@@ -41,8 +42,7 @@ export class GroupChat implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly websocketService = inject(WebsocketService);
   private readonly groupService = inject(GroupService);
-  private routeSub?: Subscription;
-  private typingSub?: Subscription;
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly toast = inject(ToastService);
   private readonly cloudinary = inject(CloudinaryStorageService);
@@ -69,6 +69,7 @@ export class GroupChat implements OnInit, OnDestroy {
   private lastTypingSent = 0;
   private readonly TYPING_THROTTLE = 1000;
   private typingCleanupTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly imageInputRef = viewChild<ElementRef<HTMLInputElement>>('imageInputRef');
 
@@ -88,61 +89,60 @@ export class GroupChat implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.routeSub = this.route.paramMap.subscribe(params => {
-      const groupIdParam = params.get('groupId');
-      if (groupIdParam) {
-        const groupId = Number.parseInt(groupIdParam, 10);
-        this.groupStore.openGroup(groupId);
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const groupIdParam = params.get('groupId');
+        if (!groupIdParam) return;
+        this.groupStore.openGroup(Number.parseInt(groupIdParam, 10));
         this.scrollToBottom();
-      }
-    });
+      });
 
-    // Sottoscrizione typing indicator
-    this.typingSub = this.websocketService.groupTyping$.subscribe(event => {
-      const group = this.groupStore.currentGroup();
-      if (!group || event.groupId !== group.id) return;
-      // Non mostrare il proprio typing
-      if (event.senderId === this.currentUserId()) return;
+    this.websocketService.groupTyping$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => {
+        const group = this.groupStore.currentGroup();
+        if (!group || event.groupId !== group.id) return;
+        if (event.senderId === this.currentUserId()) return;
 
-      if (event.isTyping) {
-        this.typingUsers.update(map => {
-          const next = new Map(map);
-          next.set(event.senderId, event.senderUsername);
-          return next;
-        });
-        // Auto-rimuovi dopo 4 secondi se non rinnovato
-        const existing = this.typingCleanupTimers.get(event.senderId);
-        if (existing) clearTimeout(existing);
-        this.typingCleanupTimers.set(event.senderId, setTimeout(() => {
+        if (event.isTyping) {
+          this.typingUsers.update(map => {
+            const next = new Map(map);
+            next.set(event.senderId, event.senderUsername);
+            return next;
+          });
+          const existing = this.typingCleanupTimers.get(event.senderId);
+          if (existing) clearTimeout(existing);
+          this.typingCleanupTimers.set(event.senderId, setTimeout(() => {
+            this.typingUsers.update(map => {
+              const next = new Map(map);
+              next.delete(event.senderId);
+              return next;
+            });
+          }, 4000));
+        } else {
           this.typingUsers.update(map => {
             const next = new Map(map);
             next.delete(event.senderId);
             return next;
           });
-        }, 4000));
-      } else {
-        this.typingUsers.update(map => {
-          const next = new Map(map);
-          next.delete(event.senderId);
-          return next;
-        });
-        const timer = this.typingCleanupTimers.get(event.senderId);
-        if (timer) clearTimeout(timer);
-        this.typingCleanupTimers.delete(event.senderId);
-      }
-    });
+          const timer = this.typingCleanupTimers.get(event.senderId);
+          if (timer) clearTimeout(timer);
+          this.typingCleanupTimers.delete(event.senderId);
+        }
+      });
   }
 
   ngOnDestroy(): void {
-    this.routeSub?.unsubscribe();
-    this.typingSub?.unsubscribe();
-    // Clear typing on leave
     const group = this.groupStore.currentGroup();
     if (group) {
       this.groupService.clearTyping(group.id).subscribe();
     }
     this.typingCleanupTimers.forEach(timer => clearTimeout(timer));
     this.typingCleanupTimers.clear();
+    if (this.scrollDebounceTimer !== null) {
+      clearTimeout(this.scrollDebounceTimer);
+    }
     this.groupStore.closeGroup();
   }
 
@@ -176,6 +176,15 @@ export class GroupChat implements OnInit, OnDestroy {
       'from-cyan-500 to-cyan-600',
     ];
     return gradients[groupId % gradients.length];
+  }
+
+  shouldShowDateSeparator(messages: GroupMessageDTO[], index: number): boolean {
+    if (index === 0) return true;
+    return !isSameDay(messages[index - 1].createdAt, messages[index].createdAt);
+  }
+
+  getDateLabel(dateStr: string): string {
+    return getChatDateLabel(dateStr);
   }
 
   onMessageInput(value: string): void {
@@ -313,10 +322,14 @@ export class GroupChat implements OnInit, OnDestroy {
   }
 
   onScroll(): void {
-    const container = this.messagesContainer()?.nativeElement;
-    if (container && container.scrollTop < 100) {
-      this.loadOlderMessages();
-    }
+    if (this.scrollDebounceTimer !== null) return;
+    this.scrollDebounceTimer = setTimeout(() => {
+      this.scrollDebounceTimer = null;
+      const container = this.messagesContainer()?.nativeElement;
+      if (container && container.scrollTop < 100) {
+        this.loadOlderMessages();
+      }
+    }, 150);
   }
 
   goBack(): void {

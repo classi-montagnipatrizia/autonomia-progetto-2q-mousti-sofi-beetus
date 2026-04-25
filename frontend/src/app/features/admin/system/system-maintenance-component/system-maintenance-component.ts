@@ -1,5 +1,6 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -12,7 +13,7 @@ import {
   LoaderCircle,
   Info,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdminService, CleanupResponse } from '../../../../core/api/admin-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -23,20 +24,19 @@ import { LoggerService } from '../../../../core/services/logger.service';
 @Component({
   selector: 'app-system-maintenance-component',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
-    ButtonComponent,
-  ],
+    ButtonComponent
+],
   templateUrl: './system-maintenance-component.html',
   styleUrl: './system-maintenance-component.scss',
 })
-export class SystemMaintenanceComponent implements OnDestroy {
+export class SystemMaintenanceComponent {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggerService);
 
   // Icone
@@ -52,11 +52,6 @@ export class SystemMaintenanceComponent implements OnDestroy {
   readonly giorni = signal(90);
   readonly isCleaningUp = signal(false);
   readonly cleanupResult = signal<CleanupResponse | null>(null);
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
 
   /**
    * Esegue la pulizia del database
@@ -76,7 +71,7 @@ export class SystemMaintenanceComponent implements OnDestroy {
 
     this.adminService.cleanupDatabase(days)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isCleaningUp.set(false))
       )
       .subscribe({

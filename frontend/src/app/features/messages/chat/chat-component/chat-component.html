@@ -84,7 +84,15 @@
 
     <!-- Messages list -->
     @if (!isLoading() && messages().length > 0) {
-      @for (message of messages(); track trackByMessageId($index, message)) {
+      @for (message of messages(); track message.id; let i = $index) {
+        <!-- Separatore data -->
+        @if (shouldShowDateSeparator(messages(), i)) {
+          <div class="flex items-center justify-center my-3">
+            <span class="px-4 py-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-gray-500 dark:text-gray-400 text-[11px] font-semibold tracking-wider rounded-2xl select-none">
+              {{ getDateLabel(message.createdAt) }}
+            </span>
+          </div>
+        }
         <!-- Wrapper con id per scroll al messaggio -->
         <div [id]="'message-' + message.id" class="group">
         <!-- Messaggio eliminato dal mittente -->
@@ -143,19 +151,27 @@
                           <img
                             [src]="message.imageUrl"
                             alt="Immagine allegato"
-                            class="w-full h-auto rounded-[20px]"
+                            class="w-full h-auto rounded-[20px] cursor-pointer hover:opacity-90 transition-opacity"
                             loading="lazy"
+                            (click)="openImageViewer(message.imageUrl!); $event.stopPropagation()"
                           />
                         </div>
                       }
 
                       <!-- Contenuto testuale  -->
                       @if (message.contenuto) {
-                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5" 
-                           [class.py-3]="!message.imageUrl" 
-                           [class.pb-4]="message.imageUrl" 
-                           [class.pt-1]="message.imageUrl"
-                           [innerHTML]="getHighlightedContent(message)"></p>
+                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5"
+                           [class.py-3]="!message.imageUrl"
+                           [class.pb-4]="message.imageUrl"
+                           [class.pt-1]="message.imageUrl">
+                          @for (segment of getContentSegments(message); track $index) {
+                            @if (segment.match) {
+                              <mark class="bg-yellow-400 text-gray-900 rounded px-0.5">{{ segment.text }}</mark>
+                            } @else {
+                              {{ segment.text }}
+                            }
+                          }
+                        </p>
                       }
                     }
                   </div>
@@ -201,7 +217,7 @@
               </app-dropdown>
 
               <!-- Footer: timestamp e stato lettura -->
-              <div class="text-[11px] mt-1.5 flex items-center gap-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity" [class.opacity-100]="message.mittente.id === currentUserId()">
+              <div class="text-[11px] mt-1.5 flex items-center gap-1.5 px-1">
                 <app-time-ago [date]="message.createdAt" class="text-gray-500/80 dark:text-gray-400/80 font-medium tracking-wide" />
                 @if (message.mittente.id === currentUserId()) {
                   <span class="text-gray-400/50 dark:text-gray-600/50">•</span>

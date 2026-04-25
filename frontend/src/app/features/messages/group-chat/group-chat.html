@@ -77,7 +77,15 @@
         </div>
       }
 
-      @for (message of groupStore.messages(); track message.id) {
+      @for (message of groupStore.messages(); track message.id; let i = $index) {
+        <!-- Separatore data -->
+        @if (shouldShowDateSeparator(groupStore.messages(), i)) {
+          <div class="flex items-center justify-center my-3">
+            <span class="px-4 py-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm text-gray-500 dark:text-gray-400 text-[11px] font-semibold tracking-wider rounded-2xl select-none">
+              {{ getDateLabel(message.createdAt) }}
+            </span>
+          </div>
+        }
         @if (message.senderId === currentUserId()) {
           <!-- Mio messaggio (destra) -->
           <div class="flex w-full justify-end group/msg">

@@ -1,4 +1,4 @@
-<article class="flex gap-3 relative transition-all duration-300" [class.ml-8]="isReply()" [class.sm:ml-12]="isReply()">
+<article class="flex gap-3 relative transition-all duration-300" [class.z-50]="dropdown.isOpen()" [class.ml-8]="isReply()" [class.sm:ml-12]="isReply()">
   <!-- Linea di connessione per risposte (styling opzionale stile albero) -->
   @if (isReply()) {
     <div class="absolute -left-6 sm:-left-8 top-0 bottom-0 w-px bg-gray-200/50 dark:bg-gray-700/50 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/50 transition-colors"></div>
@@ -6,7 +6,7 @@
   }
 
   <!-- Avatar -->
-  <div class="shrink-0 relative z-10">
+  <div class="shrink-0 relative z-10" (click)="goToAuthorProfile($event)">
     <app-avatar
       [src]="comment().autore.profilePictureUrl"
       [alt]="comment().autore.nomeCompleto"
@@ -18,11 +18,14 @@
   </div>
 
   <!-- Contenuto -->
-  <div class="flex-1 min-w-0 bg-white/40 dark:bg-gray-800/20 backdrop-blur-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-800 rounded-2xl px-3 py-2.5 -mx-3 -my-2.5 transition-all">
+  <div class="flex-1 min-w-0 bg-white/40 dark:bg-gray-800/20 backdrop-blur-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-800 rounded-2xl px-3 py-2.5 -mx-3 -my-2.5 transition-all"
+       [class.relative]="dropdown.isOpen()"
+       [class.z-50]="dropdown.isOpen()">
     <!-- Header -->
     <div class="flex items-start justify-between gap-2 mb-0.5">
       <div class="min-w-0 flex flex-wrap items-baseline gap-x-1.5">
-        <span class="font-bold text-[14px] sm:text-[15px] text-gray-900 dark:text-white hover:underline cursor-pointer decoration-gray-400 underline-offset-2">
+        <span class="font-bold text-[14px] sm:text-[15px] text-gray-900 dark:text-white hover:underline cursor-pointer decoration-gray-400 underline-offset-2"
+              (click)="goToAuthorProfile($event)">
           {{ comment().autore.nomeCompleto }}
         </span>
         <app-time-ago
@@ -32,7 +35,7 @@
       </div>
 
       <!-- Menu dropdown -->
-      <app-dropdown placement="bottom-end" [minWidth]="12">
+      <app-dropdown #dropdown strategy="absolute" placement="bottom-end" [minWidth]="12">
         <button
           trigger
           type="button"
@@ -145,7 +148,7 @@
 
     <!-- Risposte (ricorsivo) -->
     @if (hasReplies() && showReplies()) {
-      <div class="mt-4 space-y-4 animate-fade-in relative z-10">
+      <div class="mt-4 space-y-4 animate-fade-in">
         @for (risposta of comment().risposte; track risposta.id) {
           <app-comment
             [comment]="risposta"

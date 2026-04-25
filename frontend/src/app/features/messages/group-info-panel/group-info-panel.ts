@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, X, Pencil, UserPlus, UserMinus, Trash2, LogOut, Search } from 'lucide-angular';
@@ -16,7 +16,7 @@ const AVATAR_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orang
 
 @Component({
   selector: 'app-group-info-panel',
-  imports: [CommonModule, FormsModule, LucideAngularModule, AvatarComponent],
+  imports: [FormsModule, LucideAngularModule, AvatarComponent],
   templateUrl: './group-info-panel.html',
   styleUrl: './group-info-panel.scss',
 })

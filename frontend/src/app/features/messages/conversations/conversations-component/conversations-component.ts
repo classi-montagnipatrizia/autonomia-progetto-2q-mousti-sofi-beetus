@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit, OnDestroy, signal, computed, output } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, ArrowLeft, MessageSquare, Search, X } from 'lucide-angular';
-import { Subscription, interval, Subject } from 'rxjs';
-import { switchMap, startWith, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { interval, Subject } from 'rxjs';
+import { switchMap, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { MessageService } from '../../../../core/api/message-service';
 import { OnlineUsersStore } from '../../../../core/stores/online-users-store';
 import { TypingStore } from '../../../../core/stores/typing-store';
@@ -16,6 +17,7 @@ import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-compo
 import { AvatarComponent } from '../../../../shared/ui/avatar/avatar-component/avatar-component';
 import { TimeAgoPipe } from '../../../../shared/pipes/time-ago.pipe';
 import { POLLING_INTERVALS, TIMEOUTS, LIMITS } from '../../../../core/config/app.config';
+import { HighlightSegment, splitHighlight } from '../../../../core/utils/highlight.utils';
 
 /**
  * Lista delle conversazioni dell'utente.
@@ -30,14 +32,13 @@ import { POLLING_INTERVALS, TIMEOUTS, LIMITS } from '../../../../core/config/app
   selector: 'app-conversations-component',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     ConversationItemComponent,
     SkeletonComponent,
     AvatarComponent,
-    TimeAgoPipe,
-  ],
+    TimeAgoPipe
+],
   templateUrl: './conversations-component.html',
   styleUrl: './conversations-component.scss',
 })
@@ -48,7 +49,7 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   private readonly authStore = inject(AuthStore);
   readonly groupStore = inject(GroupStore);
   private readonly router = inject(Router);
-  private readonly subscriptions: Subscription[] = [];
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchSubject = new Subject<string>();
 
   // Output per switch tab
@@ -101,30 +102,28 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
+    this.loadConversations();
     this.startPolling();
     this.setupSearchDebounce();
-    // Carica utenti online
     this.onlineUsersStore.loadOnlineUsers();
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
     this.searchSubject.complete();
-    this.typingStore.stopPolling();
   }
 
   /**
    * Setup del debounce per la ricerca messaggi
    */
   private setupSearchDebounce(): void {
-    const searchSub = this.searchSubject.pipe(
+    this.searchSubject.pipe(
       debounceTime(TIMEOUTS.SEARCH_DEBOUNCE),
       distinctUntilChanged(),
-      filter(query => query.trim().length >= LIMITS.MIN_SEARCH_LENGTH)
+      filter(query => query.trim().length >= LIMITS.MIN_SEARCH_LENGTH),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(query => {
       this.performSearch(query);
     });
-    this.subscriptions.push(searchSub);
   }
 
   /**
@@ -145,31 +144,37 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Avvia polling per aggiornamenti real-time
+   * Carica le conversazioni immediatamente al primo accesso.
+   */
+  private loadConversations(): void {
+    this.messageService.getConversations(0, 50).subscribe({
+      next: (response) => {
+        this.conversations.set(response.content);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.error.set('Impossibile caricare le conversazioni');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Polling periodico come backup al WebSocket (30s).
    */
   private startPolling(): void {
-    const pollingSub = interval(this.POLLING_INTERVAL)
+    interval(this.POLLING_INTERVAL)
       .pipe(
-        startWith(0),
-        switchMap(() => this.messageService.getConversations(0, 50))
+        switchMap(() => this.messageService.getConversations(0, 50)),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (response) => {
           this.conversations.set(response.content);
           this.isLoading.set(false);
-          
-          // Aggiorna la lista degli utenti da monitorare per il typing
-          const userIds = response.content.map(conv => conv.altroUtente.id);
-          this.typingStore.setMonitoredUsers(userIds);
         },
-        error: () => {
-          if (this.isLoading()) {
-            this.error.set('Impossibile caricare le conversazioni');
-            this.isLoading.set(false);
-          }
-        },
+        error: () => { /* polling errors non critici */ },
       });
-    this.subscriptions.push(pollingSub);
   }
 
   /**
@@ -182,8 +187,8 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   /**
    * Verifica se un utente sta scrivendo
    */
-  isUserTyping(userId: number): boolean {
-    return this.typingStore.isUserTyping(userId);
+  isUserTyping(username: string): boolean {
+    return this.typingStore.isUserTypingByUsername(username);
   }
 
   onConversationSelect(userId: number): void {
@@ -243,17 +248,8 @@ export class ConversationsComponent implements OnInit, OnDestroy {
     this.searchResults.set([]);
   }
 
-  /**
-   * Evidenzia il termine di ricerca nel testo
-   */
-  highlightText(text: string, searchTerm: string): string {
-    if (!searchTerm || !text) return text;
-    const regex = new RegExp(`(${this.escapeRegex(searchTerm)})`, 'gi');
-    return text.replace(regex, '<mark class="bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-100 rounded px-1 font-medium">$1</mark>');
-  }
-
-  private escapeRegex(string: string): string {
-    return string.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  highlightSegments(text: string | null | undefined, searchTerm: string): readonly HighlightSegment[] {
+    return splitHighlight(text ?? '', searchTerm);
   }
 
   /**

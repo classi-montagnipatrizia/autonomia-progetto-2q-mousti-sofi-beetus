@@ -122,7 +122,7 @@
             (click)="toggleUserMenu($event)"
             aria-label="Menu utente"
             [attr.aria-expanded]="isUserMenuOpen()">
-            <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" [status]="'online'" />
+            <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" />
           </button>
 
           @if (isUserMenuOpen()) {
@@ -209,7 +209,7 @@
         (click)="toggleUserMenu($event)"
         aria-label="Menu utente"
         [attr.aria-expanded]="isUserMenuOpen()">
-        <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" [status]="'online'" />
+        <app-avatar [src]="avatarUrl()" [name]="displayName()" size="sm" />
       </button>
 
       @if (isUserMenuOpen()) {

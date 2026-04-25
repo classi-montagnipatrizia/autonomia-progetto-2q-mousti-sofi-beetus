@@ -7,7 +7,7 @@ import {
   ElementRef,
   computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LucideAngularModule, X } from 'lucide-angular';
 
 /**
@@ -17,7 +17,7 @@ export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
 @Component({
   selector: 'app-modal-component',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   templateUrl: './modal-component.html',
   styleUrl: './modal-component.scss',
 })

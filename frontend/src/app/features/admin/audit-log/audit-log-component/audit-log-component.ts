@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +18,7 @@ import {
   Calendar,
   Activity,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { AdminService, AdminAuditLog } from '../../../../core/api/admin-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -28,20 +29,18 @@ import { LoggerService } from '../../../../core/services/logger.service';
 @Component({
   selector: 'app-audit-log-component',
   imports: [
-    CommonModule,
-  
     FormsModule,
     LucideAngularModule,
-    ButtonComponent,
-  ],
+    ButtonComponent
+],
   templateUrl: './audit-log-component.html',
   styleUrl: './audit-log-component.scss',
 })
-export class AuditLogComponent implements OnInit, OnDestroy {
+export class AuditLogComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly toastService = inject(ToastService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggerService);
 
   // Icone
@@ -98,11 +97,6 @@ export class AuditLogComponent implements OnInit, OnDestroy {
     this.loadLogs();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Carica i log con filtri applicati
    */
@@ -125,7 +119,7 @@ export class AuditLogComponent implements OnInit, OnDestroy {
 
     request$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({

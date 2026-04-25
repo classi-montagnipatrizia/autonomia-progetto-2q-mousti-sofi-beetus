@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -18,7 +19,7 @@ import {
   CircleAlert,
   LoaderCircle,
 } from 'lucide-angular';
-import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AdminService, AdminUserDTO } from '../../../../core/api/admin-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -30,23 +31,22 @@ import { AuthService } from '../../../../core/auth/services/auth-service';
 @Component({
   selector: 'app-users-component',
   imports: [
-    CommonModule,
     FormsModule,
     LucideAngularModule,
     ButtonComponent,
     AvatarComponent,
     RouterLink
-  ],
+],
   templateUrl: './users-component.html',
   styleUrl: './users-component.scss',
 })
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly adminService = inject(AdminService);
   private readonly toastService = inject(ToastService);
   private readonly dialogService = inject(DialogService);
   private readonly authService = inject(AuthService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchSubject$ = new Subject<string>();
   private readonly currentUsername = this.authService.getCurrentUser()?.username;
 
@@ -89,11 +89,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.loadUsers();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Chiude il dropdown quando si clicca fuori
    */
@@ -110,7 +105,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((query) => {
         this.currentPage.set(0);
@@ -131,7 +126,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.getAllUsers(this.currentPage(), this.pageSize)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -160,7 +155,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.getAllUsers(this.currentPage(), this.pageSize, query)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isLoading.set(false))
       )
       .subscribe({
@@ -228,7 +223,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.promoteToAdmin(user.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingUser.set(null))
       )
       .subscribe({
@@ -266,7 +261,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.demoteFromAdmin(user.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingUser.set(null))
       )
       .subscribe({
@@ -303,7 +298,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.disableUser(user.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingUser.set(null))
       )
       .subscribe({
@@ -328,7 +323,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.enableUser(user.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingUser.set(null))
       )
       .subscribe({
@@ -372,7 +367,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.adminService.deleteUser(user.id)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.processingUser.set(null))
       )
       .subscribe({

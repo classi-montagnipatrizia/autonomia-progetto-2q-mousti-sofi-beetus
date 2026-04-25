@@ -6,7 +6,7 @@ import {
   inject,
   OnDestroy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { LucideAngularModule, Mic, Square, Trash2, Send } from 'lucide-angular';
 import { CloudinaryStorageService } from '../../../../core/services/cloudinary-storage-service';
 import { ToastService } from '../../../../core/services/toast-service';
@@ -16,7 +16,7 @@ type RecorderState = 'idle' | 'recording' | 'recorded' | 'uploading';
 
 @Component({
   selector: 'app-audio-recorder-component',
-  imports: [CommonModule, LucideAngularModule],
+  imports: [LucideAngularModule],
   templateUrl: './audio-recorder-component.html',
   styleUrl: './audio-recorder-component.scss',
 })

@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule, ArrowLeft, Bell, Check, CheckCheck, Trash2, ListFilter } from 'lucide-angular';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { NotificationService } from '../../../core/api/notification-service';
 import { NotificationResponseDTO, NotificationType, PageResponse } from '../../../models';
@@ -26,12 +27,12 @@ type FilterType = 'all' | 'unread' | NotificationType;
   templateUrl: './notifications-list-component.html',
   styleUrl: './notifications-list-component.scss',
 })
-export class NotificationsListComponent implements OnInit, OnDestroy {
+export class NotificationsListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly notificationService = inject(NotificationService);
   private readonly notificationStore = inject(NotificationStore);
   private readonly toastService = inject(ToastService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   // Icone
   readonly ArrowLeftIcon = ArrowLeft;
@@ -68,11 +69,6 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
     this.loadNotifications();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   /**
    * Carica le notifiche paginate
    */
@@ -89,7 +85,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
 
     this.notificationService.getNotifications(page, 20)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.isLoading.set(false);
           this.isLoadingMore.set(false);
@@ -147,7 +143,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
   onNotificationClick(notification: NotificationResponseDTO): void {
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.notifications.update(notifs =>
@@ -168,7 +164,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
    */
   markAllAsRead(): void {
     this.notificationService.markAllAsRead()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.notifications.update(notifs =>
@@ -188,7 +184,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
    */
   deleteAllNotifications(): void {
     this.notificationService.deleteAllNotifications()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           this.notifications.set([]);
@@ -212,7 +208,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     
     this.notificationService.deleteNotification(notification.id)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.notifications.update(notifs => notifs.filter(n => n.id !== notification.id));
@@ -238,6 +234,7 @@ export class NotificationsListComponent implements OnInit, OnDestroy {
       [NotificationType.NEW_POST]: '📝',
       [NotificationType.BOOK_MESSAGE]: '📖',
       [NotificationType.GROUP_MESSAGE]: '👥',
+      [NotificationType.GROUP_INVITE]: '👥',
     };
     return iconMap[tipo] || '🔔';
   }

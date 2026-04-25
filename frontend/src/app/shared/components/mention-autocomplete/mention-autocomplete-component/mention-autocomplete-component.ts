@@ -1,6 +1,7 @@
-import { Component, input, output, signal, inject, computed, OnDestroy, ElementRef, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of } from 'rxjs';
+import { Component, DestroyRef, input, output, signal, inject, computed, ElementRef, HostListener } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { SearchService } from '../../../../core/services/search-service';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
 import { UserSummaryDTO } from '../../../../models';
@@ -23,14 +24,14 @@ import { UserSummaryDTO } from '../../../../models';
  */
 @Component({
   selector: 'app-mention-autocomplete-component',
-  imports: [CommonModule, AvatarComponent],
+  imports: [AvatarComponent],
   templateUrl: './mention-autocomplete-component.html',
   styleUrl: './mention-autocomplete-component.scss',
 })
-export class MentionAutocompleteComponent implements OnDestroy {
+export class MentionAutocompleteComponent {
   private readonly searchService = inject(SearchService);
   private readonly elementRef = inject(ElementRef);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchSubject = new Subject<string>();
 
   // ========== INPUTS ==========
@@ -84,7 +85,7 @@ export class MentionAutocompleteComponent implements OnDestroy {
         this.isLoading.set(true);
         return this.searchService.getMentionSuggestions(term);
       }),
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (users) => {
         this.suggestions.set(users);
@@ -96,11 +97,6 @@ export class MentionAutocompleteComponent implements OnDestroy {
         this.isLoading.set(false);
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /**
