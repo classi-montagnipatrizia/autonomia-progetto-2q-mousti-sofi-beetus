@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BookMessageRepository extends JpaRepository<BookMessage, Long> {
 
@@ -67,4 +69,22 @@ public interface BookMessageRepository extends JpaRepository<BookMessage, Long> 
      */
     @Modifying
     void deleteByConversationId(Long conversationId);
+
+    @Query("""
+            SELECT m FROM BookMessage m
+            JOIN FETCH m.sender
+            WHERE m.id IN (SELECT MAX(m2.id) FROM BookMessage m2
+            WHERE m2.conversation.id IN :convIds GROUP BY m2.conversation.id)
+            """)
+    List<BookMessage> findLastByConversationIds(@Param("convIds") List<Long> convIds);
+
+    @Query("""
+            SELECT m.conversation.id, COUNT(m) FROM BookMessage m
+            WHERE m.conversation.id IN :convIds
+            AND m.sender.id <> :userId
+            AND m.isRead = false
+            GROUP BY m.conversation.id
+            """)
+    List<Object[]> countUnreadByConversationIds(@Param("convIds") List<Long> convIds,
+                                                @Param("userId") Long userId);
 }

@@ -8,6 +8,7 @@ import com.example.backend.dtos.response.BookSummaryDTO;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.mappers.BookMapper;
 import com.example.backend.models.Book;
 import com.example.backend.models.BookCondition;
@@ -90,7 +91,8 @@ public class BookService {
             }
         }
 
-        Page<Book> books = bookRepository.searchBooks(userId, searchTerm, schoolYear, subject,
+        String safeTerm = searchTerm != null ? SearchUtils.escapeLikeWildcards(searchTerm.trim()) : null;
+        Page<Book> books = bookRepository.searchBooks(userId, safeTerm, schoolYear, subject,
                 conditionEnum, maxPrice, pageable);
         return books.map(bookMapper::toBookSummaryDTO);
     }
@@ -140,6 +142,11 @@ public class BookService {
         log.info("Libro modificato con successo - ID: {}", bookId);
 
         return bookMapper.toBookResponseDTO(book);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isImageLinkedToAnyBook(String url) {
+        return bookRepository.existsByFrontImageUrlOrBackImageUrl(url, url);
     }
 
     @Transactional

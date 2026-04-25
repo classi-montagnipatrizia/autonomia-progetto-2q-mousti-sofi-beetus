@@ -12,7 +12,8 @@ import java.math.BigDecimal;
         @Index(name = "idx_book_status", columnList = "status"),
         @Index(name = "idx_book_created_at", columnList = "created_at"),
         @Index(name = "idx_book_school_year", columnList = "school_year"),
-        @Index(name = "idx_book_subject", columnList = "subject")
+        @Index(name = "idx_book_subject", columnList = "subject"),
+        @Index(name = "idx_book_seller_status", columnList = "seller_id, status")
     })
 @Data
 @NoArgsConstructor

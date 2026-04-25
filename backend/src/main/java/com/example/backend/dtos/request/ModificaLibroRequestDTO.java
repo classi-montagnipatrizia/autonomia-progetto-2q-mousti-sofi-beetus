@@ -33,7 +33,9 @@ public class ModificaLibroRequestDTO {
     @Size(max = 50, message = "La materia non può superare 50 caratteri")
     private String materia;
 
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*$", message = "URL immagine frontale non valido")
     private String frontImageUrl;
 
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*$", message = "URL immagine posteriore non valido")
     private String backImageUrl;
 }

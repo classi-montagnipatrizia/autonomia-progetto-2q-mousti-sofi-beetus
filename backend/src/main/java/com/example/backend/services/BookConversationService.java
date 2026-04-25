@@ -25,8 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -84,10 +85,44 @@ public class BookConversationService {
         List<BookConversation> conversations = conversationRepository
                 .findByUserIdOrderByLastMessageAtDesc(userId);
 
-        return conversations.stream()
+        List<BookConversation> visible = conversations.stream()
                 .filter(conv -> !isHiddenByUser(conv, userId))
-                .map(conv -> toConversationDTO(conv, userId))
                 .toList();
+
+        if (visible.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> convIds = visible.stream().map(BookConversation::getId).toList();
+
+        Map<Long, BookMessage> lastMessagesMap = new HashMap<>();
+        for (BookMessage msg : messageRepository.findLastByConversationIds(convIds)) {
+            lastMessagesMap.put(msg.getConversation().getId(), msg);
+        }
+
+        Map<Long, Integer> unreadMap = new HashMap<>();
+        for (Object[] row : messageRepository.countUnreadByConversationIds(convIds, userId)) {
+            unreadMap.put((Long) row[0], ((Long) row[1]).intValue());
+        }
+
+        return visible.stream().map(conv -> {
+            User otherUser = conv.getSeller().getId().equals(userId)
+                    ? conv.getBuyer() : conv.getSeller();
+
+            BookMessage lastMessage = lastMessagesMap.get(conv.getId());
+            int unreadCount = unreadMap.getOrDefault(conv.getId(), 0);
+            BookSummaryDTO bookSummary = bookMapper.toBookSummaryDTO(conv.getBook());
+
+            return BookConversationDTO.builder()
+                    .id(conv.getId())
+                    .libro(bookSummary)
+                    .altroUtente(userMapper.toUtenteSummaryDTO(otherUser))
+                    .ultimoMessaggio(lastMessage != null ? toMessageDTO(lastMessage) : null)
+                    .messaggiNonLetti(unreadCount)
+                    .ultimaAttivita(conv.getLastMessageAt())
+                    .createdAt(conv.getCreatedAt())
+                    .build();
+        }).toList();
     }
 
     /**

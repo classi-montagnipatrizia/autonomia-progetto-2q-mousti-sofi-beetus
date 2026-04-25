@@ -40,7 +40,9 @@ public class CreaLibroRequestDTO {
     private String materia;
 
     @NotBlank(message = "L'immagine frontale è obbligatoria")
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*$", message = "URL immagine frontale non valido")
     private String frontImageUrl;
 
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*$", message = "URL immagine posteriore non valido")
     private String backImageUrl;
 }

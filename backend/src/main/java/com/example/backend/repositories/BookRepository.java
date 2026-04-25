@@ -85,6 +85,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     boolean existsByBackImageUrlAndSellerId(String backImageUrl, Long sellerId);
 
+    boolean existsByFrontImageUrlOrBackImageUrl(String frontImageUrl, String backImageUrl);
+
     /**
      * Ultimi 50 libri disponibili per costruire il contesto del chatbot AI.
      * Limitato per non eccedere i token limit di Gemini.

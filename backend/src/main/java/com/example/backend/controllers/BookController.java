@@ -125,6 +125,11 @@ public class BookController {
         log.debug("DELETE /api/books/images - Username: {}, count: {}", user.getUsername(), urls.size());
         urls.stream()
                 .filter(url -> url != null && !url.isBlank())
+                // Elimina solo URL Cloudinary già non collegati a nessun libro:
+                // questo endpoint serve esclusivamente per cleanup di upload pendenti (modal "Annulla").
+                // URL già collegati a un libro vengono ignorati, evitando che utenti
+                // eliminino immagini di altri utenti.
+                .filter(url -> !bookService.isImageLinkedToAnyBook(url))
                 .forEach(imageService::deleteMessageImage);
         return ResponseEntity.noContent().build();
     }
