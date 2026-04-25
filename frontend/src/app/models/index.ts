@@ -10,6 +10,7 @@ export enum NotificationType {
   NEW_POST = 'NEW_POST',
   BOOK_MESSAGE = 'BOOK_MESSAGE',   // Nuovo messaggio nella chat libreria
   GROUP_MESSAGE = 'GROUP_MESSAGE', // Nuovo messaggio in un gruppo
+  GROUP_INVITE = 'GROUP_INVITE',   // Aggiunto a un gruppo
 }
 
 export enum BookCondition {
