@@ -6,7 +6,6 @@ import com.example.backend.dtos.response.AdminUserListDTO;
 import com.example.backend.dtos.response.BookSummaryDTO;
 import com.example.backend.dtos.response.CommentResponseDTO;
 import com.example.backend.dtos.response.GroupSummaryDTO;
-import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.models.AdminAuditLog;
 import com.example.backend.models.AzioneAdmin;
 import com.example.backend.models.User;
@@ -47,8 +46,6 @@ public class AdminController {
 
         log.debug("GET /api/admin/users - Admin: {} - Query: {}", admin.getUsername(), query);
 
-        validateAdminUser(admin);
-
         Page<AdminUserListDTO> users;
         if (query != null && !query.trim().isEmpty()) {
             users = adminService.cercaUtenti(query.trim(), pageable);
@@ -71,7 +68,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/users/{} - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.eliminaUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Utente eliminato con successo"));
@@ -89,7 +85,6 @@ public class AdminController {
 
         log.debug("PUT /api/admin/users/{}/disable - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.disattivaUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Utente disattivato con successo"));
@@ -107,7 +102,6 @@ public class AdminController {
 
         log.debug("PUT /api/admin/users/{}/enable - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.riattivaUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Utente riattivato con successo"));
@@ -125,7 +119,6 @@ public class AdminController {
 
         log.debug("PUT /api/admin/users/{}/promote - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.promouviAdmin(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Utente promosso ad admin con successo"));
@@ -143,7 +136,6 @@ public class AdminController {
 
         log.debug("PUT /api/admin/users/{}/demote - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.rimuoviAdmin(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Privilegi admin rimossi con successo"));
@@ -161,7 +153,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/posts/{} - Admin: {}", postId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.eliminaPost(admin.getId(), postId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Post eliminato con successo"));
@@ -178,7 +169,6 @@ public class AdminController {
             @CurrentUser User admin) {
 
         log.debug("GET /api/admin/comments - Admin: {}", admin.getUsername());
-        validateAdminUser(admin);
 
         return ResponseEntity.ok(adminService.getTuttiCommenti(pageable));
     }
@@ -195,7 +185,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/comments/{} - Admin: {}", commentId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.eliminaCommento(admin.getId(), commentId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Commento eliminato con successo"));
@@ -212,7 +201,6 @@ public class AdminController {
             @CurrentUser User admin) {
 
         log.debug("GET /api/admin/books - Admin: {}", admin.getUsername());
-        validateAdminUser(admin);
 
         return ResponseEntity.ok(adminService.getTuttiLibri(pageable));
     }
@@ -228,7 +216,6 @@ public class AdminController {
             @CurrentUser User admin) {
 
         log.debug("GET /api/admin/groups - Admin: {}", admin.getUsername());
-        validateAdminUser(admin);
 
         return ResponseEntity.ok(adminService.getTuttiGruppi(pageable));
     }
@@ -245,7 +232,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/books/{} - Admin: {}", bookId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.eliminaAnnuncio(admin.getId(), bookId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Annuncio eliminato con successo"));
@@ -263,7 +249,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/users/{}/books - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         int count = adminService.eliminaTuttiAnnunciUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(
@@ -284,7 +269,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/groups/{} - Admin: {}", groupId, admin.getUsername());
 
-        validateAdminUser(admin);
         adminService.eliminaGruppo(admin.getId(), groupId, request);
 
         return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Gruppo eliminato con successo"));
@@ -302,7 +286,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/users/{}/posts - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         int count = adminService.eliminaTuttiPostUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(
@@ -323,7 +306,6 @@ public class AdminController {
 
         log.debug("DELETE /api/admin/users/{}/comments - Admin: {}", userId, admin.getUsername());
 
-        validateAdminUser(admin);
         int count = adminService.eliminaTuttiCommentiUtente(admin.getId(), userId, request);
 
         return ResponseEntity.ok(Map.of(
@@ -343,7 +325,6 @@ public class AdminController {
 
         log.debug("GET /api/admin/stats - Admin: {}", admin.getUsername());
 
-        validateAdminUser(admin);
         Map<String, Object> stats = adminService.ottieniStatisticheSistema(admin.getId(), request);
 
         return ResponseEntity.ok(stats);
@@ -414,23 +395,12 @@ public class AdminController {
 
         log.debug("POST /api/admin/cleanup?giorni={} - Admin: {}", giorni, admin.getUsername());
 
-        validateAdminUser(admin);
         Map<String, Integer> risultati = adminService.puliziaDatabase(admin.getId(), giorni, request);
 
         return ResponseEntity.ok(Map.of(
                 MESSAGE_KEY, "Pulizia database completata",
                 "risultati", risultati
         ));
-    }
-
-    /**
-     * Helper per verificare permessi admin
-     */
-    private void validateAdminUser(User user) {
-      
-        if (! user.getIsAdmin().booleanValue()) {
-            throw new UnauthorizedException("Accesso negato: privilegi admin richiesti");
-        }
     }
 
     /**

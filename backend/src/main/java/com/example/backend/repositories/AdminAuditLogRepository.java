@@ -4,6 +4,7 @@ import com.example.backend.models.AdminAuditLog;
 import com.example.backend.models.AzioneAdmin;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +18,11 @@ import java.util.List;
 public interface AdminAuditLogRepository extends JpaRepository<AdminAuditLog, Long> {
 
     // Trova tutte le azioni di un admin
+    @EntityGraph(attributePaths = "admin")
     Page<AdminAuditLog> findByAdminIdOrderByCreatedAtDesc(Long adminId, Pageable pageable);
 
     // Trova azioni per tipo
+    @EntityGraph(attributePaths = "admin")
     Page<AdminAuditLog> findByAzioneOrderByCreatedAtDesc(AzioneAdmin azione, Pageable pageable);
 
     // Trova azioni in un periodo
@@ -34,6 +37,7 @@ public interface AdminAuditLogRepository extends JpaRepository<AdminAuditLog, Lo
     long countByAdminId(@Param("adminId") Long adminId);
 
     // Ultime N azioni
+    @EntityGraph(attributePaths = "admin")
     Page<AdminAuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     /**

@@ -6,6 +6,7 @@ import com.example.backend.dtos.response.UserSummaryDTO;
 import com.example.backend.events.CommentDeletedEvent;
 import com.example.backend.events.DeleteMentionsEvent;
 import com.example.backend.exception.AdminProtectionException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.dtos.response.BookSummaryDTO;
@@ -90,7 +91,8 @@ public class AdminService {
     public Page<AdminUserListDTO> cercaUtenti(String query, Pageable pageable) {
         log.debug("Ricerca utenti con query: {}", query);
 
-        Page<User> users = userRepository.searchByUsernameOrFullName(query, pageable);
+        String safeQuery = SearchUtils.escapeLikeWildcards(query);
+        Page<User> users = userRepository.searchByUsernameOrFullName(safeQuery, pageable);
 
         return users.map(this::mapToAdminUserListDTO);
     }
@@ -237,7 +239,10 @@ public class AdminService {
             // Il cascade eliminerà automaticamente commenti e like rimasti sui post dell'utente
             eliminaTuttiPost(userId);
 
-            // --- FASE 4: Eliminare l'utente ---
+            // --- FASE 4: Cleanup Cloudinary e eliminazione utente ---
+            if (target.getProfilePictureUrl() != null) {
+                imageService.deleteMessageImage(target.getProfilePictureUrl());
+            }
             userRepository.deleteByUserId(targetUserId);
 
             log.info("Utente {} eliminato completamente", targetUsername);
@@ -394,6 +399,11 @@ public class AdminService {
             User admin = userRepository.getReferenceById(adminId);
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+
+            // Cleanup immagine post da Cloudinary
+            if (post.getImageUrl() != null) {
+                imageService.deleteMessageImage(post.getImageUrl());
+            }
 
             // Elimina tutte le notifiche associate al post
             int notificationsDeleted = notificationRepository.deleteByRelatedPostId(postId);
@@ -566,10 +576,8 @@ public class AdminService {
 
             // Conta utenti
             long totaleUtenti = userRepository.count();
-            long utentiAttivi = userRepository.findByIsActiveTrue().size();
-            long utentiAdmin = userRepository.findAll().stream()
-                    .filter(User::getIsAdmin)
-                    .count();
+            long utentiAttivi = userRepository.countByIsActiveTrue();
+            long utentiAdmin = userRepository.countByIsAdminTrue();
 
             // Conta contenuti (solo quelli non eliminati)
             long totalePosts = postRepository.count();
@@ -723,16 +731,25 @@ public class AdminService {
      */
     @Transactional(readOnly = true)
     public Page<GroupSummaryDTO> getTuttiGruppi(Pageable pageable) {
-        return groupRepository.findAllWithAdmin(pageable)
-                .map(group -> GroupSummaryDTO.builder()
-                        .id(group.getId())
-                        .name(group.getName())
-                        .description(group.getDescription())
-                        .profilePictureUrl(group.getProfilePictureUrl())
-                        .memberCount((int) groupMembershipRepository.countByGroup(group))
-                        .unreadCount(0)
-                        .isAdmin(true)
-                        .build());
+        Page<Group> groups = groupRepository.findAllWithAdmin(pageable);
+
+        List<Long> groupIds = groups.getContent().stream().map(Group::getId).toList();
+        Map<Long, Long> memberCounts = new HashMap<>();
+        if (!groupIds.isEmpty()) {
+            for (Object[] row : groupMembershipRepository.countByGroupIds(groupIds)) {
+                memberCounts.put((Long) row[0], (Long) row[1]);
+            }
+        }
+
+        return groups.map(group -> GroupSummaryDTO.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .description(group.getDescription())
+                .profilePictureUrl(group.getProfilePictureUrl())
+                .memberCount(memberCounts.getOrDefault(group.getId(), 0L).intValue())
+                .unreadCount(0)
+                .isAdmin(true)
+                .build());
     }
 
     // =========================================================================
@@ -869,6 +886,13 @@ public class AdminService {
         int notifCommentDeleted = notificationRepository.deleteByRelatedCommentOnPostsIn(postIds);
         log.debug("Eliminate {} notifiche su commenti altrui nei post dell'utente {}", notifCommentDeleted, userId);
 
+        // Cleanup immagini post da Cloudinary
+        for (Post post : posts) {
+            if (post.getImageUrl() != null) {
+                imageService.deleteMessageImage(post.getImageUrl());
+            }
+        }
+
         // L'eliminazione dei post eliminerà in cascade:
         // - tutti i commenti (via CascadeType.ALL)
         // - tutti i like (via CascadeType.ALL)
@@ -1001,6 +1025,10 @@ public class AdminService {
         if (count == 0) return 0;
 
         for (Book book : books) {
+            // Cleanup immagini libro da Cloudinary
+            if (book.getFrontImageUrl() != null) imageService.deleteMessageImage(book.getFrontImageUrl());
+            if (book.getBackImageUrl() != null) imageService.deleteMessageImage(book.getBackImageUrl());
+
             // Elimina messaggi e conversazioni del libro
             List<Long> convIds = bookConversationRepository.findIdsByBookId(book.getId());
             for (Long convId : convIds) {
