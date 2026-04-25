@@ -315,7 +315,7 @@ export class GroupStore {
         g.id === groupId
           ? {
               ...g,
-              lastMessageContent: msg.content ?? '🎤 Messaggio vocale',
+              lastMessageContent: msg.content ?? (msg.audioUrl ? '🎤 Messaggio vocale' : msg.imageUrl ? '📷 Foto' : null),
               lastMessageAt: msg.createdAt,
             }
           : g

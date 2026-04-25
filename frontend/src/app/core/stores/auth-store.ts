@@ -1,14 +1,24 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal, effect } from '@angular/core';
 import { UserResponseDTO } from '../../models';
+import { TokenService } from '../auth/services/token-service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthStore {
-  // Signal privato per l'utente corrente
+  private readonly tokenService = inject(TokenService);
+
   private readonly _currentUser = signal<UserResponseDTO | null>(null);
 
-  // Signal readonly esposto pubblicamente
+  constructor() {
+    effect(() => {
+      const user = this._currentUser();
+      if (user) {
+        this.tokenService.saveUserData(user);
+      }
+    });
+  }
+
   readonly currentUser = this._currentUser.asReadonly();
 
   // Computed signal per verificare se l'utente è autenticato

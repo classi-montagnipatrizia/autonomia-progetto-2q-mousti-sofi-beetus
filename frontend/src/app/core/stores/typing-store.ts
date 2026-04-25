@@ -1,91 +1,69 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
-import { interval } from 'rxjs';
-import { switchMap, startWith } from 'rxjs/operators';
-import { MessageService } from '../api/message-service';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { WebsocketService } from '../services/websocket-service';
 
-/**
- * Store per tracciare chi sta scrivendo nelle conversazioni.
- * Polling periodico per ogni conversazione attiva.
- */
 @Injectable({
   providedIn: 'root',
 })
 export class TypingStore {
-  private readonly messageService = inject(MessageService);
-  
-  // Map userId -> isTyping
-  private readonly typingStatus = signal<Map<number, boolean>>(new Map());
-  
-  // Lista degli userId da monitorare
-  private monitoredUsers = new Set<number>();
-  private pollingSubscription: any = null;
-  
-  private readonly POLLING_INTERVAL = 2000;
+  private readonly websocketService = inject(WebsocketService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /**
-   * Verifica se un utente sta scrivendo
-   */
-  isUserTyping(userId: number): boolean {
-    return this.typingStatus().get(userId) ?? false;
-  }
+  private readonly typingStatus = signal<Map<string, boolean>>(new Map());
+  private readonly clearTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  /**
-   * Imposta gli utenti da monitorare per il typing
-   */
-  setMonitoredUsers(userIds: number[]): void {
-    this.monitoredUsers = new Set(userIds);
-    this.startPolling();
-  }
+  private readonly TYPING_TIMEOUT = 4000;
 
-  /**
-   * Aggiunge un utente da monitorare
-   */
-  addMonitoredUser(userId: number): void {
-    this.monitoredUsers.add(userId);
-  }
-
-  /**
-   * Avvia il polling per tutti gli utenti monitorati
-   */
-  private startPolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
-
-    this.pollingSubscription = interval(this.POLLING_INTERVAL)
-      .pipe(startWith(0))
-      .subscribe(() => {
-        this.checkAllTypingStatus();
+  constructor() {
+    this.websocketService.typing$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        const key = event.senderUsername;
+        if (event.isTyping) {
+          this.setUserTyping(key);
+        } else {
+          this.clearUserTyping(key);
+        }
       });
   }
 
-  /**
-   * Controlla lo stato typing di tutti gli utenti monitorati
-   */
-  private checkAllTypingStatus(): void {
-    for (const userId of this.monitoredUsers) {
-      this.messageService.isTyping(userId).subscribe({
-        next: (response) => {
-          this.typingStatus.update(map => {
-            const newMap = new Map(map);
-            newMap.set(userId, response.isTyping);
-            return newMap;
-          });
-        },
-        error: () => {
-          // Ignora errori
-        },
-      });
-    }
+  isUserTypingByUsername(username: string): boolean {
+    return this.typingStatus().get(username) ?? false;
   }
 
-  /**
-   * Ferma il polling
-   */
-  stopPolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-      this.pollingSubscription = null;
+  private setUserTyping(username: string): void {
+    const existing = this.clearTimers.get(username);
+    if (existing) clearTimeout(existing);
+
+    this.typingStatus.update(map => {
+      const newMap = new Map(map);
+      newMap.set(username, true);
+      return newMap;
+    });
+
+    const timer = setTimeout(() => {
+      this.clearUserTyping(username);
+    }, this.TYPING_TIMEOUT);
+    this.clearTimers.set(username, timer);
+  }
+
+  private clearUserTyping(username: string): void {
+    const existing = this.clearTimers.get(username);
+    if (existing) {
+      clearTimeout(existing);
+      this.clearTimers.delete(username);
     }
+
+    this.typingStatus.update(map => {
+      const newMap = new Map(map);
+      newMap.delete(username);
+      return newMap;
+    });
+  }
+
+  clear(): void {
+    this.clearTimers.forEach(timer => clearTimeout(timer));
+    this.clearTimers.clear();
+    this.typingStatus.set(new Map());
   }
 }

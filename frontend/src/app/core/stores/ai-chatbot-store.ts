@@ -115,21 +115,27 @@ export class AiChatbotStore {
 
   /**
    * Rimuove l'ultimo messaggio di errore e re-invia l'ultimo messaggio utente.
+   * Un solo set() per evitare flicker tra il remove e il re-send.
    */
   async retryLastMessage(): Promise<void> {
     const msgs = this._messages();
-    const errorIdx = [...msgs].reverse().findIndex(m => m.errore);
-    if (errorIdx < 0) return;
-
-    const realIdx = msgs.length - 1 - errorIdx;
-    const withoutError = msgs.filter((_, i) => i !== realIdx);
-    this._messages.set(withoutError);
-
-    const lastUser = [...withoutError].reverse().find(m => m.ruolo === 'user');
-    if (lastUser) {
-      this._messages.set(withoutError.filter(m => m !== lastUser));
-      await this.sendMessage(lastUser.contenuto);
+    let lastErrorIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (msgs[i].errore) { lastErrorIdx = i; break; }
     }
+    if (lastErrorIdx < 0) return;
+
+    let lastUserIdx = -1;
+    for (let i = lastErrorIdx - 1; i >= 0; i--) {
+      if (msgs[i].ruolo === 'user') { lastUserIdx = i; break; }
+    }
+    if (lastUserIdx < 0) return;
+
+    const lastUserContent = msgs[lastUserIdx].contenuto;
+    this._messages.set(
+      msgs.filter((_, i) => i !== lastErrorIdx && i !== lastUserIdx)
+    );
+    await this.sendMessage(lastUserContent);
   }
 
   /**
