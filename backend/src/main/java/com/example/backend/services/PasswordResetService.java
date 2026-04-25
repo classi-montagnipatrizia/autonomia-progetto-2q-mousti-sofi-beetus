@@ -124,9 +124,12 @@ public class PasswordResetService {
     public void confirmPasswordReset(String token, String newPassword) {
         log.info("Conferma reset password con token");
 
-        // Validazione password
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new InvalidInputException("La password deve essere di almeno 6 caratteri");
+        // Validazione password (stesse regole della registrazione)
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 20) {
+            throw new InvalidInputException("La password deve essere tra 8 e 20 caratteri");
+        }
+        if (!newPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$")) {
+            throw new InvalidInputException("La password deve contenere almeno una lettera maiuscola, una minuscola e un numero");
         }
 
         // Trova token valido (non usato e non scaduto)
