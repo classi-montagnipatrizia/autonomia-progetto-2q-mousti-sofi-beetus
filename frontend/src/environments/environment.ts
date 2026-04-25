@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://texas-completion-curious-alleged.trycloudflare.com/api',
-  wsUrl: 'https://texas-completion-curious-alleged.trycloudflare.com/ws',
+  apiUrl: 'http://localhost:8080/api',
+  wsUrl: 'http://localhost:8080/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
