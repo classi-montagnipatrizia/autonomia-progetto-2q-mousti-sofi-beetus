@@ -39,4 +39,22 @@ public interface GroupMembershipRepository extends JpaRepository<GroupMembership
 
     @Query("SELECT m.group FROM GroupMembership m WHERE m.user.id = :userId")
     List<Group> findGroupsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT m.group.id, COUNT(m) FROM GroupMembership m " +
+           "WHERE m.group.id IN :groupIds GROUP BY m.group.id")
+    List<Object[]> countByGroupIds(@Param("groupIds") List<Long> groupIds);
+
+    @Query("SELECT m.group.id, COUNT(msg) FROM GroupMembership m " +
+           "JOIN GroupMessage msg ON msg.group.id = m.group.id AND msg.createdAt > m.lastReadAt " +
+           "WHERE m.user.id = :userId AND m.group.id IN :groupIds AND m.lastReadAt IS NOT NULL " +
+           "GROUP BY m.group.id")
+    List<Object[]> countUnreadMessagesBatch(@Param("userId") Long userId,
+                                            @Param("groupIds") List<Long> groupIds);
+
+    @Query("SELECT m.group.id, COUNT(msg) FROM GroupMembership m " +
+           "JOIN GroupMessage msg ON msg.group.id = m.group.id AND msg.createdAt > m.joinedAt " +
+           "WHERE m.user.id = :userId AND m.group.id IN :groupIds AND m.lastReadAt IS NULL " +
+           "GROUP BY m.group.id")
+    List<Object[]> countUnreadMessagesNeverReadBatch(@Param("userId") Long userId,
+                                                     @Param("groupIds") List<Long> groupIds);
 }

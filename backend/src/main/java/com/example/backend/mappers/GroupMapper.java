@@ -27,7 +27,7 @@ public class GroupMapper {
                 .profilePictureUrl(group.getProfilePictureUrl())
                 .memberCount((int) memberCount)
                 .unreadCount(unreadCount)
-                .lastMessageContent(lastMessage != null ? lastMessage.getContent() : null)
+                .lastMessageContent(lastMessage != null ? getMessagePreview(lastMessage) : null)
                 .lastMessageAt(lastMessage != null ? lastMessage.getCreatedAt() : null)
                 .isAdmin(group.getAdmin().getId().equals(currentUserId))
                 .build();
@@ -63,6 +63,14 @@ public class GroupMapper {
                 .isAdmin(user.getId().equals(adminId))
                 .joinedAt(membership.getJoinedAt())
                 .build();
+    }
+
+    private String getMessagePreview(GroupMessage message) {
+        if (message.isDeletedBySender()) return null;
+        if (message.getContent() != null) return message.getContent();
+        if (message.getAudioUrl() != null) return "🎤 Messaggio vocale";
+        if (message.getImageUrl() != null) return "📷 Foto";
+        return null;
     }
 
     public GroupMessageDTO toMessageDTO(GroupMessage message) {

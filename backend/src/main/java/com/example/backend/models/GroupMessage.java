@@ -8,7 +8,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "group_messages")
+@Table(name = "group_messages",
+    indexes = {
+        @Index(name = "idx_group_messages_group_created", columnList = "group_id, created_at"),
+        @Index(name = "idx_group_messages_sender", columnList = "sender_id")
+    })
 @Data
 @Builder
 @NoArgsConstructor

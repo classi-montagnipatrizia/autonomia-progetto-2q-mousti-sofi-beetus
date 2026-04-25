@@ -30,4 +30,9 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long
 
     @Query("SELECT m FROM GroupMessage m WHERE m.sender.id = :senderId AND (m.imageUrl IS NOT NULL OR m.audioUrl IS NOT NULL)")
     List<GroupMessage> findMediaMessagesBySenderId(@Param("senderId") Long senderId);
+
+    @Query("SELECT m FROM GroupMessage m JOIN FETCH m.sender " +
+           "WHERE m.id IN (SELECT MAX(m2.id) FROM GroupMessage m2 " +
+           "WHERE m2.group.id IN :groupIds GROUP BY m2.group.id)")
+    List<GroupMessage> findLatestByGroupIds(@Param("groupIds") List<Long> groupIds);
 }
