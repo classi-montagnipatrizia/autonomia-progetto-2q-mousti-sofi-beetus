@@ -51,10 +51,19 @@ public class SecurityConfig {
      * Configura la security filter chain
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
-                // Disabilita CSRF
+                // Disabilita CSRF (API stateless con JWT, nessun cookie di sessione)
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // Security headers
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(contentType -> {})
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
+                )
 
                 // Configura CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -74,7 +83,8 @@ public class SecurityConfig {
                                 "/api/auth/resend-verification",
                                 "/api/users/check/email",
                                 "/api/users/check/username",
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/error"
                         ).permitAll()
 
                         // WebSocket
@@ -118,7 +128,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
         return config.getAuthenticationManager();
     }
 
@@ -143,7 +153,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(allowedOrigins);
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "Accept", "ngrok-skip-browser-warning"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

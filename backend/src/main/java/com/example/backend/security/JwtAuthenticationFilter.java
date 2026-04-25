@@ -28,6 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -50,6 +51,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Estrae il token (rimuove "Bearer ")
             jwt = authHeader.substring(7);
+
+            // Verifica blacklist (token invalidato al logout)
+            if (tokenBlacklistService.isBlacklisted(jwt)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             // Estrae l'username dal token
             username = jwtTokenProvider.extractUsername(jwt);

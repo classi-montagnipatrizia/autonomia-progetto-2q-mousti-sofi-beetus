@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,17 +77,7 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tipo", "access");
         claims.put("userId", user.getId());
-        claims.put("email", user.getEmail());
-        claims.put("nomeCompleto", user.getFullName());
-        claims.put("bio", user.getBio());
-        claims.put("profilePictureUrl", user.getProfilePictureUrl());
         claims.put("isAdmin", user.getIsAdmin());
-        claims.put("isActive", user.getIsActive());
-
-        // Converte LocalDateTime in String ISO 8601 se presente
-        if (user.getLastSeen() != null) {
-            claims.put("lastSeen", user.getLastSeen().atZone(ZoneId.systemDefault()).toInstant().toString());
-        }
 
         return generateToken(claims, user.getUsername(), accessTokenExpiration);
     }
@@ -177,7 +166,15 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
-            final String username = extractUsername(token);
+            final Claims claims = extractAllClaims(token);
+            final String username = claims.getSubject();
+
+            String tipo = (String) claims.get("tipo");
+            if (!"access".equals(tipo)) {
+                log.warn("Token tipo non valido: atteso 'access', ricevuto '{}'", tipo);
+                return false;
+            }
+
             boolean isValid = username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 
             if (isValid) {
