@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 @Table(name = "hidden_posts",
        uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"}),
     indexes = {
-        @Index(name = "idx_post_id", columnList = "post_id"),
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_hidden_posts_post_id", columnList = "post_id"),
+        @Index(name = "idx_hidden_posts_user_id", columnList = "user_id")
     })
 @Data
 @NoArgsConstructor

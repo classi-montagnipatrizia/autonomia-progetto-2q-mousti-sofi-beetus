@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
        uniqueConstraints = @UniqueConstraint(columnNames = {"comment_id", "user_id"}),
        
     indexes = {
-        @Index(name = "idx_comment_id", columnList = "comment_id"),
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_hidden_comments_comment_id", columnList = "comment_id"),
+        @Index(name = "idx_hidden_comments_user_id", columnList = "user_id")
     })
 @Data
 @NoArgsConstructor
