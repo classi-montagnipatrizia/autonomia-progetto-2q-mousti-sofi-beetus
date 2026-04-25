@@ -6,6 +6,7 @@ import com.example.backend.dtos.request.RegistrazioneRequestDTO;
 import com.example.backend.dtos.request.RefreshTokenRequestDTO;
 import com.example.backend.dtos.response.LoginResponseDTO;
 import com.example.backend.dtos.response.RefreshTokenResponseDTO;
+import com.example.backend.security.TokenBlacklistService;
 import com.example.backend.services.AuthService;
 import com.example.backend.services.EmailVerificationService;
 import com.example.backend.services.PasswordResetService;
@@ -31,6 +32,7 @@ public class AuthController {
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
     private final EmailVerificationService emailVerificationService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * POST /api/auth/registrazione
@@ -98,12 +100,17 @@ public class AuthController {
      * @return Messaggio di conferma
      */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody(required = false) RefreshTokenRequestDTO request) {
+    public ResponseEntity<String> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody(required = false) RefreshTokenRequestDTO request) {
+        // Blacklist access token per invalidazione immediata
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            tokenBlacklistService.blacklist(authHeader.substring(7));
+        }
+
         if (request != null && request.getRefreshToken() != null) {
             log.debug("POST /api/auth/logout - Invalidating refresh token");
             authService.logoutByRefreshToken(request.getRefreshToken());
-        } else {
-            log.debug("POST /api/auth/logout - No refresh token provided, skipping");
         }
 
         return ResponseEntity.ok("Logout effettuato con successo");

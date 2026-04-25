@@ -41,7 +41,6 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final UserMapper userMapper;
     private final EmailVerificationService emailVerificationService;
-    private final ValidationService validationService;
     private static  final String AUTHORIZATION_TYPE="Bearer";
 
     /**
@@ -50,9 +49,6 @@ public class AuthService {
     @Transactional
     public LoginResponseDTO registrazione(RegistrazioneRequestDTO request) {
         log.info("Tentativo di registrazione per username: {}", request.getUsername());
-
-        // Valida limite studenti (configurabile tramite app.max-students)
-        validationService.validateStudentLimit();
 
         // Verifica username unico
         if (userRepository.existsByUsername(request.getUsername())) {
