@@ -12,5 +12,7 @@ public class AggiornaProfiloRequestDTO {
     private String bio;
 
     @Size(max = 2048, message = "L'URL dell'immagine profilo non può superare 2048 caratteri")
-    private String profilePictureUrl; // URL Firebase
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*$",
+             message = "L'immagine profilo deve essere caricata tramite il servizio di upload autorizzato")
+    private String profilePictureUrl;
 }
