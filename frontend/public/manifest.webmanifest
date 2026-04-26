@@ -10,20 +10,8 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "icons/icon-96x96.png",
       "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-144x144.png",
-      "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
@@ -38,6 +26,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/maskable_icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
