@@ -7,6 +7,9 @@
 # Docker volumes
 mysql_data/
 uploads_data/
+certbot/conf/
+certbot/www/
+backups/
 
 # Logs
 backend/logs/
