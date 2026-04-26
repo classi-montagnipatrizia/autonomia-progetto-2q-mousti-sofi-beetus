@@ -1,0 +1,26 @@
+# Profilo Spring Boot per Docker Compose (VM Debian)
+# Attivato automaticamente dal Dockerfile con SPRING_PROFILE=docker
+# Sovrascrive solo ciò che è diverso da application.yml
+
+spring:
+  jpa:
+    hibernate:
+      # update = mantiene i dati tra i riavvii (NON usare create-drop in produzione)
+      ddl-auto: update
+    show-sql: false
+
+  # Datasource, mail, jwt ecc. vengono tutti da application.yml + variabili d'ambiente.
+  # Il docker-compose imposta JDBC_DATABASE_URL=jdbc:postgresql://postgres:5432/beetUs_db
+  # in modo che il backend si connetta al container postgres invece di localhost.
+
+vapid:
+  subject: mailto:moustapha.mbaye@marconirovereto.it
+
+logging:
+  level:
+    root: WARN
+    com.example.backend: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+

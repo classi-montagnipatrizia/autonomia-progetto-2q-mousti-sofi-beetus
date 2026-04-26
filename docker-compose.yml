@@ -1,0 +1,60 @@
+# Avvio: docker compose --env-file ./backend/.env up -d --build
+# Update:  git pull && docker compose --env-file ./backend/.env up -d --build backend
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: beetus_postgres
+    environment:
+      POSTGRES_DB: beetUs_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d beetUs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: beetus_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      # Sovrascrive JDBC_DATABASE_URL del .env locale: punta al container postgres
+      JDBC_DATABASE_URL: jdbc:postgresql://postgres:5432/beetUs_db
+      # Sovrascrive DDL_AUTO del .env locale: in produzione non distruggere i dati
+      DDL_AUTO: update
+      SPRING_PROFILE: docker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  nginx:
+    image: nginx:alpine
+    container_name: beetus_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
