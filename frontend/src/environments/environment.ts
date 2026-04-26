@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://tribe-kind-mpeg-eds.trycloudflare.com/api',
-  wsUrl: 'https://tribe-kind-mpeg-eds.trycloudflare.com/ws',
+  apiUrl: 'https://experiences-hopkins-statement-marker.trycloudflare.com/api',
+  wsUrl: 'https://experiences-hopkins-statement-marker.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
