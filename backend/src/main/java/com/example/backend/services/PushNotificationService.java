@@ -105,14 +105,25 @@ public class PushNotificationService {
 
         byte[] payload;
         try {
-            // Il formato richiesto da ngsw-worker.js di Angular:
-            // { "notification": { "title", "body", "icon", "data": { "url" } } }
+            String safeUrl = (url != null && !url.isBlank()) ? url : "/";
+            // Formato richiesto da ngsw-worker.js di Angular.
+            // badge: icona monocromatica per la barra delle notifiche Android.
+            // onActionClick.default: dice ad Angular SW di aprire/focalizzare la URL al click.
             payload = objectMapper.writeValueAsBytes(Map.of(
                     "notification", Map.of(
                             "title", title,
                             "body", body,
                             "icon", "/icons/icon-192x192.png",
-                            "data", Map.of("url", url)
+                            "badge", "/icons/icon-96x96.png",
+                            "data", Map.of(
+                                    "url", safeUrl,
+                                    "onActionClick", Map.of(
+                                            "default", Map.of(
+                                                    "operation", "navigateLastFocusedOrOpen",
+                                                    "url", safeUrl
+                                            )
+                                    )
+                            )
                     )
             ));
         } catch (Exception e) {

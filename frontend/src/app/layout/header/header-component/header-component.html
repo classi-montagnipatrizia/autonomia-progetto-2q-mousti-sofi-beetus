@@ -34,6 +34,20 @@
             title="Messaggi">
             <lucide-icon [img]="MessageSquareIcon" [size]="22"></lucide-icon>
           </a>
+
+          <!-- Utenti online — solo tablet (md..lg): su desktop c'è la sidebar, su mobile c'è il bottom nav -->
+          <button type="button"
+            (click)="toggleOnlineDrawer()"
+            class="lg:hidden relative p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all hover:scale-105"
+            aria-label="Utenti online"
+            title="Utenti online">
+            <lucide-icon [img]="UsersIcon" [size]="22"></lucide-icon>
+            @if (onlineCount() > 0) {
+              <span class="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-bold text-white bg-green-500 border-2 border-white dark:border-gray-900 rounded-full">
+                {{ onlineCount() > 99 ? '99+' : onlineCount() }}
+              </span>
+            }
+          </button>
         }
 
         @if (isAdmin()) {
