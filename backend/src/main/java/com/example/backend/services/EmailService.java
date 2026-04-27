@@ -120,8 +120,11 @@ public class EmailService {
                 Funzionalità disponibili:
                 - Pubblica post con testo e immagini
                 - Commenta e metti like ai post
-                - Invia messaggi diretti
-                - Ricevi notifiche in tempo reale
+                - Invia messaggi diretti e vocali
+                - Crea gruppi di chat con i tuoi compagni
+                - Compra e vendi libri scolastici usati nella Libreria
+                - Chiedi consiglio all'assistente AI per trovare libri
+                - Ricevi notifiche push anche a browser chiuso
                 - Menziona altri utenti con @username
 
                 Buon divertimento!

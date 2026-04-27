@@ -1,7 +1,7 @@
 {
   "name": "beetUs - Social Network",
   "short_name": "beetUs",
-  "description": "Connettiti con i tuoi amici e condividi momenti speciali",
+  "description": "Il social della tua scuola: post, messaggi, gruppi, libreria libri usati e assistente AI",
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "./",
