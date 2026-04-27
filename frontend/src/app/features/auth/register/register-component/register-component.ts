@@ -36,12 +36,21 @@ export class RegisterComponent {
   readonly showTermsModal = signal<boolean>(false);
 
   // Classi disponibili per la registrazione
-  readonly availableClassrooms = [
-    '1IA', '1IB', '1IC', '1ID',
-    '2IA', '2IB', '2IC', '2ID',
-    '3IA', '3IB', '3IC', '3ID',
-    '4IA', '4IB', '4IC', '4ID',
-    '5IA', '5IB', '5IC', '5ID',
+  readonly availableClassrooms: string[] = [
+    // Prime
+    "1A", "1B", "1C", "1D", "1E", "1F", "1Q",
+
+    // Seconde
+    "2A", "2B", "2C", "2D", "2E", "2F", "2G", "2H", "2I", "2Q",
+
+    // Terze
+    "3AEA", "3BEA", "3AI", "3BI", "3AM", "3BM", "3CM", "3DEN", "3Q",
+
+    // Quarte
+    "4AEA", "4BEA", "4AI", "4BI", "4CI", "4AM", "4BM", "4CM", "4DEN",
+
+    // Quinte
+    "5AEA", "5BEA", "5AI", "5BI", "5CI", "5AM", "5BM", "5CEN", "5DEN", "5FEN"
   ];
 
   // Form di registrazione
