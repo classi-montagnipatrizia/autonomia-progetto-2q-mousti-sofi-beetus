@@ -150,7 +150,7 @@ export class SettingsComponent implements OnInit {
     return this.deactivatePassword().length > 0;
   });
 
-  readonly sections: { id: SettingsSection; label: string; icon: typeof User }[] = [
+  private readonly allSections: { id: SettingsSection; label: string; icon: typeof User }[] = [
     { id: 'profile', label: 'Profilo', icon: User },
     { id: 'password', label: 'Password', icon: Lock },
     { id: 'theme', label: 'Tema', icon: Palette },
@@ -158,6 +158,12 @@ export class SettingsComponent implements OnInit {
     { id: 'account', label: 'Account', icon: Power },
     { id: 'support', label: 'Supporto', icon: Mail },
   ];
+
+  readonly sections = computed(() =>
+    this.authStore.isAdmin()
+      ? this.allSections.filter(s => s.id !== 'support')
+      : this.allSections
+  );
 
   ngOnInit(): void {
     this.loadUserData();

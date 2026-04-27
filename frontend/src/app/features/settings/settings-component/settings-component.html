@@ -22,7 +22,7 @@
       <!-- Sidebar navigation -->
       <nav class="lg:w-64 flex-shrink-0">
         <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[24px] border border-white/20 dark:border-gray-700/50 shadow-sm overflow-hidden p-2 space-y-1">
-          @for (section of sections; track section.id) {
+          @for (section of sections(); track section.id) {
             <button
               type="button"
               (click)="setSection(section.id)"
