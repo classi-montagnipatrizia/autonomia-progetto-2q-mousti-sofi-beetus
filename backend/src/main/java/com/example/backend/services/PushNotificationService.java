@@ -107,14 +107,13 @@ public class PushNotificationService {
         try {
             String safeUrl = (url != null && !url.isBlank()) ? url : "/";
             // Formato richiesto da ngsw-worker.js di Angular.
-            // badge: icona monocromatica per la barra delle notifiche Android.
+            // badge omesso: richiede icona monocromatica su sfondo trasparente.
             // onActionClick.default: dice ad Angular SW di aprire/focalizzare la URL al click.
             payload = objectMapper.writeValueAsBytes(Map.of(
                     "notification", Map.of(
                             "title", title,
                             "body", body,
                             "icon", "/icons/icon-192x192.png",
-                            "badge", "/icons/icon-96x96.png",
                             "data", Map.of(
                                     "url", safeUrl,
                                     "onActionClick", Map.of(

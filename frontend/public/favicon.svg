@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" fill="#000000" rx="180" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" shape-rendering="geometricPrecision">
+  <rect width="1024" height="1024" fill="#6366f1" rx="180" />
   <svg x="64" y="64" width="896" height="896" viewBox="150 150 720 720">
-    <g transform="translate(0,1024) scale(0.1,-0.1)" fill="#ffffff">
+    <g transform="translate(0,1024) scale(0.1,-0.1)" fill="#ffffff" shape-rendering="geometricPrecision">
 
 <path d="M2810 8719 c-318 -28 -633 -187 -875 -440 -197 -206 -312 -427 -378
 -723 l-22 -101 0 -2305 0 -2305 22 -120 c56 -306 189 -561 403 -775 163 -164
