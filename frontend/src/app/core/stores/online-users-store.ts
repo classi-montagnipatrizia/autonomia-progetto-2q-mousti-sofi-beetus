@@ -17,7 +17,7 @@ export class OnlineUsersStore {
   private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly REFRESH_INTERVAL = 300000; // 5 minuti
+  private readonly REFRESH_INTERVAL = 60000; // 1 minuto
 
   private pollingSubscription: Subscription | null = null;
 
@@ -72,6 +72,11 @@ export class OnlineUsersStore {
         this.loadOnlineUsers();
       }
     });
+
+    // Carica subito se già autenticato: non aspettare la WS (es. reload pagina o WS lenta)
+    if (this.tokenService.isTokenValid()) {
+      this.loadOnlineUsers();
+    }
   }
 
   /**
