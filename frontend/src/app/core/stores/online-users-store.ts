@@ -85,7 +85,13 @@ export class OnlineUsersStore {
       const response = await firstValueFrom(this.userService.getAllUsers(0, 1000));
       if (!response) return;
 
-      this._onlineUsers.set(response.content.filter((u) => u.isOnline));
+      const fromApi = response.content.filter((u) => u.isOnline);
+      // Merge: mantieni gli utenti arrivati via WebSocket mentre la HTTP era in volo
+      this._onlineUsers.update((current) => {
+        const merged = new Map(fromApi.map((u) => [u.id, u]));
+        current.forEach((u) => { if (!merged.has(u.id)) merged.set(u.id, u); });
+        return Array.from(merged.values());
+      });
       this._lastUpdate.set(new Date());
     } catch (error) {
       this.logger.error('Errore caricamento utenti online', error);
