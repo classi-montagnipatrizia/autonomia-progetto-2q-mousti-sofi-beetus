@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://herald-people-among-nature.trycloudflare.com/api',
-  wsUrl: 'https://herald-people-among-nature.trycloudflare.com/ws',
+  apiUrl: 'https://main-dist-annotated-clear.trycloudflare.com/api',
+  wsUrl: 'https://main-dist-annotated-clear.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {

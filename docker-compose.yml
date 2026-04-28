@@ -5,12 +5,14 @@ services:
   postgres:
     image: postgres:18-alpine
     container_name: beetus_postgres
+    env_file:
+      - ./backend/.env
     environment:
       POSTGRES_DB: beetUs_db
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d beetUs_db"]
@@ -34,6 +36,8 @@ services:
       # Sovrascrive DDL_AUTO del .env locale: in produzione non distruggere i dati
       DDL_AUTO: update
       SPRING_PROFILE: docker
+    ports:
+      - "8080:8080"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
