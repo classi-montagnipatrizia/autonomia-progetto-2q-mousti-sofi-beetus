@@ -36,6 +36,7 @@ services:
       # Sovrascrive DDL_AUTO del .env locale: in produzione non distruggere i dati
       DDL_AUTO: update
       SPRING_PROFILE: docker
+      TZ: Europe/Rome
     ports:
       - "8080:8080"
     restart: unless-stopped

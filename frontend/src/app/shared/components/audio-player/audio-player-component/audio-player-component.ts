@@ -49,6 +49,7 @@ export class AudioPlayerComponent implements OnDestroy {
       this.destroy();
       if (url) {
         this.audio = new Audio(url);
+        this.audio.preload = 'metadata';
         this.audio.ontimeupdate = () => this.currentTime.set(this.audio!.currentTime);
         this.audio.onended = () => { this.isPlaying.set(false); this.currentTime.set(0); };
         this.audio.onwaiting = () => this.isLoading.set(true);
@@ -115,7 +116,7 @@ export class AudioPlayerComponent implements OnDestroy {
       this.audio.pause();
       this.isPlaying.set(false);
     } else {
-      this.audio.play().then(() => this.isPlaying.set(true)).catch(() => {});
+      this.audio.play().then(() => this.isPlaying.set(true)).catch(() => this.isPlaying.set(false));
     }
   }
 

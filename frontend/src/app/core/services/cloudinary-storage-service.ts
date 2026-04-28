@@ -289,7 +289,8 @@ export class CloudinaryStorageService {
    * @returns Observable con l'URL pubblico dell'audio
    */
   uploadAudio(blob: Blob, onProgress?: (progress: number) => void): Observable<string> {
-    const file = new File([blob], `audio_${Date.now()}.webm`, { type: blob.type || 'audio/webm' });
+    const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
+    const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: blob.type || 'audio/webm' });
 
     if (file.size > 10 * 1024 * 1024) {
       return throwError(() => new UploadValidationError('Il file audio supera il limite di 10MB'));

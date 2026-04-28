@@ -2,7 +2,7 @@ export const environment = {
   production: true,
 
   apiUrl: 'https://main-dist-annotated-clear.trycloudflare.com/api',
-  wsUrl: 'https://main-dist-annotated-clear.trycloudflare.com/ws',
+  wsUrl: 'https://main-dist-annotated-clear.trycloudflare.com /ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
