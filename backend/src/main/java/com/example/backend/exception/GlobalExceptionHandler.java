@@ -2,6 +2,7 @@ package com.example.backend.exception;
 
 import com.example.backend.dtos.response.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -312,7 +313,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(
             Exception ex,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        // Le eccezioni sui path WebSocket/SockJS hanno già Content-Type: application/javascript —
+        // non possiamo scrivere JSON. Ignoriamo e lasciamo gestire a Spring WebSocket.
+        if (request.getRequestURI().startsWith("/ws") || response.isCommitted()) {
+            log.debug("Eccezione su path WebSocket ignorata: {} - Path: {}", ex.getMessage(), request.getRequestURI());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         log.error("Errore interno del server: {} - Path: {}", ex.getMessage(), request.getRequestURI(), ex);
 
