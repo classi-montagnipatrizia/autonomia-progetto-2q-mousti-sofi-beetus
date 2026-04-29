@@ -258,6 +258,7 @@ export class ConversationsComponent implements OnInit, OnDestroy {
    */
   getLastMessagePreview(conversation: ConversationResponseDTO): string {
     const lastMsg = conversation.ultimoMessaggio;
+    if (!lastMsg) return '';
     const currentUserId = this.authStore.userId();
 
     if (lastMsg.isDeletedBySender) {

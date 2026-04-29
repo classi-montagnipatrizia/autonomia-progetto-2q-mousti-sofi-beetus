@@ -190,14 +190,12 @@
       } @else if (posts().length > 0) {
         <div class="px-4 space-y-4">
           @for (post of posts(); track post.id) {
-            <div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-[32px] border border-white/20 dark:border-gray-700/50 shadow-sm overflow-hidden p-4">
-              <app-post-card-component
-                [post]="post"
-                (deleted)="onPostDeleted($event)"
-                (edited)="onPostEdited($event)"
-                (hidden)="onPostHidden($event)"
-              />
-            </div>
+            <app-post-card-component
+              [post]="post"
+              (deleted)="onPostDeleted($event)"
+              (edited)="onPostEdited($event)"
+              (hidden)="onPostHidden($event)"
+            />
           }
         </div>
 

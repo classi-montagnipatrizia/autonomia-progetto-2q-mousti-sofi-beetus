@@ -111,7 +111,19 @@
           </div>
         } @else {
           <!-- Messaggio normale - cliccabile per aprire dropdown -->
-          <div class="flex w-full" [class.justify-end]="message.mittente.id === currentUserId()" [class.justify-start]="message.mittente.id !== currentUserId()">
+          <div class="flex w-full items-end gap-2" [class.justify-end]="message.mittente.id === currentUserId()" [class.justify-start]="message.mittente.id !== currentUserId()">
+            <!-- Bottone elimina sempre visibile per messaggi propri (prima del bubble per stare a sinistra) -->
+            @if (message.mittente.id === currentUserId()) {
+              <button
+                type="button"
+                (click)="deleteMessage(message.id)"
+                [disabled]="isDeleting(message.id)"
+                class="p-2 rounded-full bg-white/60 dark:bg-gray-800/60 hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 backdrop-blur shadow-sm transition-colors disabled:opacity-50 flex-shrink-0"
+                title="Elimina messaggio"
+              >
+                <lucide-icon [img]="TrashIcon" [size]="14" />
+              </button>
+            }
             <div class="flex flex-col" [class.items-end]="message.mittente.id === currentUserId()" [class.items-start]="message.mittente.id !== currentUserId()">
               <app-dropdown
                 [placement]="message.mittente.id === currentUserId() ? 'bottom-end' : 'bottom-start'"
