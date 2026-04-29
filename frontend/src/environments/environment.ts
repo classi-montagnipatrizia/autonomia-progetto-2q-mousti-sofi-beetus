@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://shift-cathedral-with-zoning.trycloudflare.com/api',
-  wsUrl: 'https://shift-cathedral-with-zoning.trycloudflare.com/ws',
+  apiUrl: 'https://awarded-alloy-julie-reward.trycloudflare.com/api',
+  wsUrl: 'https://awarded-alloy-julie-reward.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
