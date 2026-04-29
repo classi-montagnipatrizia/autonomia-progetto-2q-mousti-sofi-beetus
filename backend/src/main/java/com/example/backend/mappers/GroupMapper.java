@@ -66,7 +66,7 @@ public class GroupMapper {
     }
 
     private String getMessagePreview(GroupMessage message) {
-        if (message.isDeletedBySender()) return null;
+        if (message.isDeletedBySender()) return "Messaggio cancellato";
         if (message.getContent() != null) return message.getContent();
         if (message.getAudioUrl() != null) return "🎤 Messaggio vocale";
         if (message.getImageUrl() != null) return "📷 Foto";

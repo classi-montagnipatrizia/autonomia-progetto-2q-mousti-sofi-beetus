@@ -20,6 +20,7 @@ import com.example.backend.repositories.GroupRepository;
 import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -196,7 +197,12 @@ public class GroupService {
                 .group(group)
                 .user(target)
                 .build();
-        membershipRepository.save(membership);
+        try {
+            membershipRepository.save(membership);
+        } catch (DataIntegrityViolationException e) {
+            log.debug("Race condition: utente {} già membro del gruppo {}", targetUserId, groupId);
+            throw new InvalidInputException("L'utente è già membro del gruppo");
+        }
 
         log.info("Membro aggiunto al gruppo {} - User: {}", groupId, targetUserId);
 

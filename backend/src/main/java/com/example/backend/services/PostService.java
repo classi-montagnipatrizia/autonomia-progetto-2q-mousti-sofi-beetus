@@ -24,6 +24,7 @@ import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -354,13 +355,13 @@ public class PostService {
 
         Page<Post> posts;
         if (Boolean.TRUE.equals(currentUser.getIsAdmin())) {
-            posts = postRepository.searchPosts(safeTerm, pageable);
+            posts = postRepository.searchPosts(safeTerm, userId, pageable);
             log.debug("Ricerca admin completata: {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
         } else if (classroom != null && !classroom.isEmpty()) {
-            posts = postRepository.searchPostsByClassroom(safeTerm, classroom, pageable);
+            posts = postRepository.searchPostsByClassroom(safeTerm, classroom, userId, pageable);
             log.debug("Ricerca completata: {} risultati per termine '{}' nella classe '{}'", posts.getTotalElements(), searchTerm, classroom);
         } else {
-            posts = postRepository.searchPosts(safeTerm, pageable);
+            posts = postRepository.searchPosts(safeTerm, userId, pageable);
             log.debug("Ricerca completata (senza filtro classe): {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
         }
 
@@ -433,7 +434,12 @@ public class PostService {
                 .user(userRepository.getReferenceById(userId))
                 .build();
 
-        hiddenPostRepository.save(hiddenPost);
+        try {
+            hiddenPostRepository.save(hiddenPost);
+        } catch (DataIntegrityViolationException e) {
+            log.debug("Race condition: post ID: {} già nascosto per utente ID: {}", postId, userId);
+            return;
+        }
 
         log.info("Post ID: {} nascosto per utente ID: {}", postId, userId);
     }

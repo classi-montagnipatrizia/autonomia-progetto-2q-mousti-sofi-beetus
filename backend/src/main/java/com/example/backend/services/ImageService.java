@@ -207,21 +207,24 @@ public class ImageService {
         String publicId = extractPublicIdFromUrl(imageUrl);
         log.debug("Public ID estratto: {}", publicId);
 
+        // Gli audio su Cloudinary sono resource_type "video", le immagini sono "image"
+        Map<String, Object> options = imageUrl.contains("/video/upload/")
+                ? ObjectUtils.asMap("resource_type", "video")
+                : ObjectUtils.emptyMap();
+
         // Elimina da Cloudinary
         try {
             @SuppressWarnings("unchecked")
-            Map<String, Object> result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            Map<String, Object> result = cloudinary.uploader().destroy(publicId, options);
             String resultStatus = (String) result.get("result");
 
             if (!"ok".equals(resultStatus) && !"not found".equals(resultStatus)) {
                 log.error("Errore eliminazione Cloudinary - Result: {}", result);
-                // Non lanciare eccezione, log solo l'errore
             } else {
-                log.info("Immagine messaggio eliminata da Cloudinary - Public ID: {}, Result: {}", publicId, resultStatus);
+                log.info("File media messaggio eliminato da Cloudinary - Public ID: {}, Result: {}", publicId, resultStatus);
             }
         } catch (Exception e) {
-            log.error("Eccezione durante eliminazione immagine messaggio da Cloudinary", e);
-            // Non lanciare eccezione, il messaggio può comunque essere eliminato
+            log.error("Eccezione durante eliminazione da Cloudinary", e);
         }
     }
 }

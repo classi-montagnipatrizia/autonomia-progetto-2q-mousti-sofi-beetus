@@ -82,6 +82,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
             SELECT p FROM Post p
             WHERE p.isDeletedByAuthor = false
+            AND NOT EXISTS (
+                SELECT hp FROM HiddenPost hp
+                WHERE hp.post.id = p.id AND hp.user.id = :userId
+            )
             AND (
                 LOWER(p.content) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
                 OR LOWER(p.user.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
@@ -89,7 +93,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             )
             ORDER BY p.createdAt DESC
             """)
-    Page<Post> searchPosts(@Param("searchTerm") String searchTerm, Pageable pageable);
+    Page<Post> searchPosts(@Param("searchTerm") String searchTerm, @Param("userId") Long userId, Pageable pageable);
 
     /**
      * Ricerca full-text nei post, filtrata per classe.
@@ -100,6 +104,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             SELECT p FROM Post p
             WHERE p.isDeletedByAuthor = false
             AND p.user.classroom = :classroom
+            AND NOT EXISTS (
+                SELECT hp FROM HiddenPost hp
+                WHERE hp.post.id = p.id AND hp.user.id = :userId
+            )
             AND (
                 LOWER(p.content) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
                 OR LOWER(p.user.username) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
@@ -107,7 +115,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             )
             ORDER BY p.createdAt DESC
             """)
-    Page<Post> searchPostsByClassroom(@Param("searchTerm") String searchTerm, @Param("classroom") String classroom, Pageable pageable);
+    Page<Post> searchPostsByClassroom(@Param("searchTerm") String searchTerm, @Param("classroom") String classroom, @Param("userId") Long userId, Pageable pageable);
 
     /**
      * Conta il numero totale di post pubblicati da un utente.
