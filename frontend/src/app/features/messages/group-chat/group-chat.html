@@ -32,28 +32,6 @@
         }
       </div>
 
-      <!-- Cerca messaggi -->
-      <button
-        type="button"
-        (click)="toggleSearch()"
-        class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-700/80 transition-colors text-gray-600 dark:text-gray-300 shadow-sm"
-        title="Cerca messaggi"
-      >
-        <lucide-icon [img]="SearchIcon" [size]="20" />
-      </button>
-
-      <!-- Abbandona gruppo (non admin) — visibile direttamente in header -->
-      @if (!isGroupAdmin()) {
-        <button
-          type="button"
-          (click)="leaveGroup()"
-          class="p-2 rounded-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500 shadow-sm"
-          title="Abbandona gruppo"
-        >
-          <lucide-icon [img]="LogOutIcon" [size]="20" />
-        </button>
-      }
-
       <!-- Info (apre pannello laterale con eliminazione per admin) -->
       <button
         type="button"
@@ -64,55 +42,6 @@
         <lucide-icon [img]="InfoIcon" [size]="20" />
       </button>
     </header>
-
-    <!-- Barra di ricerca messaggi -->
-    @if (showSearch()) {
-      <div class="flex-shrink-0 px-4 py-2 bg-white/30 dark:bg-gray-800/30 border-b border-white/20 dark:border-gray-700/50">
-        <div class="flex items-center gap-2">
-          <div class="flex-1 relative">
-            <lucide-icon [img]="SearchIcon" [size]="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              [value]="searchQuery()"
-              (input)="onSearchChange($any($event.target).value)"
-              placeholder="Cerca nei messaggi..."
-              class="w-full pl-9 pr-4 py-2 rounded-[20px] bg-white/50 dark:bg-gray-800/50 border border-white/20 dark:border-gray-700/50 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-              autofocus
-            />
-          </div>
-          <button
-            type="button"
-            (click)="closeSearch()"
-            class="p-2 rounded-full hover:bg-white/50 dark:hover:bg-gray-700/50 text-gray-500 transition-colors"
-          >
-            <lucide-icon [img]="XIcon" [size]="16" />
-          </button>
-        </div>
-
-        <!-- Risultati ricerca -->
-        @if (isSearching()) {
-          <div class="flex justify-center py-3">
-            <div class="w-5 h-5 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
-          </div>
-        } @else if (searchResults().length > 0) {
-          <div class="mt-2 space-y-1 max-h-48 overflow-y-auto">
-            @for (result of searchResults(); track result.id) {
-              <button
-                type="button"
-                (click)="jumpToMessage(result)"
-                class="w-full flex items-start gap-2 p-2 rounded-xl hover:bg-white/60 dark:hover:bg-gray-700/60 text-left transition-colors"
-              >
-                <span class="text-xs font-bold text-primary-600 dark:text-primary-400 shrink-0 pt-0.5">{{ result.senderFullName }}</span>
-                <span class="text-xs text-gray-700 dark:text-gray-300 truncate flex-1">{{ result.content }}</span>
-                <span class="text-[10px] text-gray-400 shrink-0 pt-0.5">{{ formatTime(result.createdAt) }}</span>
-              </button>
-            }
-          </div>
-        } @else if (searchQuery().trim().length >= 2 && !isSearching()) {
-          <p class="text-xs text-gray-500 dark:text-gray-400 text-center py-2">Nessun messaggio trovato</p>
-        }
-      </div>
-    }
 
     <!-- Messaggi -->
     <div

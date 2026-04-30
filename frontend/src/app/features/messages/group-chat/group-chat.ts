@@ -4,7 +4,7 @@ import { getChatDateLabel, isSameDay, formatExactTime } from '../../../core/util
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ArrowLeft, Send, Info, Mic, Image, X, Trash, Search, LogOut } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, Send, Info, Mic, Image, X, Trash } from 'lucide-angular';
 import { GroupStore } from '../../../core/stores/group-store';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { WebsocketService } from '../../../core/services/websocket-service';
@@ -16,8 +16,6 @@ import { GroupMessageDTO, InviaMessaggioGruppoRequestDTO } from '../../../models
 import { AudioPlayerComponent } from '../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { AudioRecorderComponent } from '../../../shared/components/audio-recorder/audio-recorder-component/audio-recorder-component';
 import { GroupInfoPanel } from '../group-info-panel/group-info-panel';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 
 const AVATAR_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-cyan-500'];
 
@@ -56,8 +54,6 @@ export class GroupChat implements OnInit, OnDestroy {
   readonly ImageIcon = Image;
   readonly XIcon = X;
   readonly TrashIcon = Trash;
-  readonly SearchIcon = Search;
-  readonly LogOutIcon = LogOut;
 
   readonly messageText = signal('');
   readonly isSending = signal(false);
@@ -70,15 +66,10 @@ export class GroupChat implements OnInit, OnDestroy {
   readonly deletingIds = signal<Set<number>>(new Set());
   readonly typingUsers = signal<Map<number, string>>(new Map());
 
-  // Ricerca messaggi
-  readonly showSearch = signal(false);
-  readonly searchQuery = signal('');
-  readonly searchResults = signal<GroupMessageDTO[]>([]);
-  readonly isSearching = signal(false);
   readonly highlightedMessageId = signal<number | null>(null);
   readonly highlightTerm = signal<string | null>(null);
-  private readonly searchSubject = new Subject<string>();
   private highlightTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingScrollToMessageId: number | null = null;
 
   private lastTypingSent = 0;
   private readonly TYPING_THROTTLE = 1000;
@@ -110,18 +101,50 @@ export class GroupChat implements OnInit, OnDestroy {
       .subscribe(async params => {
         const groupIdParam = params.get('groupId');
         if (!groupIdParam) return;
+
+        const queryParams = this.route.snapshot.queryParamMap;
+        const messageIdParam = queryParams.get('messageId');
+        const highlightParam = queryParams.get('highlight');
+
+        if (messageIdParam) {
+          const messageId = Number.parseInt(messageIdParam, 10);
+          this.pendingScrollToMessageId = messageId;
+          this.setHighlight(messageId, highlightParam);
+        } else {
+          this.pendingScrollToMessageId = null;
+          this.clearHighlight();
+        }
+
         this.isFirstLoad = true;
-        this.closeSearch();
         await this.groupStore.openGroup(Number.parseInt(groupIdParam, 10));
-        this.scrollToBottom();
+
+        if (this.pendingScrollToMessageId !== null) {
+          const messageId = this.pendingScrollToMessageId;
+          this.pendingScrollToMessageId = null;
+          this.scrollToMessage(messageId);
+        } else {
+          this.scrollToBottom();
+        }
       });
 
-    this.searchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      filter(q => q.trim().length >= 2),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(q => this.performSearch(q));
+    // Stesso gruppo, messaggio diverso dalla ricerca
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const messageIdParam = params.get('messageId');
+        const highlightParam = params.get('highlight');
+
+        if (!messageIdParam) return;
+
+        const messageId = Number.parseInt(messageIdParam, 10);
+        this.setHighlight(messageId, highlightParam);
+
+        if (this.groupStore.messages().length > 0) {
+          this.scrollToMessage(messageId);
+        } else {
+          this.pendingScrollToMessageId = messageId;
+        }
+      });
 
     this.websocketService.groupTyping$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -165,14 +188,28 @@ export class GroupChat implements OnInit, OnDestroy {
     }
     this.typingCleanupTimers.forEach(timer => clearTimeout(timer));
     this.typingCleanupTimers.clear();
-    if (this.scrollDebounceTimer !== null) {
-      clearTimeout(this.scrollDebounceTimer);
-    }
-    if (this.highlightTimer !== null) {
-      clearTimeout(this.highlightTimer);
-    }
-    this.searchSubject.complete();
+    if (this.scrollDebounceTimer !== null) clearTimeout(this.scrollDebounceTimer);
+    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
     this.groupStore.closeGroup();
+  }
+
+  private setHighlight(messageId: number, term: string | null): void {
+    this.highlightedMessageId.set(messageId);
+    this.highlightTerm.set(term);
+    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
+    this.highlightTimer = setTimeout(() => {
+      this.highlightTimer = null;
+      this.clearHighlight();
+    }, 4000);
+  }
+
+  private clearHighlight(): void {
+    this.highlightedMessageId.set(null);
+    this.highlightTerm.set(null);
+  }
+
+  isHighlighted(messageId: number): boolean {
+    return this.highlightedMessageId() === messageId;
   }
 
   getSenderColor(senderId: number): string {
@@ -257,7 +294,6 @@ export class GroupChat implements OnInit, OnDestroy {
     this.imagePreviewUrl.set(null);
     this.pendingImageUrl.set(null);
 
-    // Clear typing quando invia
     const group = this.groupStore.currentGroup();
     if (group) this.groupService.clearTyping(group.id).subscribe();
 
@@ -342,7 +378,6 @@ export class GroupChat implements OnInit, OnDestroy {
 
     await this.groupStore.loadMoreMessages();
 
-    // Mantieni la posizione di scroll dopo il caricamento
     if (container) {
       requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight - prevScrollHeight;
@@ -365,25 +400,6 @@ export class GroupChat implements OnInit, OnDestroy {
     this.router.navigate(['/messages']);
   }
 
-  async leaveGroup(): Promise<void> {
-    const group = this.groupStore.currentGroup();
-    if (!group) return;
-    const confirmed = await this.dialogService.confirmDangerous({
-      title: 'Abbandonare il gruppo?',
-      message: `Non potrai più accedere ai messaggi di "${group.name}".`,
-      confirmText: 'Abbandona',
-    });
-    if (confirmed) {
-      try {
-        await this.groupStore.abbandonaGruppo(group.id);
-        this.toast.success('Hai abbandonato il gruppo');
-        this.router.navigate(['/messages']);
-      } catch {
-        this.toast.error('Errore nell\'abbandono');
-      }
-    }
-  }
-
   async deleteGroupAction(): Promise<void> {
     const group = this.groupStore.currentGroup();
     if (!group) return;
@@ -403,74 +419,6 @@ export class GroupChat implements OnInit, OnDestroy {
     }
   }
 
-  // ── RICERCA ──────────────────────────────────────────────────────────────────
-
-  toggleSearch(): void {
-    this.showSearch.update(v => !v);
-    if (!this.showSearch()) {
-      this.closeSearch();
-    }
-  }
-
-  closeSearch(): void {
-    this.showSearch.set(false);
-    this.searchQuery.set('');
-    this.searchResults.set([]);
-    this.highlightedMessageId.set(null);
-    this.highlightTerm.set(null);
-  }
-
-  onSearchChange(value: string): void {
-    this.searchQuery.set(value);
-    if (value.trim().length >= 2) {
-      this.searchSubject.next(value);
-    } else {
-      this.searchResults.set([]);
-    }
-  }
-
-  private performSearch(query: string): void {
-    const group = this.groupStore.currentGroup();
-    if (!group) return;
-    this.isSearching.set(true);
-    this.groupService.searchMessages(group.id, query).subscribe({
-      next: (res) => {
-        this.searchResults.set(res.content);
-        this.isSearching.set(false);
-      },
-      error: () => {
-        this.searchResults.set([]);
-        this.isSearching.set(false);
-      },
-    });
-  }
-
-  jumpToMessage(message: GroupMessageDTO): void {
-    this.highlightedMessageId.set(message.id);
-    this.highlightTerm.set(this.searchQuery());
-
-    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
-    this.highlightTimer = setTimeout(() => {
-      this.highlightedMessageId.set(null);
-      this.highlightTerm.set(null);
-    }, 3000);
-
-    // Verifica se il messaggio è già caricato nella lista
-    const loaded = this.groupStore.messages().some(m => m.id === message.id);
-    if (loaded) {
-      this.scrollToMessage(message.id);
-    } else {
-      // Il messaggio non è nella pagina corrente: ricarica da pagina 0 e poi scorri
-      this.groupStore.openGroup(this.groupStore.currentGroup()!.id).then(() => {
-        setTimeout(() => this.scrollToMessage(message.id), 200);
-      });
-    }
-  }
-
-  isHighlighted(messageId: number): boolean {
-    return this.highlightedMessageId() === messageId;
-  }
-
   formatTime(dateStr: string | null | undefined): string {
     return formatExactTime(dateStr);
   }
@@ -486,12 +434,14 @@ export class GroupChat implements OnInit, OnDestroy {
     });
   }
 
-  private scrollToMessage(messageId: number): void {
-    requestAnimationFrame(() => {
+  private scrollToMessage(messageId: number, retryCount = 0): void {
+    setTimeout(() => {
       const el = document.getElementById(`group-msg-${messageId}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (retryCount < 5) {
+        this.scrollToMessage(messageId, retryCount + 1);
       }
-    });
+    }, 150);
   }
 }
