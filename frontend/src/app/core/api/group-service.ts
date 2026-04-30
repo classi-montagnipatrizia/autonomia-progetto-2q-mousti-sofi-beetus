@@ -77,6 +77,18 @@ export class GroupService {
     );
   }
 
+  /** GET /api/groups/{id}/messages/search?q=... — cerca messaggi nel gruppo */
+  searchMessages(groupId: number, query: string, page = 0, size = 20): Observable<PageResponse<GroupMessageDTO>> {
+    const params = new HttpParams()
+      .set('q', query)
+      .set('page', page)
+      .set('size', size);
+    return this.http.get<PageResponse<GroupMessageDTO>>(
+      `${this.baseUrl}/${groupId}/messages/search`,
+      { params }
+    );
+  }
+
   /** POST /api/groups/{id}/messages — invia messaggio (testo o audio) */
   inviaMessaggio(
     groupId: number,

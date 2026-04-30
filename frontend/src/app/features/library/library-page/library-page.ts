@@ -273,8 +273,21 @@ export class LibraryPage implements OnInit {
   // =========================================================================
   // I miei annunci
   // =========================================================================
-  onStatusChange(event: Event, listing: BookResponseDTO): void {
-    const value = (event.target as HTMLSelectElement).value;
+  async onStatusChange(event: Event, listing: BookResponseDTO): Promise<void> {
+    const select = event.target as HTMLSelectElement;
+    const value = select.value;
+    if (value === BookStatus.VENDUTO) {
+      const confirmed = await this.dialogService.confirmDangerous({
+        title: 'Segna come Venduto',
+        message: `Vuoi segnare "${listing.titolo}" come venduto? Questa azione non può essere annullata.`,
+        confirmText: 'Segna Venduto',
+        cancelText: 'Annulla',
+      });
+      if (!confirmed) {
+        select.value = listing.stato;
+        return;
+      }
+    }
     this.store.aggiornaStato(listing.id, value);
   }
 

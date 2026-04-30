@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ArrowLeft, MessageSquare, Search, X } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, MessageSquare, Search, X, Trash2 } from 'lucide-angular';
 import { interval, Subject } from 'rxjs';
 import { switchMap, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { MessageService } from '../../../../core/api/message-service';
@@ -11,6 +11,8 @@ import { OnlineUsersStore } from '../../../../core/stores/online-users-store';
 import { TypingStore } from '../../../../core/stores/typing-store';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { GroupStore } from '../../../../core/stores/group-store';
+import { DialogService } from '../../../../core/services/dialog-service';
+import { ToastService } from '../../../../core/services/toast-service';
 import { ConversationResponseDTO, MessageResponseDTO } from '../../../../models';
 import { ConversationItemComponent } from '../../../../shared/components/conversation-item/conversation-item-component/conversation-item-component';
 import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-component/skeleton-component';
@@ -50,6 +52,8 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   readonly groupStore = inject(GroupStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialogService = inject(DialogService);
+  private readonly toast = inject(ToastService);
   private readonly searchSubject = new Subject<string>();
 
   // Output per switch tab
@@ -60,6 +64,7 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   readonly MessageSquareIcon = MessageSquare;
   readonly SearchIcon = Search;
   readonly XIcon = X;
+  readonly Trash2Icon = Trash2;
 
   // Stato
   readonly conversations = signal<ConversationResponseDTO[]>([]);
@@ -67,6 +72,7 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   readonly error = signal<string | null>(null);
   readonly selectedUserId = signal<number | null>(null);
   readonly searchQuery = signal('');
+  readonly deletingConvIds = signal(new Set<number>());
   
   // Stato ricerca messaggi
   readonly searchResults = signal<MessageResponseDTO[]>([]);
@@ -246,6 +252,35 @@ export class ConversationsComponent implements OnInit, OnDestroy {
   clearSearch(): void {
     this.searchQuery.set('');
     this.searchResults.set([]);
+  }
+
+  async deleteConversation(event: MouseEvent, userId: number, userName: string): Promise<void> {
+    event.stopPropagation();
+    if (this.deletingConvIds().has(userId)) return;
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Elimina conversazione',
+      message: `Sei sicuro di voler eliminare la conversazione con ${userName}? I messaggi verranno rimossi solo per te.`,
+      confirmText: 'Elimina',
+      cancelText: 'Annulla',
+    });
+    if (!confirmed) return;
+    this.deletingConvIds.update(s => new Set(s).add(userId));
+    this.messageService.deleteConversation(userId).subscribe({
+      next: () => {
+        this.conversations.update(convs => convs.filter(c => c.altroUtente.id !== userId));
+        if (this.selectedUserId() === userId) {
+          this.selectedUserId.set(null);
+          this.router.navigate(['/messages']);
+        }
+        this.toast.success('Conversazione eliminata');
+      },
+      error: () => {
+        this.toast.error('Errore durante l\'eliminazione');
+      },
+      complete: () => {
+        this.deletingConvIds.update(s => { const n = new Set(s); n.delete(userId); return n; });
+      },
+    });
   }
 
   highlightSegments(text: string | null | undefined, searchTerm: string): readonly HighlightSegment[] {

@@ -1,21 +1,23 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { getChatDateLabel, isSameDay } from '../../../core/utils/chat-date.utils';
+import { getChatDateLabel, isSameDay, formatExactTime } from '../../../core/utils/chat-date.utils';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, ArrowLeft, Send, Info, Mic, Image, X, Trash } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, Send, Info, Mic, Image, X, Trash, Search, LogOut } from 'lucide-angular';
 import { GroupStore } from '../../../core/stores/group-store';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { WebsocketService } from '../../../core/services/websocket-service';
 import { ToastService } from '../../../core/services/toast-service';
+import { DialogService } from '../../../core/services/dialog-service';
 import { CloudinaryStorageService } from '../../../core/services/cloudinary-storage-service';
 import { GroupService } from '../../../core/api/group-service';
-import { GroupMessageDTO, GroupTypingEvent, InviaMessaggioGruppoRequestDTO } from '../../../models';
+import { GroupMessageDTO, InviaMessaggioGruppoRequestDTO } from '../../../models';
 import { AudioPlayerComponent } from '../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { AudioRecorderComponent } from '../../../shared/components/audio-recorder/audio-recorder-component/audio-recorder-component';
-import { TimeAgoComponent } from '../../../shared/components/time-ago/time-ago-component/time-ago-component';
 import { GroupInfoPanel } from '../group-info-panel/group-info-panel';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 
 const AVATAR_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-cyan-500'];
 
@@ -26,7 +28,6 @@ const AVATAR_COLORS = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orang
     LucideAngularModule,
     AudioPlayerComponent,
     AudioRecorderComponent,
-    TimeAgoComponent,
     GroupInfoPanel
 ],
   templateUrl: './group-chat.html',
@@ -42,6 +43,7 @@ export class GroupChat implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly websocketService = inject(WebsocketService);
   private readonly groupService = inject(GroupService);
+  private readonly dialogService = inject(DialogService);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly toast = inject(ToastService);
@@ -54,6 +56,8 @@ export class GroupChat implements OnInit, OnDestroy {
   readonly ImageIcon = Image;
   readonly XIcon = X;
   readonly TrashIcon = Trash;
+  readonly SearchIcon = Search;
+  readonly LogOutIcon = LogOut;
 
   readonly messageText = signal('');
   readonly isSending = signal(false);
@@ -66,14 +70,26 @@ export class GroupChat implements OnInit, OnDestroy {
   readonly deletingIds = signal<Set<number>>(new Set());
   readonly typingUsers = signal<Map<number, string>>(new Map());
 
+  // Ricerca messaggi
+  readonly showSearch = signal(false);
+  readonly searchQuery = signal('');
+  readonly searchResults = signal<GroupMessageDTO[]>([]);
+  readonly isSearching = signal(false);
+  readonly highlightedMessageId = signal<number | null>(null);
+  readonly highlightTerm = signal<string | null>(null);
+  private readonly searchSubject = new Subject<string>();
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
   private lastTypingSent = 0;
   private readonly TYPING_THROTTLE = 1000;
   private typingCleanupTimers = new Map<number, ReturnType<typeof setTimeout>>();
   private scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private isFirstLoad = true;
 
   readonly imageInputRef = viewChild<ElementRef<HTMLInputElement>>('imageInputRef');
 
   readonly currentUserId = computed(() => this.authStore.userId());
+  readonly isGroupAdmin = computed(() => this.groupStore.currentGroup()?.isAdmin ?? false);
 
   readonly canSend = computed(() =>
     (this.messageText().trim().length > 0 || !!this.pendingImageUrl()) && !this.isSending() && !this.isUploadingImage()
@@ -91,12 +107,21 @@ export class GroupChat implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => {
+      .subscribe(async params => {
         const groupIdParam = params.get('groupId');
         if (!groupIdParam) return;
-        this.groupStore.openGroup(Number.parseInt(groupIdParam, 10));
+        this.isFirstLoad = true;
+        this.closeSearch();
+        await this.groupStore.openGroup(Number.parseInt(groupIdParam, 10));
         this.scrollToBottom();
       });
+
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      filter(q => q.trim().length >= 2),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(q => this.performSearch(q));
 
     this.websocketService.groupTyping$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -143,6 +168,10 @@ export class GroupChat implements OnInit, OnDestroy {
     if (this.scrollDebounceTimer !== null) {
       clearTimeout(this.scrollDebounceTimer);
     }
+    if (this.highlightTimer !== null) {
+      clearTimeout(this.highlightTimer);
+    }
+    this.searchSubject.complete();
     this.groupStore.closeGroup();
   }
 
@@ -336,12 +365,133 @@ export class GroupChat implements OnInit, OnDestroy {
     this.router.navigate(['/messages']);
   }
 
-  private scrollToBottom(): void {
-    setTimeout(() => {
-      const container = this.messagesContainer()?.nativeElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
+  async leaveGroup(): Promise<void> {
+    const group = this.groupStore.currentGroup();
+    if (!group) return;
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Abbandonare il gruppo?',
+      message: `Non potrai più accedere ai messaggi di "${group.name}".`,
+      confirmText: 'Abbandona',
+    });
+    if (confirmed) {
+      try {
+        await this.groupStore.abbandonaGruppo(group.id);
+        this.toast.success('Hai abbandonato il gruppo');
+        this.router.navigate(['/messages']);
+      } catch {
+        this.toast.error('Errore nell\'abbandono');
       }
-    }, 50);
+    }
+  }
+
+  async deleteGroupAction(): Promise<void> {
+    const group = this.groupStore.currentGroup();
+    if (!group) return;
+    const confirmed = await this.dialogService.confirmDangerous({
+      title: 'Eliminare il gruppo?',
+      message: `Tutti i messaggi e i dati di "${group.name}" verranno eliminati definitivamente.`,
+      confirmText: 'Elimina',
+    });
+    if (confirmed) {
+      try {
+        await this.groupStore.eliminaGruppo(group.id);
+        this.toast.success('Gruppo eliminato');
+        this.router.navigate(['/messages']);
+      } catch {
+        this.toast.error('Errore nell\'eliminazione');
+      }
+    }
+  }
+
+  // ── RICERCA ──────────────────────────────────────────────────────────────────
+
+  toggleSearch(): void {
+    this.showSearch.update(v => !v);
+    if (!this.showSearch()) {
+      this.closeSearch();
+    }
+  }
+
+  closeSearch(): void {
+    this.showSearch.set(false);
+    this.searchQuery.set('');
+    this.searchResults.set([]);
+    this.highlightedMessageId.set(null);
+    this.highlightTerm.set(null);
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    if (value.trim().length >= 2) {
+      this.searchSubject.next(value);
+    } else {
+      this.searchResults.set([]);
+    }
+  }
+
+  private performSearch(query: string): void {
+    const group = this.groupStore.currentGroup();
+    if (!group) return;
+    this.isSearching.set(true);
+    this.groupService.searchMessages(group.id, query).subscribe({
+      next: (res) => {
+        this.searchResults.set(res.content);
+        this.isSearching.set(false);
+      },
+      error: () => {
+        this.searchResults.set([]);
+        this.isSearching.set(false);
+      },
+    });
+  }
+
+  jumpToMessage(message: GroupMessageDTO): void {
+    this.highlightedMessageId.set(message.id);
+    this.highlightTerm.set(this.searchQuery());
+
+    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
+    this.highlightTimer = setTimeout(() => {
+      this.highlightedMessageId.set(null);
+      this.highlightTerm.set(null);
+    }, 3000);
+
+    // Verifica se il messaggio è già caricato nella lista
+    const loaded = this.groupStore.messages().some(m => m.id === message.id);
+    if (loaded) {
+      this.scrollToMessage(message.id);
+    } else {
+      // Il messaggio non è nella pagina corrente: ricarica da pagina 0 e poi scorri
+      this.groupStore.openGroup(this.groupStore.currentGroup()!.id).then(() => {
+        setTimeout(() => this.scrollToMessage(message.id), 200);
+      });
+    }
+  }
+
+  isHighlighted(messageId: number): boolean {
+    return this.highlightedMessageId() === messageId;
+  }
+
+  formatTime(dateStr: string | null | undefined): string {
+    return formatExactTime(dateStr);
+  }
+
+  private scrollToBottom(): void {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const container = this.messagesContainer()?.nativeElement;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+    });
+  }
+
+  private scrollToMessage(messageId: number): void {
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`group-msg-${messageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   }
 }

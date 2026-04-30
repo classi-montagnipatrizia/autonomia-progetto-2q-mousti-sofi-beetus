@@ -125,6 +125,7 @@
               </button>
             }
             <div class="flex flex-col" [class.items-end]="message.mittente.id === currentUserId()" [class.items-start]="message.mittente.id !== currentUserId()">
+
               <app-dropdown
                 [placement]="message.mittente.id === currentUserId() ? 'bottom-end' : 'bottom-start'"
                 [minWidth]="8"
@@ -230,7 +231,7 @@
 
               <!-- Footer: timestamp e stato lettura -->
               <div class="text-[11px] mt-1.5 flex items-center gap-1.5 px-1">
-                <app-time-ago [date]="message.createdAt" class="text-gray-500/80 dark:text-gray-400/80 font-medium tracking-wide" />
+                <span class="text-gray-500/80 dark:text-gray-400/80 font-medium tracking-wide">{{ formatTime(message.createdAt) }}</span>
                 @if (message.mittente.id === currentUserId()) {
                   <span class="text-gray-400/50 dark:text-gray-600/50">•</span>
                   <span [class.text-primary-500]="message.isRead" class="font-medium tracking-wide" [class.text-gray-500/80]="!message.isRead" [class.dark:text-gray-400/80]="!message.isRead">
@@ -239,6 +240,18 @@
                 }
               </div>
             </div>
+            <!-- Bottone nascondi sempre visibile per messaggi altrui (dopo il bubble, a destra) -->
+            @if (message.mittente.id !== currentUserId()) {
+              <button
+                type="button"
+                (click)="deleteMessage(message.id)"
+                [disabled]="isDeleting(message.id)"
+                class="p-2 rounded-full bg-white/60 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-700/60 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 backdrop-blur shadow-sm transition-colors disabled:opacity-50 flex-shrink-0"
+                title="Nascondi messaggio"
+              >
+                <lucide-icon [img]="EyeOffIcon" [size]="14" />
+              </button>
+            }
           </div>
         }
         </div>

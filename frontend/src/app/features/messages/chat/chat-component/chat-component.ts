@@ -23,7 +23,7 @@ import { AudioRecorderComponent } from '../../../../shared/components/audio-reco
 import { AudioPlayerComponent } from '../../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../core/config/app.config';
 import { HighlightSegment, splitHighlight } from '../../../../core/utils/highlight.utils';
-import { getChatDateLabel, isSameDay } from '../../../../core/utils/chat-date.utils';
+import { getChatDateLabel, isSameDay, formatExactTime } from '../../../../core/utils/chat-date.utils';
 
 /**
  * Chat view per una singola conversazione.
@@ -595,6 +595,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   getDateLabel(dateStr: string): string {
     return getChatDateLabel(dateStr);
+  }
+
+  formatTime(dateStr: string | null | undefined): string {
+    return formatExactTime(dateStr);
   }
 
   /**

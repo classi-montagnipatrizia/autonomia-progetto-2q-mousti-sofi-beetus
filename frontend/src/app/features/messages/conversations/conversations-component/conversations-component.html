@@ -223,25 +223,36 @@
     @if (!isSearchMode() && !isLoading() && hasConversations()) {
       <div class="space-y-1.5 px-2">
         @for (conversation of filteredConversations(); track conversation.altroUtente.id) {
-          <div class="rounded-[20px] overflow-hidden bg-white/20 dark:bg-gray-800/20 hover:bg-white/50 dark:hover:bg-gray-700/40 backdrop-blur-sm border border-transparent hover:border-white/30 dark:hover:border-gray-600/50 transition-all"
+          <div class="flex items-center rounded-[20px] bg-white/20 dark:bg-gray-800/20 hover:bg-white/50 dark:hover:bg-gray-700/40 backdrop-blur-sm border border-transparent hover:border-white/30 dark:hover:border-gray-600/50 transition-all"
                [class.bg-white/70]="selectedUserId() === conversation.altroUtente.id"
                [class.dark:bg-gray-700]="selectedUserId() === conversation.altroUtente.id"
                [class.shadow-sm]="selectedUserId() === conversation.altroUtente.id"
                [class.border-white/40]="selectedUserId() === conversation.altroUtente.id"
                [class.dark:border-gray-600]="selectedUserId() === conversation.altroUtente.id">
-            <app-conversation-item-component
-              [userId]="conversation.altroUtente.id"
-              [username]="conversation.altroUtente.username"
-              [nomeCompleto]="conversation.altroUtente.nomeCompleto"
-              [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
-              [isOnline]="isUserOnline(conversation.altroUtente.id)"
-              [isTyping]="isUserTyping(conversation.altroUtente.username)"
-              [lastMessage]="getLastMessagePreview(conversation)"
-              [lastActivityAt]="conversation.ultimaAttivita"
-              [unreadCount]="conversation.messaggiNonLetti"
-              [isSelected]="selectedUserId() === conversation.altroUtente.id"
-              (conversationSelect)="onConversationSelect($event)"
-            />
+            <div class="flex-1 min-w-0 overflow-hidden">
+              <app-conversation-item-component
+                [userId]="conversation.altroUtente.id"
+                [username]="conversation.altroUtente.username"
+                [nomeCompleto]="conversation.altroUtente.nomeCompleto"
+                [profilePictureUrl]="conversation.altroUtente.profilePictureUrl"
+                [isOnline]="isUserOnline(conversation.altroUtente.id)"
+                [isTyping]="isUserTyping(conversation.altroUtente.username)"
+                [lastMessage]="getLastMessagePreview(conversation)"
+                [lastActivityAt]="conversation.ultimaAttivita"
+                [unreadCount]="conversation.messaggiNonLetti"
+                [isSelected]="selectedUserId() === conversation.altroUtente.id"
+                (conversationSelect)="onConversationSelect($event)"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="deleteConversation($event, conversation.altroUtente.id, conversation.altroUtente.nomeCompleto)"
+              [disabled]="deletingConvIds().has(conversation.altroUtente.id)"
+              class="flex-shrink-0 p-2.5 mr-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+              title="Elimina conversazione"
+            >
+              <lucide-icon [img]="Trash2Icon" [size]="16" />
+            </button>
           </div>
         }
       </div>

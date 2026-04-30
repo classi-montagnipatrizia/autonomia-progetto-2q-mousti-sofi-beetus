@@ -143,11 +143,11 @@
             </div>
           } @else if (isMyMessage(message)) {
             <!-- Messaggio inviato (destra) -->
-            <div class="flex gap-2.5 justify-end group/msg items-end mb-4">
+            <div class="flex gap-2.5 justify-end items-end mb-4">
               <button
                 (click)="deleteMessage(message.id)"
                 [disabled]="deletingIds().has(message.id)"
-                class="opacity-0 group-hover/msg:opacity-100 transition-all p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 dark:hover:text-red-400 self-center mb-2"
+                class="p-2 rounded-full bg-white/60 dark:bg-gray-800/60 hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 backdrop-blur shadow-sm transition-colors disabled:opacity-50 flex-shrink-0 self-center mb-2"
                 title="Elimina per me"
               >
                 <lucide-angular [img]="Trash2Icon" class="size-4" />

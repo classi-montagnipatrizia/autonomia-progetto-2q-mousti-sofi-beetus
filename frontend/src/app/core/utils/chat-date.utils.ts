@@ -31,6 +31,15 @@ export function getChatDateLabel(dateStr: string): string {
 }
 
 /**
+ * Restituisce l'orario esatto in formato HH:MM (stile WhatsApp).
+ */
+export function formatExactTime(dateStr: string | Date | null | undefined): string {
+  if (!dateStr) return '';
+  const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+  return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
  * Restituisce true se i due timestamp ISO appartengono allo stesso giorno di calendario.
  */
 export function isSameDay(dateStr1: string, dateStr2: string): boolean {
