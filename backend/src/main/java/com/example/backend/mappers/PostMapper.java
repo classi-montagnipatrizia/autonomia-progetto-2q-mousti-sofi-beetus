@@ -64,8 +64,7 @@ public class PostMapper {
                 .commentsCount(post.getCommentsCount())
                 .hasLiked(post.isLikedByUser(currentUserId))
                 .commenti(post.getComments().stream()
-                        .filter(c -> !c.getIsDeletedByAuthor() 
-                                && !c.isHiddenForUser(currentUserId)
+                        .filter(c -> !c.getIsDeletedByAuthor()
                                 && c.getParentComment() == null) // Solo commenti principali
                         .map(commentMapper::toCommentoResponseDTO)
                         .toList())

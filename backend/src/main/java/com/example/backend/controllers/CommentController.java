@@ -193,37 +193,4 @@ public class CommentController {
      * @param user      Utente autenticato (iniettato automaticamente)
      * @return ResponseEntity vuoto con status 200
      */
-    @PostMapping("/api/comments/{commentId}/hide")
-    public ResponseEntity<Void> nascondiCommento(
-            @PathVariable Long commentId,
-            @CurrentUser User user) {
-
-        log.debug("POST /api/comments/{}/hide - Username: {}", commentId, user.getUsername());
-
-        // Nasconde il commento
-        commentService.nascondiCommento(commentId, user.getId());
-
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * DELETE /api/comments/{commentId}/hide
-     * Mostra un commento precedentemente nascosto.
-
-     * @param commentId L'ID del commento da mostrare
-     * @param user      Utente autenticato (iniettato automaticamente)
-     * @return ResponseEntity vuoto con status 200
-     */
-    @DeleteMapping("/api/comments/{commentId}/hide")
-    public ResponseEntity<Void> mostraCommento(
-            @PathVariable Long commentId,
-            @CurrentUser User user) {
-
-        log.debug("DELETE /api/comments/{}/hide - Username: {}", commentId, user.getUsername());
-
-        // Mostra il commento
-        commentService.mostraCommento(commentId, user.getId());
-
-        return ResponseEntity.ok().build();
-    }
 }

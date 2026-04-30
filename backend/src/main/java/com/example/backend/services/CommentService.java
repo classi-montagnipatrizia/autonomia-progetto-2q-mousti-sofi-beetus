@@ -13,12 +13,10 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mappers.CommentMapper;
 import com.example.backend.models.Comment;
-import com.example.backend.models.HiddenComment;
 import com.example.backend.models.MentionableType;
 import com.example.backend.models.Post;
 import com.example.backend.models.User;
 import com.example.backend.repositories.CommentRepository;
-import com.example.backend.repositories.HiddenCommentRepository;
 import com.example.backend.repositories.PostRepository;
 import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +46,6 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final HiddenCommentRepository hiddenCommentRepository;
     private final CommentMapper commentMapper;
     private final NotificationService notificationService;
     private final ApplicationEventPublisher eventPublisher;
@@ -343,16 +340,7 @@ public class CommentService {
 
     /**
      * Ottiene tutti i commenti di un post con struttura gerarchica.
-     *
-     * Questo metodo restituisce i commenti principali, e ogni commento include
-     * le sue risposte nella proprietà "risposte" del DTO.
-     *
-     * OTTIMIZZAZIONE N+1:
-     * Questo metodo usa una strategia a query batch per evitare il problema N+1:
-     * 1. Carica tutti i root comments con i loro user (JOIN FETCH)
-     * 2. Carica gli ID dei commenti nascosti dall'utente in una singola query
-     * 3. Carica tutte le risposte in batch con i loro user (JOIN FETCH)
-     * Questo riduce drasticamente il numero di query da O(N+M) a solo 3 query fisse.
+     * Usa query batch per evitare N+1: 1 query per root comments, 1 per tutte le risposte.
      *
      * @param postId L'ID del post
      * @param userId L'ID dell'utente che sta visualizzando
@@ -363,113 +351,32 @@ public class CommentService {
     public List<CommentResponseDTO> ottieniCommentiPost(Long postId, Long userId) {
         log.debug("Caricamento commenti per post ID: {} e utente ID: {}", postId, userId);
 
-        // Verifica che il post esista
         if (!postRepository.existsById(postId)) {
             throw new ResourceNotFoundException(ENTITY_POST, FIELD_ID, postId);
         }
 
-        // 1. Carica i commenti root con limite per protezione memoria
         List<Comment> rootComments = commentRepository.findRootCommentsByPostId(
                 postId, PageRequest.of(0, 200));
 
         if (rootComments.isEmpty()) {
-            log.debug("Nessun commento trovato per post ID: {}", postId);
             return List.of();
         }
 
-        // 2. Carica gli ID dei commenti nascosti dall'utente (evita N+1)
-        var hiddenCommentIds = hiddenCommentRepository.findHiddenCommentIdsByUserId(userId);
-
-        // Filtra i commenti nascosti dall'utente
-        List<Comment> visibleRootComments = rootComments.stream()
-                .filter(comment -> !hiddenCommentIds.contains(comment.getId()))
-                .toList();
-
-        if (visibleRootComments.isEmpty()) {
-            log.debug("Nessun commento visibile per post ID: {} (tutti nascosti)", postId);
-            return List.of();
-        }
-
-        // 3. Carica tutte le risposte in batch con i loro user (evita N+1)
-        List<Long> rootCommentIds = visibleRootComments.stream()
-                .map(Comment::getId)
-                .toList();
-
+        List<Long> rootCommentIds = rootComments.stream().map(Comment::getId).toList();
         List<Comment> allChildComments = commentRepository.findChildCommentsByParentIds(rootCommentIds);
 
-        // 4. Popola manualmente i childComments nei root comments
-        // Raggruppa le risposte per parentComment ID
         var childCommentsByParentId = allChildComments.stream()
                 .collect(Collectors.groupingBy(c -> c.getParentComment().getId()));
 
-        // Associa le risposte ai commenti parent
-        visibleRootComments.forEach(rootComment -> {
+        rootComments.forEach(rootComment -> {
             List<Comment> children = childCommentsByParentId.getOrDefault(rootComment.getId(), List.of());
             rootComment.getChildComments().clear();
             rootComment.getChildComments().addAll(children);
         });
 
-        log.debug("Trovati {} commenti principali con {} risposte totali per post ID: {}",
-                visibleRootComments.size(), allChildComments.size(), postId);
-
-        // Converte in DTO con struttura gerarchica
-        return visibleRootComments.stream()
+        return rootComments.stream()
                 .map(commentMapper::toCommentoResponseDTO)
                 .toList();
-    }
-
-    /**
-     * Nasconde un commento per l'utente corrente.
-     *
-     *
-     *
-     * @param commentId L'ID del commento da nascondere
-     * @param userId L'ID dell'utente
-     * @throws ResourceNotFoundException se il commento non esiste
-     */
-    @Transactional
-    public void nascondiCommento(Long commentId, Long userId) {
-        log.info("Nascondimento commento ID: {} per utente ID: {}", commentId, userId);
-
-        // Verifica che il commento esista
-        if (!commentRepository.existsById(commentId)) {
-            throw new ResourceNotFoundException(ENTITY_COMMENT, FIELD_ID, commentId);
-        }
-
-        // Verifica che non sia già nascosto 
-        if (hiddenCommentRepository.existsByCommentIdAndUserId(commentId, userId)) {
-            log.debug("Commento ID: {} già nascosto per utente ID: {}", commentId, userId);
-            return;
-        }
-
-        // Crea il record di nascondimento
-        HiddenComment hiddenComment = HiddenComment.builder()
-                .comment(commentRepository.getReferenceById(commentId))
-                .user(userRepository.getReferenceById(userId))
-                .build();
-
-        hiddenCommentRepository.save(hiddenComment);
-
-        log.info("Commento ID: {} nascosto per utente ID: {}", commentId, userId);
-    }
-
-    /**
-     * Mostra un commento precedentemente nascosto.
-     *
-     * Operazione inversa di nascondiCommento.
-     * Elimina il record da HiddenComment, rendendo il commento nuovamente visibile.
-     *
-     * @param commentId L'ID del commento da mostrare
-     * @param userId L'ID dell'utente
-     */
-    @Transactional
-    public void mostraCommento(Long commentId, Long userId) {
-        log.info("Mostra commento ID: {} per utente ID: {}", commentId, userId);
-
-        // Elimina il record di nascondimento se esiste
-        hiddenCommentRepository.deleteByCommentIdAndUserId(commentId, userId);
-
-        log.info("Commento ID: {} ora visibile per utente ID: {}", commentId, userId);
     }
 
     /**

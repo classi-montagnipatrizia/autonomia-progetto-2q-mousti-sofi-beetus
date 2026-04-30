@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long> {
 
@@ -43,4 +44,13 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long
            "WHERE m.id IN (SELECT MAX(m2.id) FROM GroupMessage m2 " +
            "WHERE m2.group.id IN :groupIds GROUP BY m2.group.id)")
     List<GroupMessage> findLatestByGroupIds(@Param("groupIds") List<Long> groupIds);
+
+    @Query("SELECT msg FROM GroupMessage msg JOIN FETCH msg.sender " +
+           "WHERE msg.group.id IN (SELECT mem.group.id FROM GroupMembership mem WHERE mem.user.id = :userId) " +
+           "AND msg.isDeletedBySender = false " +
+           "AND LOWER(msg.content) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "ORDER BY msg.createdAt DESC")
+    List<GroupMessage> searchMessagesAcrossGroups(@Param("userId") Long userId,
+                                                  @Param("query") String query,
+                                                  Pageable pageable);
 }

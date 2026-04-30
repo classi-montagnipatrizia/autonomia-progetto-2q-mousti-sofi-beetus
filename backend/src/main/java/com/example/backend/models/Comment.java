@@ -16,8 +16,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"childComments", "hiddenByUsers", "parentComment", "post", "user"})
-@ToString(exclude = {"childComments", "hiddenByUsers", "parentComment", "post", "user"})
+@EqualsAndHashCode(callSuper = true, exclude = {"childComments", "parentComment", "post", "user"})
+@ToString(exclude = {"childComments", "parentComment", "post", "user"})
 public class Comment extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -43,14 +43,4 @@ public class Comment extends BaseEntity {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Comment> childComments = new HashSet<>();
-
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<HiddenComment> hiddenByUsers = new HashSet<>();
-    
-    // Helper method per verificare se è nascosto per un utente
-    @Transient
-    public boolean isHiddenForUser(Long userId) {
-        return hiddenByUsers.stream().anyMatch(hc -> hc.getUser().getId().equals(userId));
-    }
 }

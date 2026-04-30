@@ -9,6 +9,7 @@ import com.example.backend.dtos.response.GroupSummaryDTO;
 import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
+import com.example.backend.util.SearchUtils;
 import com.example.backend.mappers.GroupMapper;
 import com.example.backend.models.Group;
 import com.example.backend.models.GroupMembership;
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -275,6 +277,18 @@ public class GroupService {
 
         return messageRepository.searchMessages(groupId, query.trim(), pageable)
                 .map(groupMapper::toMessageDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GroupMessageDTO> searchMessagesGlobal(Long userId, String query) {
+        if (query == null || query.trim().isEmpty()) {
+            throw new InvalidInputException("Il termine di ricerca non può essere vuoto");
+        }
+        String safeTerm = SearchUtils.escapeLikeWildcards(query.trim());
+        return messageRepository.searchMessagesAcrossGroups(userId, safeTerm, PageRequest.of(0, 30))
+                .stream()
+                .map(groupMapper::toMessageDTO)
+                .toList();
     }
 
     @Transactional

@@ -52,7 +52,6 @@ public class AdminService {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final HiddenMessageRepository hiddenMessageRepository;
     private final HiddenPostRepository hiddenPostRepository;
-    private final HiddenCommentRepository hiddenCommentRepository;
     private final MentionRepository mentionRepository;
     private final BookRepository bookRepository;
     private final BookConversationRepository bookConversationRepository;
@@ -163,9 +162,6 @@ public class AdminService {
             hiddenPostRepository.deleteByPostUserId(userId);
             log.debug("Eliminati hidden_posts relativi ai post dell'utente {}", userId);
 
-            // 1.4 HiddenComments relativi ai commenti dell'utente (FK: hidden_comments -> comments)
-            hiddenCommentRepository.deleteByCommentUserId(userId);
-            log.debug("Eliminati hidden_comments relativi ai commenti dell'utente {}", userId);
 
             // --- FASE 2: Eliminare record nelle tabelle con FK diretta verso users ---
 
@@ -179,7 +175,6 @@ public class AdminService {
             // 2.3 Hidden records dell'utente (dove user_id = target)
             hiddenMessageRepository.deleteByUserId(userId);
             hiddenPostRepository.deleteByUserId(userId);
-            hiddenCommentRepository.deleteByUserId(userId);
             log.debug("Eliminati tutti i record hidden dell'utente {}", userId);
 
             // 2.4 Menzioni (sia come mentioned che come mentioning)

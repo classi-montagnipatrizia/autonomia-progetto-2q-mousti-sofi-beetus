@@ -21,19 +21,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c JOIN FETCH c.user WHERE c.id = :commentId")
     Optional<Comment> findByIdWithUser(@Param("commentId") Long commentId);
 
-    // Commenti visibili per un post
-    @Query("""
-        SELECT c FROM Comment c
-        WHERE c.post.id = :postId
-        AND c.isDeletedByAuthor = false
-        AND NOT EXISTS (
-            SELECT hc FROM HiddenComment hc 
-            WHERE hc.comment.id = c.id AND hc.user.id = :userId
-        )
-        ORDER BY c.createdAt ASC
-        """)
-    List<Comment> findVisibleCommentsForPost(@Param("postId") Long postId, @Param("userId") Long userId);
-
     // Commenti principali con user eager-loaded (evita N+1), con limite per protezione memoria
     @Query("""
         SELECT c FROM Comment c
