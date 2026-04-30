@@ -32,6 +32,14 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long
     List<GroupMessage> findMediaMessagesBySenderId(@Param("senderId") Long senderId);
 
     @Query("SELECT m FROM GroupMessage m JOIN FETCH m.sender " +
+           "WHERE m.group.id = :groupId AND m.isDeletedBySender = false " +
+           "AND LOWER(m.content) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "ORDER BY m.createdAt DESC")
+    Page<GroupMessage> searchMessages(@Param("groupId") Long groupId,
+                                      @Param("query") String query,
+                                      Pageable pageable);
+
+    @Query("SELECT m FROM GroupMessage m JOIN FETCH m.sender " +
            "WHERE m.id IN (SELECT MAX(m2.id) FROM GroupMessage m2 " +
            "WHERE m2.group.id IN :groupIds GROUP BY m2.group.id)")
     List<GroupMessage> findLatestByGroupIds(@Param("groupIds") List<Long> groupIds);

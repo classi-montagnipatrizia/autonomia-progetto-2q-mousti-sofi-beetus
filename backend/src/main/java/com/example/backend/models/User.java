@@ -18,8 +18,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"posts", "comments", "likes", "sentMessages", "receivedMessages", "notifications"})
-@ToString(exclude = {"posts", "comments", "likes", "sentMessages", "receivedMessages", "notifications"})
+@EqualsAndHashCode(callSuper = true, exclude = {"posts", "comments", "likes", "sentMessages", "receivedMessages", "notifications", "sessions"})
+@ToString(exclude = {"posts", "comments", "likes", "sentMessages", "receivedMessages", "notifications", "sessions"})
 
 public class User extends BaseEntity {
 @Column(length = 50, unique = true, nullable = false)

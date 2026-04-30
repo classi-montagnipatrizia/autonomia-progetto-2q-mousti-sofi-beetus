@@ -268,6 +268,15 @@ public class GroupService {
                 .map(groupMapper::toMessageDTO);
     }
 
+    @Transactional(readOnly = true)
+    public Page<GroupMessageDTO> searchMessages(Long groupId, Long userId, String query, Pageable pageable) {
+        Group group = findGroupWithAdmin(groupId);
+        verificaMembro(group, userId);
+
+        return messageRepository.searchMessages(groupId, query.trim(), pageable)
+                .map(groupMapper::toMessageDTO);
+    }
+
     @Transactional
     public GroupMessageDTO inviaMessaggio(Long groupId, Long senderId,
                                           InviaMessaggioGruppoRequestDTO request) {

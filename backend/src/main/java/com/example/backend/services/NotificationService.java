@@ -47,6 +47,7 @@ public class NotificationService {
     private final CommentRepository commentRepository;
     private final DirectMessageRepository directMessageRepository;
     private final BookRepository bookRepository;
+    private final HiddenPostRepository hiddenPostRepository;
     private final NotificationMapper notificationMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final PushNotificationService pushNotificationService;
@@ -199,6 +200,11 @@ public class NotificationService {
             return;
         }
 
+        if (hiddenPostRepository.existsByPostIdAndUserId(postId, receiverId)) {
+            log.debug("Notifica risposta skippata - post nascosto dal ricevente");
+            return;
+        }
+
         if (esisteNotificaDuplicata(receiverId, triggeredByUserId, NotificationType.COMMENT,
                 commentId, "COMMENT")) {
             log.debug("Notifica risposta duplicata, skip");
@@ -277,6 +283,10 @@ public class NotificationService {
         // Costruisci contenuto e URL in base al tipo
         switch (type) {
             case POST -> {
+                if (hiddenPostRepository.existsByPostIdAndUserId(relatedId, receiverId)) {
+                    log.debug("Notifica menzione POST skippata - post nascosto dal ricevente");
+                    return;
+                }
                 content = String.format("%s ti ha menzionato in un post",
                         triggeredBy.getFullName());
                 actionUrl = "/post/" + relatedId;
@@ -285,6 +295,10 @@ public class NotificationService {
                 Comment comment = commentRepository.findById(relatedId).orElse(null);
                 if (comment == null) {
                     log.warn("Commento non trovato per notifica menzione - commentId:{}", relatedId);
+                    return;
+                }
+                if (hiddenPostRepository.existsByPostIdAndUserId(comment.getPost().getId(), receiverId)) {
+                    log.debug("Notifica menzione COMMENT skippata - post nascosto dal ricevente");
                     return;
                 }
                 content = String.format("%s ti ha menzionato in un commento",
@@ -638,10 +652,6 @@ public class NotificationService {
         log.debug("Notifica messaggio libro - Ricevente: {}, Mittente: {}", receiverId, senderId);
 
         String actionUrl = "/library/conversation/" + bookId + "?convId=" + conversationId;
-        if (isNotificaDuplicataRecente(receiverId, senderId, NotificationType.BOOK_MESSAGE, actionUrl)) {
-            log.debug("Notifica BOOK_MESSAGE duplicata, skip");
-            return;
-        }
 
         User receiver = userRepository.findById(receiverId).orElse(null);
         User sender = userRepository.findById(senderId).orElse(null);
@@ -712,7 +722,6 @@ public class NotificationService {
 
         List<Long> recipientIds = memberIds.stream()
                 .filter(id -> !id.equals(senderId))
-                .filter(id -> !isNotificaDuplicataRecente(id, senderId, NotificationType.GROUP_MESSAGE, actionUrl))
                 .toList();
 
         if (recipientIds.isEmpty()) return;

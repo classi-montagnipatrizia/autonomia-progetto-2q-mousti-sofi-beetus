@@ -113,6 +113,16 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getMessaggi(groupId, user.getId(), pageable));
     }
 
+    @GetMapping("/{groupId}/messages/search")
+    public ResponseEntity<Page<GroupMessageDTO>> searchMessages(
+            @PathVariable Long groupId,
+            @RequestParam String q,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @CurrentUser User user) {
+        log.debug("GET /api/groups/{}/messages/search?q={} - Username: {}", groupId, q, user.getUsername());
+        return ResponseEntity.ok(groupService.searchMessages(groupId, user.getId(), q, pageable));
+    }
+
     @PostMapping("/{groupId}/messages")
     public ResponseEntity<GroupMessageDTO> inviaMessaggio(
             @PathVariable Long groupId,
