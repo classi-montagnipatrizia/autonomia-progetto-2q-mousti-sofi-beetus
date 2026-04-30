@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://awarded-alloy-julie-reward.trycloudflare.com/api',
-  wsUrl: 'https://awarded-alloy-julie-reward.trycloudflare.com/ws',
+  apiUrl: 'https://best-defeat-ripe-correspondence.trycloudflare.com/api',
+  wsUrl: 'https://best-defeat-ripe-correspondence.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
