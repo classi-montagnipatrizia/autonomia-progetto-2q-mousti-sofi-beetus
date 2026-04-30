@@ -77,6 +77,12 @@ export class GroupService {
     );
   }
 
+  /** GET /api/groups/messages/search?q=... — cerca messaggi in tutti i gruppi dell'utente */
+  searchMessagesGlobal(query: string): Observable<GroupMessageDTO[]> {
+    const params = new HttpParams().set('q', query);
+    return this.http.get<GroupMessageDTO[]>(`${this.baseUrl}/messages/search`, { params });
+  }
+
   /** GET /api/groups/{id}/messages/search?q=... — cerca messaggi nel gruppo */
   searchMessages(groupId: number, query: string, page = 0, size = 20): Observable<PageResponse<GroupMessageDTO>> {
     const params = new HttpParams()

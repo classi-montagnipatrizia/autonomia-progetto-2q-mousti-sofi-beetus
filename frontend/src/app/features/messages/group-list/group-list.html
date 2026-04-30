@@ -38,7 +38,30 @@
     </div>
   </header>
 
-  <!-- Lista gruppi -->
+  <!-- Search bar -->
+  <div class="flex-shrink-0 px-4 sm:px-6 py-3 border-b border-white/20 dark:border-gray-700/50">
+    <div class="relative">
+      <lucide-icon [img]="SearchIcon" [size]="18" class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+      <input
+        type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Cerca messaggi nei gruppi..."
+        class="w-full pl-14 pr-10 py-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-[16px] text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all shadow-sm"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          (click)="clearSearch()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        >
+          <lucide-icon [img]="XIcon" [size]="16" />
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Lista / Risultati -->
   <div class="group-list-scroll flex-1 min-h-0 overflow-y-auto pt-2 pb-4 px-2 sm:px-4">
 
     <!-- Loading -->
@@ -56,7 +79,7 @@
       </div>
     }
 
-    <!-- Empty state -->
+    <!-- Empty state (nessun gruppo, fuori modalità ricerca) -->
     @if (isEmpty()) {
       <div class="flex flex-col items-center justify-center h-full p-8 text-center">
         <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-3xl p-8 border border-white/20 dark:border-gray-700/50 shadow-sm max-w-sm mx-auto">
@@ -80,8 +103,121 @@
       </div>
     }
 
-    <!-- Lista gruppi -->
-    @if (!groupStore.isLoading() && !isEmpty()) {
+    <!-- Ricerca in corso -->
+    @if (isSearching()) {
+      <div class="flex items-center justify-center py-10">
+        <div class="flex flex-col items-center gap-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 dark:border-gray-700/50 shadow-sm">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 p-[3px] animate-spin border border-white/20">
+            <div class="w-full h-full bg-gray-50 dark:bg-gray-900 rounded-full"></div>
+          </div>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 tracking-wide">Ricerca in corso...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Nessun risultato -->
+    @if (noSearchResults()) {
+      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-[24px] p-6 border border-white/20 dark:border-gray-700/50 shadow-sm mx-auto">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100/50 dark:bg-gray-800/50 flex items-center justify-center border border-white/20 dark:border-gray-700/50">
+            <lucide-icon [img]="SearchIcon" [size]="32" class="text-gray-400 dark:text-gray-500" />
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Nessun risultato</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
+            Nessun messaggio contiene <span class="font-semibold text-gray-900 dark:text-gray-200">"{{ searchQuery() }}"</span>
+          </p>
+        </div>
+      </div>
+    }
+
+    <!-- Modalità ricerca: risultati messaggi -->
+    @if (isSearchMode() && !isSearching()) {
+
+      @if (hasSearchResults()) {
+        <div class="px-6 py-2.5 bg-black/5 dark:bg-white/5 mb-2 rounded-xl mx-2 shadow-inner border border-white/10 dark:border-gray-700/20">
+          <p class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-widest">
+            Messaggi trovati ({{ searchResults().length }})
+          </p>
+        </div>
+        <div class="space-y-1.5 px-2">
+          @for (message of searchResults(); track message.id) {
+            <button
+              type="button"
+              (click)="onSearchResultClick(message)"
+              class="group w-full flex items-start gap-4 p-4 rounded-[20px] bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 dark:hover:bg-gray-700/60 backdrop-blur-md border border-white/20 dark:border-gray-700/50 transition-all text-left shadow-sm hover:shadow-md active:scale-[0.98]"
+            >
+              <app-avatar
+                [src]="message.senderProfilePictureUrl"
+                [name]="message.senderFullName"
+                size="md"
+              />
+              <div class="flex-1 min-w-0 pt-0.5">
+                <div class="flex items-center justify-between gap-3 mb-0.5">
+                  <span class="font-bold text-[15px] text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    {{ message.senderFullName }}
+                  </span>
+                  <span class="text-xs text-gray-400 flex-shrink-0">
+                    {{ message.createdAt | timeAgo }}
+                  </span>
+                </div>
+                <p class="text-[12px] font-semibold text-primary-600 dark:text-primary-400 mb-1 truncate">
+                  {{ getGroupNameById(message.groupId) }}
+                </p>
+                <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 line-clamp-2 bg-white/30 dark:bg-gray-900/30 p-2.5 rounded-xl text-[13px] transition-colors group-hover:text-gray-700 dark:group-hover:text-gray-300">
+                  @for (segment of highlightSegments(message.content, searchQuery()); track $index) {
+                    @if (segment.match) {
+                      <mark class="bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-100 rounded px-1 font-medium">{{ segment.text }}</mark>
+                    } @else {
+                      {{ segment.text }}
+                    }
+                  }
+                </p>
+              </div>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Gruppi corrispondenti durante la ricerca -->
+      @if (filteredGroups().length > 0) {
+        <div class="px-6 py-2.5 bg-black/5 dark:bg-white/5 mb-2 mt-4 rounded-xl mx-2 shadow-inner border border-white/10 dark:border-gray-700/20">
+          <p class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-widest">
+            Gruppi
+          </p>
+        </div>
+        <div class="space-y-1.5 mx-2">
+          @for (group of filteredGroups(); track group.id) {
+            <div class="rounded-[20px] overflow-hidden bg-white/20 dark:bg-gray-800/20 hover:bg-white/50 dark:hover:bg-gray-700/40 backdrop-blur-sm border border-transparent hover:border-white/30 dark:hover:border-gray-600/50 transition-all">
+              <button
+                type="button"
+                (click)="openGroup(group)"
+                class="w-full flex items-center gap-4 p-4 cursor-pointer text-left focus:outline-none"
+              >
+                @if (group.profilePictureUrl) {
+                  <img
+                    [src]="group.profilePictureUrl"
+                    [alt]="group.name"
+                    class="w-14 h-14 rounded-[16px] object-cover shrink-0 shadow-sm border border-white/20 dark:border-gray-700/50"
+                  />
+                } @else {
+                  <div
+                    class="w-14 h-14 bg-gradient-to-br rounded-[16px] flex items-center justify-center text-white font-bold shrink-0 shadow-sm border border-white/20 dark:border-gray-700/50"
+                    [class]="getAvatarColor(group.id).from + ' ' + getAvatarColor(group.id).to"
+                  >{{ getInitials(group.name) }}</div>
+                }
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-[15px] text-gray-900 dark:text-white truncate">{{ group.name }}</p>
+                  <p class="text-[13px] text-gray-500 dark:text-gray-400 truncate">{{ group.memberCount }} membri</p>
+                </div>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Modalità normale: lista gruppi -->
+    @if (!isSearchMode() && !groupStore.isLoading() && !isEmpty()) {
       <div class="space-y-1.5 mt-2">
         @for (group of groupStore.myGroups(); track group.id) {
           <div class="rounded-[20px] overflow-hidden bg-white/20 dark:bg-gray-800/20 hover:bg-white/50 dark:hover:bg-gray-700/40 backdrop-blur-sm border border-transparent hover:border-white/30 dark:hover:border-gray-600/50 transition-all"
@@ -118,15 +254,12 @@
                     </span>
                   }
                 </div>
-                <!-- Anteprima ultimo messaggio -->
                 <div class="flex items-center justify-between mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                   @if (group.lastMessageContent) {
                     <p class="text-[13px] truncate transition-colors" [class]="group.unreadCount > 0 ? 'text-gray-900 dark:text-gray-100 font-semibold' : 'text-gray-500 dark:text-gray-400 font-medium group-hover:text-gray-600 dark:group-hover:text-gray-300'">{{ group.lastMessageContent }}</p>
                   } @else {
                     <p class="text-[13px] text-gray-400 dark:text-gray-500 italic truncate transition-colors">Nessun messaggio</p>
                   }
-                  
-                  <!-- Badge unread spostato qui a destra del messaggio per layout più pulito -->
                   @if (group.unreadCount > 0) {
                     <span class="ml-2 px-2 py-0.5 bg-primary-500 shadow-sm text-white text-[11px] font-bold rounded-full flex items-center justify-center shrink-0">
                       {{ group.unreadCount > 9 ? '9+' : group.unreadCount }}

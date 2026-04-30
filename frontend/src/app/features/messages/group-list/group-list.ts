@@ -1,12 +1,18 @@
-import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
-
+import { Component, computed, DestroyRef, inject, OnDestroy, OnInit, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { LucideAngularModule, ArrowLeft, Plus, Users } from 'lucide-angular';
+import { FormsModule } from '@angular/forms';
+import { LucideAngularModule, ArrowLeft, Plus, Users, Search, X } from 'lucide-angular';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { GroupStore } from '../../../core/stores/group-store';
-import { AuthStore } from '../../../core/stores/auth-store';
-import { GroupSummaryDTO, CreaGruppoRequestDTO } from '../../../models';
+import { GroupService } from '../../../core/api/group-service';
+import { GroupSummaryDTO, GroupMessageDTO, CreaGruppoRequestDTO } from '../../../models';
 import { CreateGroupModal } from '../create-group-modal/create-group-modal';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
+import { AvatarComponent } from '../../../shared/ui/avatar/avatar-component/avatar-component';
+import { TIMEOUTS, LIMITS } from '../../../core/config/app.config';
+import { HighlightSegment, splitHighlight } from '../../../core/utils/highlight.utils';
 
 const AVATAR_COLORS = [
   { from: 'from-blue-500', to: 'to-blue-600' },
@@ -19,30 +25,115 @@ const AVATAR_COLORS = [
 
 @Component({
   selector: 'app-group-list',
-  imports: [LucideAngularModule, CreateGroupModal, TimeAgoPipe],
+  imports: [LucideAngularModule, FormsModule, CreateGroupModal, TimeAgoPipe, AvatarComponent],
   templateUrl: './group-list.html',
   styleUrl: './group-list.scss',
 })
-export class GroupList implements OnInit {
+export class GroupList implements OnInit, OnDestroy {
   readonly groupStore = inject(GroupStore);
-  private readonly authStore = inject(AuthStore);
+  private readonly groupService = inject(GroupService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly searchSubject = new Subject<string>();
 
   readonly tabChanged = output<'chat' | 'gruppi'>();
 
   readonly ArrowLeftIcon = ArrowLeft;
   readonly PlusIcon = Plus;
   readonly UsersIcon = Users;
+  readonly SearchIcon = Search;
+  readonly XIcon = X;
 
   readonly showCreateModal = signal(false);
   readonly selectedGroupId = signal<number | null>(null);
+  readonly searchQuery = signal('');
+  readonly searchResults = signal<GroupMessageDTO[]>([]);
+  readonly isSearching = signal(false);
+
+  readonly isSearchMode = computed(() => this.searchQuery().trim().length > 0);
+
+  readonly filteredGroups = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    const groups = this.groupStore.myGroups();
+    if (!q) return groups;
+    return groups.filter(g => g.name.toLowerCase().includes(q));
+  });
 
   readonly isEmpty = computed(() =>
-    !this.groupStore.isLoading() && this.groupStore.myGroups().length === 0
+    !this.groupStore.isLoading() && !this.isSearchMode() && this.groupStore.myGroups().length === 0
+  );
+
+  readonly hasSearchResults = computed(() => this.searchResults().length > 0);
+
+  readonly noSearchResults = computed(() =>
+    !this.groupStore.isLoading() &&
+    !this.isSearching() &&
+    this.isSearchMode() &&
+    !this.hasSearchResults() &&
+    this.filteredGroups().length === 0
   );
 
   ngOnInit(): void {
     this.groupStore.loadMyGroups();
+    this.setupSearchDebounce();
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubject.complete();
+  }
+
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(
+      debounceTime(TIMEOUTS.SEARCH_DEBOUNCE),
+      distinctUntilChanged(),
+      filter(query => query.trim().length >= LIMITS.MIN_SEARCH_LENGTH),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(query => {
+      this.performSearch(query);
+    });
+  }
+
+  private performSearch(query: string): void {
+    this.isSearching.set(true);
+    this.groupService.searchMessagesGlobal(query).subscribe({
+      next: (results) => {
+        this.searchResults.set(results);
+        this.isSearching.set(false);
+      },
+      error: () => {
+        this.searchResults.set([]);
+        this.isSearching.set(false);
+      },
+    });
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    if (value.trim().length >= LIMITS.MIN_SEARCH_LENGTH) {
+      this.searchSubject.next(value);
+    } else {
+      this.searchResults.set([]);
+    }
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.searchResults.set([]);
+  }
+
+  onSearchResultClick(message: GroupMessageDTO): void {
+    this.selectedGroupId.set(message.groupId);
+    this.router.navigate(['/messages', 'group', message.groupId], {
+      queryParams: { messageId: message.id, highlight: this.searchQuery() }
+    });
+  }
+
+  getGroupNameById(groupId: number): string {
+    return this.groupStore.myGroups().find(g => g.id === groupId)?.name ?? 'Gruppo';
+  }
+
+  highlightSegments(text: string | null | undefined, searchTerm: string): readonly HighlightSegment[] {
+    return splitHighlight(text ?? '', searchTerm);
   }
 
   getInitials(name: string): string {

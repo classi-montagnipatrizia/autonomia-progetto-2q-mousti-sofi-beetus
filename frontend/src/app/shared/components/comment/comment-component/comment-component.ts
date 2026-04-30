@@ -1,7 +1,7 @@
 
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Ellipsis, Pencil, Trash2, EyeOff, Flag, Reply, ChevronDown, ChevronUp } from 'lucide-angular';
+import { LucideAngularModule, Ellipsis, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-angular';
 import { map } from 'rxjs/operators';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
 import { DropdownComponent } from '../../../ui/dropdown/dropdown-component/dropdown-component';
@@ -32,8 +32,6 @@ export class CommentComponent {
   readonly MoreHorizontalIcon = Ellipsis;
   readonly PencilIcon = Pencil;
   readonly Trash2Icon = Trash2;
-  readonly EyeOffIcon = EyeOff;
-  readonly FlagIcon = Flag;
   readonly ReplyIcon = Reply;
   readonly ChevronDownIcon = ChevronDown;
   readonly ChevronUpIcon = ChevronUp;
@@ -208,23 +206,6 @@ export class CommentComponent {
     }
     this.router.navigate(['/profile', this.comment().autore.id]);
   }
-
-  /**
-   * Nascondi commento
-   */
-  hideComment(): void {
-    this.commentService.hideComment(this.comment().id).subscribe({
-      next: () => {
-        this.deleted.emit(this.comment().id);
-        this.toastService.success('Commento nascosto');
-      },
-      error: () => {
-        this.toastService.error('Errore nel nascondere il commento');
-      },
-    });
-  }
-
-
 
   /**
    * Gestisce input per edit

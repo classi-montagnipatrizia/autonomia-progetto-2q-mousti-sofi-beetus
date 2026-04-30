@@ -80,32 +80,4 @@ export class CommentService {
     return this.http.delete<void>(`${this.baseUrl}/comments/${commentId}`);
   }
 
-  /**
-   * Nasconde un commento dalla propria visualizzazione
-   *
-   * Endpoint: POST /api/comments/{commentId}/hide
-   * Autenticazione: richiesta
-   *
-   * Il commento non sarà più visibile all'utente corrente
-   * Utile per nascondere contenuti offensivi o spam
-   *
-   * @param commentId ID del commento da nascondere
-   */
-  hideComment(commentId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/comments/${commentId}/hide`, {});
-  }
-
-  /**
-   * Mostra un commento precedentemente nascosto
-   *
-   * Endpoint: DELETE /api/comments/{commentId}/hide
-   * Autenticazione: richiesta
-   *
-   * Annulla l'operazione di nascondimento
-   *
-   * @param commentId ID del commento da mostrare
-   */
-  unhideComment(commentId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/comments/${commentId}/hide`);
-  }
 }
