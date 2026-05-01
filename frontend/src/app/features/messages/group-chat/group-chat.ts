@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getChatDateLabel, isSameDay, formatExactTime } from '../../../core/utils/chat-date.utils';
+import { HighlightSegment, splitHighlight } from '../../../core/utils/highlight.utils';
+import { TIMEOUTS, LIMITS, UI_SPACING } from '../../../core/config/app.config';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -76,6 +78,7 @@ export class GroupChat implements OnInit, OnDestroy {
   private typingCleanupTimers = new Map<number, ReturnType<typeof setTimeout>>();
   private scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private isFirstLoad = true;
+  private isAutoScrolling = false;
 
   readonly imageInputRef = viewChild<ElementRef<HTMLInputElement>>('imageInputRef');
 
@@ -121,7 +124,7 @@ export class GroupChat implements OnInit, OnDestroy {
         if (this.pendingScrollToMessageId !== null) {
           const messageId = this.pendingScrollToMessageId;
           this.pendingScrollToMessageId = null;
-          this.scrollToMessage(messageId);
+          this.scrollToMessage(messageId, true);
         } else {
           this.scrollToBottom();
         }
@@ -200,7 +203,7 @@ export class GroupChat implements OnInit, OnDestroy {
     this.highlightTimer = setTimeout(() => {
       this.highlightTimer = null;
       this.clearHighlight();
-    }, 4000);
+    }, TIMEOUTS.MESSAGE_HIGHLIGHT);
   }
 
   private clearHighlight(): void {
@@ -210,6 +213,15 @@ export class GroupChat implements OnInit, OnDestroy {
 
   isHighlighted(messageId: number): boolean {
     return this.highlightedMessageId() === messageId;
+  }
+
+  getContentSegments(message: GroupMessageDTO): readonly HighlightSegment[] {
+    const content = message.content ?? '';
+    if (!content) return [];
+    const term = this.highlightTerm();
+    const isHL = this.highlightedMessageId() === message.id;
+    if (!term || !isHL) return [{ text: content, match: false }];
+    return splitHighlight(content, term);
   }
 
   getSenderColor(senderId: number): string {
@@ -386,9 +398,11 @@ export class GroupChat implements OnInit, OnDestroy {
   }
 
   onScroll(): void {
+    if (this.isAutoScrolling) return;
     if (this.scrollDebounceTimer !== null) return;
     this.scrollDebounceTimer = setTimeout(() => {
       this.scrollDebounceTimer = null;
+      if (this.isAutoScrolling) return;
       const container = this.messagesContainer()?.nativeElement;
       if (container && container.scrollTop < 100) {
         this.loadOlderMessages();
@@ -424,24 +438,58 @@ export class GroupChat implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
+    this.isAutoScrolling = true;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const container = this.messagesContainer()?.nativeElement;
         if (container) {
           container.scrollTop = container.scrollHeight;
         }
+        this.isAutoScrolling = false;
       });
     });
   }
 
-  private scrollToMessage(messageId: number, retryCount = 0): void {
+  private scrollToMessage(messageId: number, instant = false, retryCount = 0): void {
     setTimeout(() => {
-      const el = document.getElementById(`group-msg-${messageId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (retryCount < 5) {
-        this.scrollToMessage(messageId, retryCount + 1);
+      const container = this.messagesContainer();
+      const element = document.getElementById(`group-msg-${messageId}`);
+
+      if (!container || !element) {
+        if (retryCount < LIMITS.MAX_SCROLL_RETRIES) {
+          setTimeout(() => this.scrollToMessage(messageId, instant, retryCount + 1), TIMEOUTS.SCROLL_RETRY_DELAY);
+        }
+        return;
       }
-    }, 150);
+
+      const containerEl = container.nativeElement;
+
+      if (containerEl.clientHeight === 0) {
+        if (retryCount < LIMITS.MAX_SCROLL_RETRIES) {
+          setTimeout(() => this.scrollToMessage(messageId, instant, retryCount + 1), TIMEOUTS.SCROLL_RETRY_DELAY);
+        }
+        return;
+      }
+
+      const allMessages = containerEl.querySelectorAll('[id^="group-msg-"]');
+      let targetOffset = 0;
+
+      for (const msg of allMessages) {
+        const msgEl = msg as HTMLElement;
+        if (msgEl.id === `group-msg-${messageId}`) break;
+        targetOffset += msgEl.offsetHeight + UI_SPACING.MESSAGE_SPACING;
+      }
+
+      const containerHeight = containerEl.clientHeight;
+      const elementHeight = element.offsetHeight;
+      const scrollTo = targetOffset - (containerHeight / 2) + (elementHeight / 2);
+
+      this.isAutoScrolling = true;
+      containerEl.scrollTo({
+        top: Math.max(0, scrollTo),
+        behavior: instant ? 'instant' : 'smooth'
+      });
+      setTimeout(() => { this.isAutoScrolling = false; }, 500);
+    }, instant ? 0 : TIMEOUTS.SCROLL_DELAY);
   }
 }

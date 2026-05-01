@@ -130,10 +130,26 @@
                         />
                       </div>
                       @if (message.content) {
-                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 pt-1 pb-4">{{ message.content }}</p>
+                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 pt-1 pb-4">
+                          @for (segment of getContentSegments(message); track $index) {
+                            @if (segment.match) {
+                              <mark class="bg-yellow-400 text-gray-900 rounded px-0.5">{{ segment.text }}</mark>
+                            } @else {
+                              {{ segment.text }}
+                            }
+                          }
+                        </p>
                       }
                     } @else {
-                      <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 py-3">{{ message.content }}</p>
+                      <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 py-3">
+                        @for (segment of getContentSegments(message); track $index) {
+                          @if (segment.match) {
+                            <mark class="bg-yellow-400 text-gray-900 rounded px-0.5">{{ segment.text }}</mark>
+                          } @else {
+                            {{ segment.text }}
+                          }
+                        }
+                      </p>
                     }
                   </div>
                 </div>
@@ -189,10 +205,26 @@
                       />
                     </div>
                     @if (message.content) {
-                      <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 pt-1 pb-4">{{ message.content }}</p>
+                      <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 pt-1 pb-4">
+                        @for (segment of getContentSegments(message); track $index) {
+                          @if (segment.match) {
+                            <mark class="bg-yellow-400 text-gray-900 rounded px-0.5">{{ segment.text }}</mark>
+                          } @else {
+                            {{ segment.text }}
+                          }
+                        }
+                      </p>
                     }
                   } @else {
-                    <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 py-3">{{ message.content }}</p>
+                    <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words px-5 py-3">
+                      @for (segment of getContentSegments(message); track $index) {
+                        @if (segment.match) {
+                          <mark class="bg-yellow-400 text-gray-900 rounded px-0.5">{{ segment.text }}</mark>
+                        } @else {
+                          {{ segment.text }}
+                        }
+                      }
+                    </p>
                   }
                 </div>
               }

@@ -10,7 +10,7 @@
 }
 
 .chat-messages {
-  scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 
 .chat-messages::-webkit-scrollbar {
