@@ -1,5 +1,6 @@
 package com.example.backend.dtos.request;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class InviaMessaggioGruppoRequestDTO {
     private String audioUrl;
 
     @Min(value = 1, message = "La durata audio deve essere almeno 1 secondo")
+    @Max(value = 120, message = "I messaggi vocali non possono superare 2 minuti")
     private Integer audioDuration;
 
     public boolean isValid() {

@@ -18,6 +18,7 @@ public class InviaMessaggioRequestDTO {
     private String audioUrl;
 
     @Min(value = 1, message = "La durata audio deve essere almeno 1 secondo")
+    @Max(value = 120, message = "I messaggi vocali non possono superare 2 minuti")
     private Integer audioDuration;
 
     /**

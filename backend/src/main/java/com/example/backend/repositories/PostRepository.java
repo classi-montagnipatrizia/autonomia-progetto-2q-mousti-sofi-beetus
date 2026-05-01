@@ -19,6 +19,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Post visibili per un utente (non cancellati e non nascosti)
     @Query("""
             SELECT p FROM Post p
+            JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
             AND NOT EXISTS (
                 SELECT hp FROM HiddenPost hp
@@ -34,6 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("""
             SELECT p FROM Post p
+            JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
             AND p.user.classroom = :classroom
             AND NOT EXISTS (
@@ -81,6 +83,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("""
             SELECT p FROM Post p
+            JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
             AND NOT EXISTS (
                 SELECT hp FROM HiddenPost hp
@@ -102,6 +105,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("""
             SELECT p FROM Post p
+            JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
             AND p.user.classroom = :classroom
             AND NOT EXISTS (
@@ -147,6 +151,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("""
             SELECT p FROM Post p
+            JOIN FETCH p.user
             WHERE p.user.id = :authorId
             AND p.isDeletedByAuthor = false
             AND NOT EXISTS (

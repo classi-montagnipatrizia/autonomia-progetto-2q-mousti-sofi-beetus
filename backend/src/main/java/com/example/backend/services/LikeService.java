@@ -90,9 +90,9 @@ public class LikeService {
             // Like esisteva ed è stato rimosso
             postRepository.updateLikesCount(postId, -1);
             log.info("Like rimosso - Post ID: {}, Utente: {}", postId, user.getUsername());
-            
-            // Pubblica evento per broadcast real-time
-            int newLikesCount = post.getLikesCount() - 1;
+
+            // Legge il conteggio reale dal DB (l'oggetto Post in memoria è stale dopo l'UPDATE atomico)
+            int newLikesCount = (int) likeRepository.countByPostId(postId);
             eventPublisher.publishEvent(new PostLikedEvent(postId, newLikesCount, userId, false));
             
             return false;
@@ -117,9 +117,9 @@ public class LikeService {
                 }
 
                 log.info("Like aggiunto - Post ID: {}, Utente: {}", postId, user.getUsername());
-                
-                // Pubblica evento per broadcast real-time
-                int newLikesCount = post.getLikesCount() + 1;
+
+                // Legge il conteggio reale dal DB (l'oggetto Post in memoria è stale dopo l'UPDATE atomico)
+                int newLikesCount = (int) likeRepository.countByPostId(postId);
                 eventPublisher.publishEvent(new PostLikedEvent(postId, newLikesCount, userId, true));
                 
                 return true;

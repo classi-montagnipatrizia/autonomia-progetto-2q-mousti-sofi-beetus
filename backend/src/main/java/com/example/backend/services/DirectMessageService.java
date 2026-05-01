@@ -370,18 +370,10 @@ public class DirectMessageService {
     public int eliminaTuttiMessaggiUtente(Long userId) {
         log.info("Eliminazione tutti i messaggi dell'utente {}", userId);
 
-        // Usa query ottimizzata
-        List<DirectMessage> messages = messageRepository.findAllByUserId(userId);
+        int count = messageRepository.markAllAsDeletedPermanentlyByUserId(userId);
 
-        // Marca tutti come eliminati permanentemente
-        for (DirectMessage msg : messages) {
-            msg.setDeletedPermanently(true);
-        }
-
-        messageRepository.saveAll(messages);
-
-        log.info("Eliminati {} messaggi dell'utente {}", messages.size(), userId);
-        return messages.size();
+        log.info("Eliminati {} messaggi dell'utente {}", count, userId);
+        return count;
     }
 
     /**

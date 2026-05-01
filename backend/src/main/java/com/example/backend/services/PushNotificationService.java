@@ -13,6 +13,7 @@ import nl.martijndwars.webpush.PushService;
 import org.apache.http.HttpResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +92,7 @@ public class PushNotificationService {
      * Operazione best-effort: gli errori vengono loggati ma non rilanciano eccezioni.
      * Le subscription scadute (HTTP 410) vengono rimosse automaticamente.
      */
+    @Async
     public void sendToUser(Long userId, String title, String body, String url) {
         if (pushService == null) {
             return; // VAPID non configurato

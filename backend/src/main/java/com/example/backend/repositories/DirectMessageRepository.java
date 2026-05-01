@@ -101,14 +101,12 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, Lo
         """)
     Page<DirectMessage> findLatestConversations(@Param("userId") Long userId, Pageable pageable);
     /**
-     * Trova tutti i messaggi inviati o ricevuti da un utente.
-     * Usato per eliminazione account.
+     * Marca come eliminati permanentemente tutti i messaggi di un utente in una sola query.
+     * Usato per eliminazione account — evita di caricare tutti i messaggi in memoria.
      */
-    @Query("""
-        SELECT dm FROM DirectMessage dm
-        WHERE dm.sender.id = :userId OR dm.receiver.id = :userId
-        """)
-    List<DirectMessage> findAllByUserId(@Param("userId") Long userId);
+    @Modifying
+    @Query("UPDATE DirectMessage dm SET dm.isDeletedPermanently = true WHERE dm.sender.id = :userId OR dm.receiver.id = :userId")
+    int markAllAsDeletedPermanentlyByUserId(@Param("userId") Long userId);
 
     /**
      * Elimina tutti i messaggi in cui l'utente è mittente o destinatario.
