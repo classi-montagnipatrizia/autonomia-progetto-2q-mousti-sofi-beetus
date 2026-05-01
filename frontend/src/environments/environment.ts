@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://best-defeat-ripe-correspondence.trycloudflare.com/api',
-  wsUrl: 'https://best-defeat-ripe-correspondence.trycloudflare.com/ws',
+  apiUrl: 'https://psi-division-simpson-banner.trycloudflare.com/api',
+  wsUrl: 'https://psi-division-simpson-banner.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
