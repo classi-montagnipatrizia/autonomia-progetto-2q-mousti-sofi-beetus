@@ -18,7 +18,6 @@ import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-compo
 import { DropdownComponent } from '../../../../shared/ui/dropdown/dropdown-component/dropdown-component';
 import { CloudinaryStorageService } from '../../../../core/services/cloudinary-storage-service';
 import { ToastService } from '../../../../core/services/toast-service';
-import { TimeAgoComponent } from '../../../../shared/components/time-ago/time-ago-component/time-ago-component';
 import { AudioRecorderComponent } from '../../../../shared/components/audio-recorder/audio-recorder-component/audio-recorder-component';
 import { AudioPlayerComponent } from '../../../../shared/components/audio-player/audio-player-component/audio-player-component';
 import { POLLING_INTERVALS, TIMEOUTS, LIMITS, UI_SPACING } from '../../../../core/config/app.config';
@@ -39,7 +38,6 @@ import { getChatDateLabel, isSameDay, formatExactTime } from '../../../../core/u
     AvatarComponent,
     SkeletonComponent,
     DropdownComponent,
-    TimeAgoComponent,
     AudioRecorderComponent,
     AudioPlayerComponent
 ],

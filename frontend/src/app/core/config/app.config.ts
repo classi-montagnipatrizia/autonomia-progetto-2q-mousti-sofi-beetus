@@ -100,18 +100,6 @@ export const UI_SPACING = {
 } as const;
 
 /**
- * Configurazione cache
- */
-export const CACHE_CONFIG = {
-  /** Durata cache profili utente (ms) */
-  USER_PROFILE_TTL: 300000, // 5 minuti
-  /** Durata cache post (ms) */
-  POST_TTL: 60000, // 1 minuto
-  /** Dimensione massima cache */
-  MAX_CACHE_SIZE: 100
-} as const;
-
-/**
  * Configurazione validazione
  */
 export const VALIDATION = {

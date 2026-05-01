@@ -14,6 +14,9 @@ export class ToastService {
   // Contatore per generare ID univoci
   private idCounter = 0;
 
+  // Timer auto-dismiss per evitare zombie setTimeout
+  private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
+
   /**
    * Mostra un toast generico
    */
@@ -34,11 +37,12 @@ export class ToastService {
     // Aggiunge il toast alla lista
     this._toasts.update(toasts => [...toasts, toast]);
 
-    // Auto-dismiss dopo la durata specificata (se > 0)
     if (duration > 0) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
+        this.timers.delete(id);
         this.dismiss(id);
       }, duration);
+      this.timers.set(id, timer);
     }
 
     return id;
@@ -86,6 +90,11 @@ export class ToastService {
    * Chiude un toast specifico per ID
    */
   dismiss(id: string): void {
+    const timer = this.timers.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.timers.delete(id);
+    }
     this._toasts.update(toasts => toasts.filter(toast => toast.id !== id));
   }
 
@@ -93,6 +102,8 @@ export class ToastService {
    * Chiude tutti i toast attivi
    */
   dismissAll(): void {
+    this.timers.forEach(timer => clearTimeout(timer));
+    this.timers.clear();
     this._toasts.set([]);
   }
 
@@ -100,6 +111,14 @@ export class ToastService {
    * Chiude tutti i toast di un tipo specifico
    */
   dismissByType(type: ToastType): void {
+    const toRemove = this._toasts().filter(toast => toast.type === type);
+    for (const toast of toRemove) {
+      const timer = this.timers.get(toast.id);
+      if (timer) {
+        clearTimeout(timer);
+        this.timers.delete(toast.id);
+      }
+    }
     this._toasts.update(toasts => toasts.filter(toast => toast.type !== type));
   }
 
