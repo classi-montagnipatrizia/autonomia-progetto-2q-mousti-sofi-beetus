@@ -72,12 +72,18 @@
 
         <!-- Avatar + Info row -->
         <div class="flex items-center gap-5 mb-4">
-          <!-- Avatar with online status (clickable to view full size) -->
+          <!-- Avatar with online status (clickable to view full size only if has photo) -->
           <button
             type="button"
             (click)="openProfilePictureViewer()"
-            class="shrink-0 rounded-[32px] transition-opacity hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 touch-manipulation active:opacity-70 shadow-lg border border-white/50 dark:border-gray-700/50"
-            [attr.aria-label]="'Visualizza foto profilo di ' + user()!.nomeCompleto"
+            class="shrink-0 rounded-[32px] transition-opacity shadow-lg border border-white/50 dark:border-gray-700/50 focus:outline-none"
+            [class.hover:opacity-90]="!!user()!.profilePictureUrl"
+            [class.cursor-pointer]="!!user()!.profilePictureUrl"
+            [class.cursor-default]="!user()!.profilePictureUrl"
+            [class.focus:ring-2]="!!user()!.profilePictureUrl"
+            [class.focus:ring-primary-500]="!!user()!.profilePictureUrl"
+            [class.pointer-events-none]="!user()!.profilePictureUrl"
+            [attr.aria-label]="user()!.profilePictureUrl ? 'Visualizza foto profilo di ' + user()!.nomeCompleto : null"
           >
             <app-avatar
               [src]="user()!.profilePictureUrl"

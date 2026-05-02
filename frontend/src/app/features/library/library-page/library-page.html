@@ -24,11 +24,6 @@
     </div>
   </header>
 
-  <!-- Pulsante FAB (Mobile) -->
-  <button type="button" (click)="openSellModal()" class="sm:hidden fixed bottom-20 right-4 z-40 flex items-center justify-center w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all" aria-label="Vendi un libro">
-    <lucide-icon [img]="PlusIcon" [size]="24" />
-  </button>
-
   <!-- ============================================
        CONTENUTO PRINCIPALE
        ============================================ -->
@@ -499,16 +494,24 @@
     (submitted)="onSellBookSubmitted($event)"
   />
 
-
   <!-- ============================================
-       FLOATING: Chiedi all'AI
+       FLOATING ACTIONS (Mobile & Desktop)
        ============================================ -->
-  <button type="button"
-    (click)="showChatbot.set(true)"
-    class="ai-fab fixed bottom-6 right-6 z-30 flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl font-medium text-sm shadow-lg shadow-primary-500/30 transition-all hover:shadow-xl hover:shadow-primary-500/40 hover:scale-105 active:scale-95">
-    <lucide-icon [img]="LightbulbIcon" [size]="20" />
-    <span class="hidden sm:inline">Chiedi all'AI</span>
-  </button>
+  <div class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-30 flex flex-col gap-3 items-end">
+    <!-- "Vendi un libro" FAB (solo mobile) -->
+    <button type="button" (click)="openSellModal()" 
+      class="sm:hidden flex items-center justify-center w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all" aria-label="Vendi un libro">
+      <lucide-icon [img]="PlusIcon" [size]="24" />
+    </button>
+    
+    <!-- Chatbot FAB -->
+    <button type="button"
+      (click)="showChatbot.set(true)"
+      class="ai-fab flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:from-violet-600 hover:to-fuchsia-700 text-white rounded-2xl font-medium text-sm shadow-lg shadow-violet-500/30 transition-all hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-1 active:scale-95 active:translate-y-0">
+      <lucide-icon [img]="SparklesIcon" [size]="20" />
+      <span>beetAI</span>
+    </button>
+  </div>
 
 
   <!-- ============================================

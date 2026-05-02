@@ -14,7 +14,7 @@ export const libraryRoutes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./ai-chatbot/ai-chatbot').then((m) => m.AiChatbot),
-    title: 'Assistente AI - beetUs',
+    title: 'beetAI - beetUs',
   },
   {
     path: 'conversation/:bookId',

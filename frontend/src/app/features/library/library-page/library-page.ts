@@ -17,6 +17,8 @@ import {
   MessageCircle,
   Users,
   Lightbulb,
+  Sparkles,
+  Bot
 } from 'lucide-angular';
 
 import { LibraryStore, LibraryTab } from '../../../core/stores/library-store';
@@ -76,6 +78,8 @@ export class LibraryPage implements OnInit {
   readonly MessageCircleIcon = MessageCircle;
   readonly UsersIcon = Users;
   readonly LightbulbIcon = Lightbulb;
+  readonly SparklesIcon = Sparkles;
+  readonly BotIcon = Bot;
 
   // Local UI state
   readonly searchQuery = signal('');

@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Search,
   TriangleAlert,
+  Bot,
 } from 'lucide-angular';
 
 import { AiChatbotStore } from '../../../core/stores/ai-chatbot-store';
@@ -45,6 +46,7 @@ export class AiChatbot implements OnInit, AfterViewChecked {
   readonly RefreshCwIcon = RefreshCw;
   readonly SearchIcon = Search;
   readonly AlertTriangleIcon = TriangleAlert;
+  readonly BotIcon = Bot;
 
   // Enums
   readonly BookCondition = BookCondition;

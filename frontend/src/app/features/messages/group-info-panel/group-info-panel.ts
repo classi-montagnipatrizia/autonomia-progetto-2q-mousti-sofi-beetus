@@ -1,8 +1,10 @@
-import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, X, Pencil, UserPlus, UserMinus, Trash2, LogOut, Search } from 'lucide-angular';
+import { LucideAngularModule, X, Pencil, UserPlus, UserMinus, Trash2, LogOut, Search, Camera } from 'lucide-angular';
+import { CloudinaryStorageService } from '../../../core/services/cloudinary-storage-service';
 import { GroupStore } from '../../../core/stores/group-store';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { OnlineUsersStore } from '../../../core/stores/online-users-store';
@@ -27,6 +29,8 @@ export class GroupInfoPanel implements OnInit {
   private readonly dialogService = inject(DialogService);
   private readonly toastService = inject(ToastService);
   private readonly userService = inject(UserService);
+  private readonly cloudinaryService = inject(CloudinaryStorageService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
   readonly closed = output<void>();
@@ -38,6 +42,11 @@ export class GroupInfoPanel implements OnInit {
   readonly Trash2Icon = Trash2;
   readonly LogOutIcon = LogOut;
   readonly SearchIcon = Search;
+  readonly CameraIcon = Camera;
+
+  // Stato avatar viewer
+  readonly isAvatarViewerOpen = signal(false);
+  readonly isUploadingAvatar = signal(false);
 
   // Stato editing
   readonly isEditing = signal(false);
@@ -228,6 +237,64 @@ export class GroupInfoPanel implements OnInit {
       } catch {
         this.toastService.error('Errore nell\'eliminazione');
       }
+    }
+  }
+
+  // ── Avatar gruppo ──
+  openAvatarViewer(): void {
+    if (this.group()?.profilePictureUrl) this.isAvatarViewerOpen.set(true);
+  }
+
+  closeAvatarViewer(): void {
+    this.isAvatarViewerOpen.set(false);
+  }
+
+  onAvatarFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.group()) return;
+
+    this.isUploadingAvatar.set(true);
+    this.cloudinaryService.uploadImage(file, 'profile')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: async (response) => {
+          try {
+            await this.groupStore.modificaGruppo(this.group()!.id, { profilePictureUrl: response.secureUrl });
+            this.toastService.success('Foto gruppo aggiornata');
+          } catch {
+            this.toastService.error('Errore nell\'aggiornamento della foto');
+          } finally {
+            this.isUploadingAvatar.set(false);
+          }
+        },
+        error: () => {
+          this.toastService.error('Errore nel caricamento dell\'immagine');
+          this.isUploadingAvatar.set(false);
+        },
+      });
+  }
+
+  async removeGroupAvatar(): Promise<void> {
+    const g = this.group();
+    if (!g?.profilePictureUrl) return;
+
+    const confirmed = await this.dialogService.confirm({
+      title: 'Rimuovi foto gruppo',
+      message: 'Sei sicuro di voler rimuovere la foto del gruppo?',
+      confirmText: 'Rimuovi',
+      cancelText: 'Annulla',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      // Stringa vuota segnala rimozione al backend
+      await this.groupStore.modificaGruppo(g.id, { profilePictureUrl: '' });
+      this.toastService.success('Foto gruppo rimossa');
+    } catch {
+      this.toastService.error('Errore nella rimozione della foto');
     }
   }
 

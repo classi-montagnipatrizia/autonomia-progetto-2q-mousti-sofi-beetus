@@ -1,3 +1,26 @@
+<!-- Avatar viewer full-screen -->
+@if (isAvatarViewerOpen() && group()?.profilePictureUrl) {
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
+    (click)="closeAvatarViewer()"
+  >
+    <button
+      type="button"
+      class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+      (click)="closeAvatarViewer()"
+      aria-label="Chiudi foto gruppo"
+    >
+      <lucide-icon [img]="XIcon" [size]="24" />
+    </button>
+    <img
+      [src]="group()!.profilePictureUrl!"
+      [alt]="group()!.name"
+      class="max-w-full max-h-full object-contain rounded-lg"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}
+
 <!-- Overlay + Panel slide-in da destra -->
 <div class="fixed inset-0 z-50 flex justify-end" (click)="closed.emit()">
   <!-- Backdrop -->
@@ -28,14 +51,61 @@
           <!-- Avatar e info gruppo -->
           @if (!isEditing()) {
             <div class="text-center mb-8">
-              @if (g.profilePictureUrl) {
-                <img [src]="g.profilePictureUrl" [alt]="g.name" class="w-24 h-24 rounded-[24px] object-cover mx-auto mb-4 shadow-md border border-white/20" />
-              } @else {
-                <div
-                  class="w-24 h-24 bg-gradient-to-br rounded-[24px] flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 shadow-md border border-white/20"
-                  [class]="getGroupAvatarGradient(g.id)"
-                >{{ getGroupInitials(g.name) }}</div>
+
+              <!-- Avatar con overlay camera (admin) -->
+              <div class="relative w-24 h-24 mx-auto mb-4">
+                @if (g.profilePictureUrl) {
+                  <button
+                    type="button"
+                    (click)="openAvatarViewer()"
+                    class="w-full h-full block hover:opacity-90 transition-opacity focus:outline-none"
+                    aria-label="Visualizza foto gruppo"
+                  >
+                    <img [src]="g.profilePictureUrl" [alt]="g.name" class="w-full h-full rounded-[24px] object-cover shadow-md border border-white/20" />
+                  </button>
+                } @else {
+                  <div
+                    class="w-full h-full bg-gradient-to-br rounded-[24px] flex items-center justify-center text-white text-3xl font-bold shadow-md border border-white/20"
+                    [class]="getGroupAvatarGradient(g.id)"
+                  >{{ getGroupInitials(g.name) }}</div>
+                }
+
+                <!-- Camera button (solo admin) -->
+                @if (isAdmin()) {
+                  <button
+                    type="button"
+                    (click)="avatarFileInput.click()"
+                    [disabled]="isUploadingAvatar()"
+                    class="absolute -bottom-1.5 -right-1.5 w-8 h-8 bg-primary-500 hover:bg-primary-600 disabled:opacity-60 rounded-full flex items-center justify-center text-white shadow-md transition-colors border-2 border-white dark:border-gray-900"
+                    aria-label="Cambia foto gruppo"
+                  >
+                    @if (isUploadingAvatar()) {
+                      <div class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    } @else {
+                      <lucide-icon [img]="CameraIcon" [size]="14" />
+                    }
+                  </button>
+                  <input
+                    #avatarFileInput
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    class="hidden"
+                    (change)="onAvatarFileSelected($event)"
+                  />
+                }
+              </div>
+
+              <!-- Rimuovi foto (solo admin, solo se ha foto) -->
+              @if (isAdmin() && g.profilePictureUrl) {
+                <button
+                  type="button"
+                  (click)="removeGroupAvatar()"
+                  class="text-xs text-red-400 hover:text-red-500 transition-colors mb-3 block mx-auto"
+                >
+                  Rimuovi foto
+                </button>
               }
+
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ g.name }}</h3>
               @if (g.description) {
                 <p class="text-sm text-gray-600 dark:text-gray-300 mt-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm p-3 rounded-2xl border border-white/10 dark:border-gray-700/30 w-full inline-block">{{ g.description }}</p>
