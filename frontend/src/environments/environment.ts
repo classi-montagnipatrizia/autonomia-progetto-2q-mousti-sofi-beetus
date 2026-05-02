@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://necessary-resumes-measuring-neck.trycloudflare.com/api',
-  wsUrl: 'https://necessary-resumes-measuring-neck.trycloudflare.com/ws',
+  apiUrl: 'https://corporate-committees-jackie-receptor.trycloudflare.com/api',
+  wsUrl: 'https://corporate-committees-jackie-receptor.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
