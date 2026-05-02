@@ -148,7 +148,8 @@ public class GroupService {
             group.setDescription(request.getDescrizione());
         }
         if (request.getProfilePictureUrl() != null) {
-            group.setProfilePictureUrl(request.getProfilePictureUrl());
+            // Stringa vuota = rimozione intenzionale della foto
+            group.setProfilePictureUrl(request.getProfilePictureUrl().isBlank() ? null : request.getProfilePictureUrl());
         }
 
         group = groupRepository.save(group);
