@@ -145,7 +145,10 @@ export class GroupStore {
       this._messages.update(curr => [...sorted, ...curr]);
     }
 
-    this._hasMoreMessages.set(!response.last);
+    const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+    this._hasMoreMessages.set(!isLast);
     this._currentPage.set(page);
   }
 

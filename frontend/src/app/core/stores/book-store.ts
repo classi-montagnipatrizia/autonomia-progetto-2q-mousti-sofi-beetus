@@ -95,7 +95,10 @@ export class BookStore {
       }
 
       this._currentPageAvailable.set(page);
-      this._hasMoreAvailable.set(!response.last);
+      const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+      this._hasMoreAvailable.set(!isLast);
     } catch (error) {
       this.logger.error('Errore caricamento libri disponibili', error);
     } finally {
@@ -143,7 +146,10 @@ export class BookStore {
       }
 
       this._currentPageListings.set(page);
-      this._hasMoreListings.set(!response.last);
+      const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+      this._hasMoreListings.set(!isLast);
     } catch (error) {
       this.logger.error('Errore caricamento propri annunci', error);
     } finally {

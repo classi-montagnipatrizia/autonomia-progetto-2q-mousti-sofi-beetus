@@ -136,8 +136,8 @@ export class UsersComponent implements OnInit {
             user => user.username !== this.currentUsername
           );
           this.users.set(filteredUsers);
-          this.totalPages.set(response.totalPages);
-          this.totalElements.set(response.totalElements - (response.content.length - filteredUsers.length));
+          this.totalPages.set(response.page ? response.page.totalPages : (response.totalPages || 0));
+          this.totalElements.set((response.page ? response.page.totalElements : (response.totalElements || 0)) - (response.content.length - filteredUsers.length));
         },
         error: () => {
           this.hasError.set(true);

@@ -35,7 +35,7 @@
       </div>
 
       <!-- Menu dropdown -->
-      <app-dropdown #dropdown strategy="absolute" placement="bottom-end" [minWidth]="12">
+      <app-dropdown #dropdown strategy="absolute" placement="bottom-end" [minWidth]="12" [class.hidden]="!isOwner() && !isAdmin()">
         <button
           trigger
           type="button"

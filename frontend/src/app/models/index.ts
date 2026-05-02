@@ -446,6 +446,12 @@ export interface PageResponse<T> {
   first: boolean;
   last: boolean;
   empty: boolean;
+  page?: {
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    number: number;
+  };
 }
 
 export interface CountResponse {

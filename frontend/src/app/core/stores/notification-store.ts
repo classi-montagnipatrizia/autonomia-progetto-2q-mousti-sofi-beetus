@@ -95,7 +95,11 @@ export class NotificationStore {
       }
 
       this._currentPage.set(page);
-      this._hasMore.set(!response.last);
+      
+      const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+      this._hasMore.set(!isLast);
     } catch (error) {
       this.logger.error('Errore caricamento notifiche', error);
     } finally {

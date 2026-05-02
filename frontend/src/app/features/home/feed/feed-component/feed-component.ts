@@ -134,7 +134,12 @@ export class FeedComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.posts.set(response.content);
-          this.hasMore.set(!response.last);
+          
+          const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+            
+          this.hasMore.set(!isLast);
           this.currentPage = 0;
           this.isLoading.set(false);
         },
@@ -163,7 +168,12 @@ export class FeedComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.posts.update((posts) => [...posts, ...response.content]);
-          this.hasMore.set(!response.last);
+          
+          const isLast = response.page !== undefined
+            ? response.page.number >= response.page.totalPages - 1
+            : response.last || false;
+            
+          this.hasMore.set(!isLast);
           this.currentPage = nextPage;
           this.isLoadingMore.set(false);
         },
