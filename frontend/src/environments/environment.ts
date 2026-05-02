@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://psi-division-simpson-banner.trycloudflare.com/api',
-  wsUrl: 'https://psi-division-simpson-banner.trycloudflare.com/ws',
+  apiUrl: 'https://necessary-resumes-measuring-neck.trycloudflare.com/api',
+  wsUrl: 'https://necessary-resumes-measuring-neck.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
