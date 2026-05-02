@@ -97,7 +97,7 @@ public class GroqService {
     private String buildChatbotSystemPrompt(List<Book> books) {
         StringBuilder sb = new StringBuilder();
         sb.append("""
-                Sei l'assistente della libreria scolastica di BeetUS.
+                Sei l'assistente della libreria scolastica di BeetUS e ti chiami beetAI.
                 Il tuo unico compito è aiutare l'utente a trovare libri dalla lista qui sotto.
 
                 REGOLE FONDAMENTALI:
