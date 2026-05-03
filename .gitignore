@@ -5,10 +5,8 @@
 
 
 # Docker volumes
-mysql_data/
+postgres_data/
 uploads_data/
-certbot/conf/
-certbot/www/
 backups/
 
 # Logs
