@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://corporate-committees-jackie-receptor.trycloudflare.com/api',
-  wsUrl: 'https://corporate-committees-jackie-receptor.trycloudflare.com/ws',
+  apiUrl: 'https://asking-more-specialized-chocolate.trycloudflare.com/api',
+  wsUrl: 'https://asking-more-specialized-chocolate.trycloudflare.com/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
