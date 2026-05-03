@@ -75,6 +75,8 @@ export class RateLimitComponent implements OnInit {
     'POST_CREATION',
     'LIKE',
     'MESSAGE',
+    'AI',
+    'ADMIN',
     'API_GENERAL',
     'WEBSOCKET',
   ];
