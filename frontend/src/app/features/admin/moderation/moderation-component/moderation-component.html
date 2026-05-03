@@ -23,17 +23,17 @@
   <main class="max-w-6xl mx-auto px-4 py-6">
 
     <!-- Tabs -->
-    <div class="flex gap-2 mb-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[20px] p-2 shadow-inner">
+    <div class="flex flex-wrap sm:flex-nowrap gap-2 mb-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-white/20 dark:border-gray-700/50 rounded-[20px] p-2 shadow-inner">
       @for (tab of tabs; track tab.id) {
         <button
           type="button"
           (click)="setTab(tab.id)"
-          class="flex items-center gap-2 px-5 py-3 rounded-[16px] text-sm font-bold transition-all flex-1 justify-center relative shadow-sm"
+          class="flex items-center gap-2 px-3 sm:px-5 py-3 rounded-[16px] text-xs sm:text-sm font-bold transition-all flex-1 justify-center relative shadow-sm min-w-fit"
           [class]="activeTab() === tab.id
             ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-[0_4px_20px_rgb(0,0,0,0.05)] scale-[1.02]'
             : 'text-gray-600 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-200 active:scale-[0.98]'"
         >
-          <lucide-icon [img]="tab.icon" [size]="18" />
+          <lucide-icon [img]="tab.icon" [size]="18" class="hidden sm:block" />
           {{ tab.label }}
         </button>
       }
