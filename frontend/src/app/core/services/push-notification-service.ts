@@ -71,6 +71,23 @@ export class PushNotificationService {
   }
 
   /**
+   * Chiamato durante il logout: rimuove la subscription dal backend (con token ancora valido)
+   * e pulisce localStorage. Non chiama swPush.unsubscribe() — quello è per la disattivazione
+   * manuale nelle impostazioni.
+   */
+  clearSubscriptionOnLogout(): Observable<void> {
+    const savedEndpoint = localStorage.getItem(STORAGE_ENDPOINT_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_ENDPOINT_KEY);
+
+    if (!savedEndpoint) return of(undefined as void);
+
+    return this.pushApiService.unsubscribe({ endpoint: savedEndpoint }).pipe(
+      catchError(() => of(undefined as void))
+    );
+  }
+
+  /**
    * Annulla la subscription: prima salva l'endpoint (perché dopo unsubscribe non è più
    * accessibile), poi notifica il backend, poi aggiorna localStorage.
    */

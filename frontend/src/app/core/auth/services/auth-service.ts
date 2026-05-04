@@ -19,6 +19,7 @@ import { AuthStore } from '../../stores/auth-store';
 import { AiChatbotStore } from '../../stores/ai-chatbot-store';
 import { WebsocketService } from '../../services/websocket-service';
 import { LoggerService } from '../../services/logger.service';
+import { PushNotificationService } from '../../services/push-notification-service';
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +32,7 @@ export class AuthService {
   private readonly aiChatbotStore = inject(AiChatbotStore);
   private readonly websocketService = inject(WebsocketService);
   private readonly logger = inject(LoggerService);
+  private readonly pushNotificationService = inject(PushNotificationService);
 
   private readonly API_URL = `${environment.apiUrl}/auth`;
 
@@ -64,6 +66,12 @@ export class AuthService {
    * Prima pulisce i token localmente, poi notifica il backend
    */
   logout(): Observable<void> {
+    // Rimuovi la push subscription dal backend PRIMA di pulire il JWT (l'interceptor legge il
+    // token sincronamente al subscribe, la request è già in volo quando puliamo i token)
+    if (this.pushNotificationService.isSubscribed) {
+      this.pushNotificationService.clearSubscriptionOnLogout().subscribe({ error: () => {} });
+    }
+
     // Pulisci prima i token localmente per evitare problemi di 401 sulla chiamata di logout
     const refreshToken = this.tokenService.getRefreshToken();
     this.handleLogoutSuccess();
@@ -260,6 +268,12 @@ export class AuthService {
     this.authStore.setUser(response.user);
     // Connetti WebSocket dopo login
     this.websocketService.connect();
+
+    // Se il browser ha già il permesso push, registra automaticamente la subscription
+    // per il nuovo utente (nessun dialog — il permesso è già stato concesso)
+    if (this.pushNotificationService.isSwEnabled && Notification.permission === 'granted') {
+      this.pushNotificationService.requestPermissionAndSubscribe().subscribe({ error: () => {} });
+    }
   }
 
   /**
