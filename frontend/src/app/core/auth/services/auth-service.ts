@@ -271,7 +271,7 @@ export class AuthService {
 
     // Se il browser ha già il permesso push, registra automaticamente la subscription
     // per il nuovo utente (nessun dialog — il permesso è già stato concesso)
-    if (this.pushNotificationService.isSwEnabled && Notification.permission === 'granted') {
+    if (this.pushNotificationService.isSwEnabled && 'Notification' in window && Notification.permission === 'granted') {
       this.pushNotificationService.requestPermissionAndSubscribe().subscribe({ error: () => {} });
     }
   }
