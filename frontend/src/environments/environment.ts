@@ -1,8 +1,7 @@
 export const environment = {
   production: true,
-//https://api.beetus.me
-  apiUrl: 'https://clerk-everyone-partially-literally.trycloudflare.com/api',
-  wsUrl: 'https://clerk-everyone-partially-literally.trycloudflare.com/ws',
+  apiUrl: 'https://api.beetus.me/api',
+  wsUrl: 'https://api.beetus.me/ws',
 
   // Cloudinary Storage Configuration
   cloudinary: {
