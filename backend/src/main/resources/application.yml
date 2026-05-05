@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:create-drop}
+      ddl-auto: ${DDL_AUTO:update}
     open-in-view: false
     # PRODUZIONE: Disabilitare show-sql per performance
     show-sql: ${SHOW_SQL:false}

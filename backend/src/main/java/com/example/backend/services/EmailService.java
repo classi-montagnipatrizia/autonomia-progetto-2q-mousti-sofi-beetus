@@ -36,7 +36,7 @@ public class EmailService {
     @Value("${spring.mail.username:noreply@beetUs.com}")
     private String fromEmail;
 
-    @Value("${app.frontend.url:https://beetus-frontend.vercel.app}")
+    @Value("${app.frontend.url:https://beetus.me}")
     private String frontendUrl;
 
     /**
