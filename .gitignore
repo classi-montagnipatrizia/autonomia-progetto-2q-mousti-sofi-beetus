@@ -26,3 +26,6 @@ firebase-debug.*.log
 
 # Fly.io
 fly.toml.local
+
+# ...
+CLAUDE.md
