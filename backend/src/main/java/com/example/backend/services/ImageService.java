@@ -13,6 +13,7 @@ import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
@@ -57,7 +58,7 @@ public class ImageService {
      * @throws UnauthorizedException se l'utente non è proprietario
      * @throws ResourceNotFoundException se l'immagine non esiste
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteImage(String imageUrl, Long userId) {
         log.info("Richiesta eliminazione immagine - URL: {}, User ID: {}", imageUrl, userId);
 

@@ -2,6 +2,7 @@ package com.example.backend.listeners;
 
 import com.example.backend.events.PasswordChangedEmailEvent;
 import com.example.backend.events.PasswordResetEmailEvent;
+import com.example.backend.events.VerificationEmailEvent;
 import com.example.backend.events.WelcomeEmailEvent;
 import com.example.backend.services.EmailService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,21 @@ import org.springframework.stereotype.Component;
 public class EmailEventListener {
 
     private final EmailService emailService;
+
+    /**
+     * Gestisce l'invio dell'email di verifica account in modo asincrono.
+     */
+    @Async
+    @EventListener
+    public void handleVerificationEmail(VerificationEmailEvent event) {
+        log.info("Evento VerificationEmailEvent ricevuto per utente: {}", event.getUsername());
+        try {
+            emailService.sendVerificationEmail(event.getEmail(), event.getUsername(), event.getVerificationToken());
+            log.info("Email di verifica processata per: {}", event.getUsername());
+        } catch (Exception e) {
+            log.error("Errore invio email di verifica a {}: {}", event.getEmail(), e.getMessage(), e);
+        }
+    }
 
     /**
      * Gestisce l'invio dell'email di benvenuto quando un nuovo utente si registra.

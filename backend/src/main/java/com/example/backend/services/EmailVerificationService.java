@@ -1,5 +1,6 @@
 package com.example.backend.services;
 
+import com.example.backend.events.VerificationEmailEvent;
 import com.example.backend.events.WelcomeEmailEvent;
 import com.example.backend.exception.InvalidTokenException;
 import com.example.backend.exception.ResourceNotFoundException;
@@ -25,7 +26,6 @@ public class EmailVerificationService {
 
     private final EmailVerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
     private final ApplicationEventPublisher eventPublisher;
 
     private static final int MAX_RESEND_ATTEMPTS_PER_HOUR = 3;
@@ -41,10 +41,10 @@ public class EmailVerificationService {
         EmailVerificationToken token = EmailVerificationToken.createToken(user);
         token = tokenRepository.save(token);
 
-        // Invia email di verifica
-        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), token.getToken());
+        // Pubblica evento asincrono per l'invio email (come gli altri tipi di email)
+        eventPublisher.publishEvent(new VerificationEmailEvent(user.getEmail(), user.getUsername(), token.getToken()));
 
-        log.info("Token di verifica creato e email inviata per utente: {}", user.getUsername());
+        log.info("Token di verifica creato e evento email pubblicato per utente: {}", user.getUsername());
         return token;
     }
 
@@ -125,9 +125,8 @@ public class EmailVerificationService {
         EmailVerificationToken token = EmailVerificationToken.createToken(user);
         tokenRepository.save(token);
         
-        // Invia email di verifica
-        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), token.getToken());
-        
+        eventPublisher.publishEvent(new VerificationEmailEvent(user.getEmail(), user.getUsername(), token.getToken()));
+
         log.info("Email di verifica re-inviata per utente: {}", user.getUsername());
     }
 
