@@ -65,6 +65,46 @@ export class TokenService {
   }
 
   /**
+   * Come getUserFromToken() ma senza controllo scadenza.
+   * Usato in initAuth() per ripristinare la sessione in caso di errore di rete
+   * (il token è scaduto ma l'identità dell'utente è ancora leggibile dal payload).
+   */
+  getUserFromExpiredToken(): UserResponseDTO | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+
+      const decodedPayload = this.base64UrlDecode(payload);
+      const data = JSON.parse(decodedPayload);
+
+      const savedUser = this.getSavedUserData();
+      if (savedUser && savedUser.id === data.userId) {
+        savedUser.isAdmin = data.isAdmin || false;
+        savedUser.isOnline = true;
+        return savedUser;
+      }
+
+      return {
+        id: data.userId,
+        username: data.sub,
+        email: '',
+        nomeCompleto: data.sub,
+        bio: null,
+        profilePictureUrl: null,
+        isAdmin: data.isAdmin || false,
+        isActive: true,
+        lastSeen: new Date().toISOString(),
+        isOnline: true,
+      } as UserResponseDTO;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Ripristina le informazioni utente dal localStorage + JWT.
    * Il JWT contiene solo userId, username, isAdmin (dati minimi per sicurezza).
    * I dati completi (email, nome, foto...) vengono da localStorage.

@@ -1,5 +1,6 @@
 import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 
 import { PostCardComponent } from '../../../../shared/components/post-card/post-card-component/post-card-component';
 import { SkeletonComponent } from '../../../../shared/ui/skeleton/skeleton-component/skeleton-component';
@@ -13,6 +14,9 @@ import { WebsocketService, PostLikeUpdate, CommentsCountUpdate } from '../../../
 import { AuthService } from '../../../../core/auth/services/auth-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { Router, NavigationStart } from '@angular/router';
+
+const FEED_SCROLL_KEY = 'feedScrollY';
 
 @Component({
   selector: 'app-feed-component',
@@ -34,6 +38,7 @@ export class FeedComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
 
   // Stato
   readonly posts = signal<PostResponseDTO[]>([]);
@@ -62,6 +67,18 @@ export class FeedComponent implements OnInit {
   ngOnInit(): void {
     this.loadPosts();
     this.subscribeToWebSocketEvents();
+    this.saveScrollBeforePostNavigation();
+  }
+
+  private saveScrollBeforePostNavigation(): void {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationStart),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(e => {
+      if ((e as NavigationStart).url.startsWith('/post/')) {
+        sessionStorage.setItem(FEED_SCROLL_KEY, window.scrollY.toString());
+      }
+    });
   }
 
   private subscribeToWebSocketEvents(): void {
@@ -134,14 +151,20 @@ export class FeedComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.posts.set(response.content);
-          
+
           const isLast = response.page !== undefined
             ? response.page.number >= response.page.totalPages - 1
             : response.last || false;
-            
+
           this.hasMore.set(!isLast);
           this.currentPage = 0;
           this.isLoading.set(false);
+
+          const savedY = sessionStorage.getItem(FEED_SCROLL_KEY);
+          if (savedY) {
+            sessionStorage.removeItem(FEED_SCROLL_KEY);
+            setTimeout(() => window.scrollTo(0, parseInt(savedY, 10)), 50);
+          }
         },
         error: (err) => {
           this.isLoading.set(false);

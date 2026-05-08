@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
 import { Observable, from, of } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { catchError, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { PushApiService } from '../api/push-api-service';
 import { LoggerService } from './logger.service';
@@ -67,6 +67,39 @@ export class PushNotificationService {
         this.logger.error('Errore attivazione push notifications', err);
         throw err;
       })
+    );
+  }
+
+  /**
+   * Chiamato su initAuth() quando l'utente è autenticato: controlla se Chrome ha rinnovato
+   * la subscription VAPID senza che l'app lo sapesse. Se l'endpoint è cambiato, aggiorna il
+   * backend, altrimenti non fa nulla (idempotente).
+   */
+  syncSubscriptionIfChanged(): Observable<void> {
+    if (!this.swPush.isEnabled) return of(undefined as void);
+
+    return this.swPush.subscription.pipe(
+      take(1),
+      switchMap(sub => {
+        if (!sub) return of(undefined as void);
+
+        const savedEndpoint = localStorage.getItem(STORAGE_ENDPOINT_KEY);
+        if (sub.endpoint === savedEndpoint) return of(undefined as void);
+
+        // Endpoint cambiato (Chrome ha rinnovato la subscription) — re-registra
+        const key = sub.getKey('p256dh');
+        const auth = sub.getKey('auth');
+        const dto = {
+          endpoint: sub.endpoint,
+          p256dh: key ? btoa(String.fromCharCode(...new Uint8Array(key))) : '',
+          auth: auth ? btoa(String.fromCharCode(...new Uint8Array(auth))) : '',
+        };
+        localStorage.setItem(STORAGE_ENDPOINT_KEY, sub.endpoint);
+        return this.pushApiService.subscribe(dto).pipe(
+          tap(() => localStorage.setItem(STORAGE_KEY, 'true'))
+        );
+      }),
+      catchError(() => of(undefined as void))
     );
   }
 

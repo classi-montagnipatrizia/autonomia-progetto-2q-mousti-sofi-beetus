@@ -23,6 +23,7 @@ import { DialogService } from '../../../../core/services/dialog-service';
 import { ToastService } from '../../../../core/services/toast-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { PostService } from '../../../../core/api/post-service';
+import { AdminService } from '../../../../core/api/admin-service';
 
 @Component({
   selector: 'app-post-card-component',
@@ -41,6 +42,7 @@ import { PostService } from '../../../../core/api/post-service';
 export class PostCardComponent {
   private readonly router = inject(Router);
   private readonly postService = inject(PostService);
+  private readonly adminService = inject(AdminService);
   private readonly dialogService = inject(DialogService);
   private readonly toastService = inject(ToastService);
   private readonly authStore = inject(AuthStore);
@@ -224,7 +226,11 @@ export class PostCardComponent {
 
     if (!confirmed) return;
 
-    this.postService.deletePost(this.post().id).subscribe({
+    const delete$ = (this.isAdmin() && !this.isOwner())
+      ? this.adminService.deletePost(this.post().id)
+      : this.postService.deletePost(this.post().id);
+
+    delete$.subscribe({
       next: () => {
         this.toastService.success('Post eliminato');
         this.deleted.emit(this.post().id);

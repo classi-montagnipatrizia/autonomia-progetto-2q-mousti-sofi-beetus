@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError, firstValueFrom } from 'rxjs';
 import { tap, catchError, shareReplay } from 'rxjs/operators';
@@ -127,12 +127,11 @@ export class AuthService {
           this.refreshTokenRequest$ = null;
         }),
         catchError((error) => {
-          // Pulisce l'Observable condiviso
           this.refreshTokenRequest$ = null;
-
-          // Logout in caso di errore
-          this.handleLogoutSuccess();
-
+          // Non chiama handleLogoutSuccess() qui: ogni chiamante decide cosa fare.
+          // - initAuth(): logout solo su 401, non su errori di rete (backend in riavvio)
+          // - errorInterceptor: chiama forceLogout() nel proprio catchError
+          // - TokenRefreshService: il prossimo ciclo di refresh gestirà la situazione
           return throwError(() => error);
         }),
         // shareReplay(1) cachea l'ultimo valore per subscribers multipli
@@ -227,28 +226,42 @@ export class AuthService {
       if (userFromToken) {
         // Token valido, ripristina la sessione
         this.authStore.setUser(userFromToken);
-        // Connetti WebSocket se utente già loggato (reload pagina)
         this.websocketService.connect();
+        // Sincronizza subscription push se Chrome l'ha rinnovata (silenziosamente)
+        this.pushNotificationService.syncSubscriptionIfChanged().subscribe({ error: () => {} });
       } else {
         // Access token scaduto, tenta il refresh automatico
         try {
           this.logger.info('Access token scaduto, tentativo di refresh automatico...');
           await firstValueFrom(this.refreshToken());
 
-          // Refresh riuscito, ora ripristina la sessione con il nuovo token
           const newUserFromToken = this.tokenService.getUserFromToken();
           if (newUserFromToken) {
             this.authStore.setUser(newUserFromToken);
             this.websocketService.connect();
+            this.pushNotificationService.syncSubscriptionIfChanged().subscribe({ error: () => {} });
             this.logger.info('Sessione ripristinata con successo dopo refresh token');
           } else {
-            // Nuovo token non valido (non dovrebbe mai succedere)
             this.handleLogoutSuccess();
           }
-        } catch {
-          // Refresh fallito, effettua logout
-          this.logger.warn('Refresh token fallito, sessione scaduta');
-          this.handleLogoutSuccess();
+        } catch (error) {
+          // Logout solo se il server ha esplicitamente rifiutato il token (401).
+          // Per errori di rete (backend in riavvio: status 0, 502, 503, 504)
+          // manteniamo la sessione: il primo API call successivo farà retry
+          // tramite l'error interceptor.
+          const isAuthRejection = error instanceof HttpErrorResponse && error.status === 401;
+          if (isAuthRejection) {
+            this.logger.warn('Refresh token non valido (401), effettuo logout');
+            this.handleLogoutSuccess();
+          } else {
+            this.logger.warn('Refresh fallito per errore di rete, sessione mantenuta in attesa di connessione');
+            const expiredUser = this.tokenService.getUserFromExpiredToken();
+            if (expiredUser) {
+              this.authStore.setUser(expiredUser);
+            } else {
+              this.handleLogoutSuccess();
+            }
+          }
         }
       }
     }
