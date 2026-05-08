@@ -1,4 +1,5 @@
 import { Component, input, output, computed, inject, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -226,7 +227,7 @@ export class PostCardComponent {
 
     if (!confirmed) return;
 
-    const delete$ = (this.isAdmin() && !this.isOwner())
+    const delete$: Observable<unknown> = (this.isAdmin() && !this.isOwner())
       ? this.adminService.deletePost(this.post().id)
       : this.postService.deletePost(this.post().id);
 
