@@ -40,6 +40,7 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
+    mem_limit: 768m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
