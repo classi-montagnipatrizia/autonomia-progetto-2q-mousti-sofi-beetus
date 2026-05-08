@@ -457,6 +457,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.router.navigate(['/messages']);
   }
 
+  navigateToProfile(userId: number): void {
+    this.router.navigate(['/profile', userId]);
+  }
+
   private scrollToBottom(): void {
     // Usa requestAnimationFrame per assicurarsi che il DOM sia pronto
     requestAnimationFrame(() => {

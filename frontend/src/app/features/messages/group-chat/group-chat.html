@@ -169,12 +169,14 @@
               <img
                 [src]="message.senderProfilePictureUrl"
                 [alt]="message.senderFullName"
-                class="w-10 h-10 rounded-[14px] object-cover shrink-0 mt-1 shadow-sm border border-white/20"
+                class="w-10 h-10 rounded-[14px] object-cover shrink-0 mt-1 shadow-sm border border-white/20 cursor-pointer hover:opacity-80 transition-opacity"
+                (click)="navigateToProfile(message.senderId)"
               />
             } @else {
               <div
-                class="w-10 h-10 rounded-[14px] flex items-center justify-center text-white font-bold shrink-0 mt-1 shadow-sm border border-white/20"
+                class="w-10 h-10 rounded-[14px] flex items-center justify-center text-white font-bold shrink-0 mt-1 shadow-sm border border-white/20 cursor-pointer hover:opacity-80 transition-opacity"
                 [class]="getSenderColor(message.senderId)"
+                (click)="navigateToProfile(message.senderId)"
               >{{ getSenderInitials(message.senderFullName) }}</div>
             }
 

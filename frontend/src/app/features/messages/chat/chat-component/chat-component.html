@@ -15,14 +15,16 @@
 
     <!-- User info -->
     @if (otherUser(); as user) {
-      <app-avatar
-        [src]="user.profilePictureUrl"
-        [name]="user.nomeCompleto"
-        size="md"
-        [status]="isOtherUserOnline() ? 'online' : 'offline'"
-      />
+      <button type="button" (click)="navigateToProfile(user.id)" class="cursor-pointer rounded-full focus:outline-none">
+        <app-avatar
+          [src]="user.profilePictureUrl"
+          [name]="user.nomeCompleto"
+          size="md"
+          [status]="isOtherUserOnline() ? 'online' : 'offline'"
+        />
+      </button>
       <div class="flex-1 min-w-0">
-        <h2 class="font-semibold text-gray-900 dark:text-white truncate">
+        <h2 class="font-semibold text-gray-900 dark:text-white truncate cursor-pointer hover:underline" (click)="navigateToProfile(user.id)">
           {{ user.nomeCompleto }}
         </h2>
         <p class="text-sm" [class]="isOtherUserTyping() ? 'text-primary-400 font-medium' : (isOtherUserOnline() ? 'text-green-500 font-medium' : 'text-gray-500 dark:text-gray-400')">

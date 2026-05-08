@@ -410,6 +410,10 @@ export class GroupChat implements OnInit, OnDestroy {
     }, 150);
   }
 
+  navigateToProfile(userId: number): void {
+    this.router.navigate(['/profile', userId]);
+  }
+
   goBack(): void {
     this.router.navigate(['/messages']);
   }
