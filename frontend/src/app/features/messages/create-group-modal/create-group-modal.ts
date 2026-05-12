@@ -144,6 +144,7 @@ export class CreateGroupModal {
   }
 
   private searchDebounce?: ReturnType<typeof setTimeout>;
+  private submitTimer?: ReturnType<typeof setTimeout>;
 
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
@@ -173,6 +174,8 @@ export class CreateGroupModal {
   }
 
   onClose(): void {
+    clearTimeout(this.submitTimer);
+    clearTimeout(this.searchDebounce);
     this.resetForm();
     this.closed.emit();
   }
@@ -191,7 +194,7 @@ export class CreateGroupModal {
     const memberIds = this.selectedMembers().map((m) => m.id);
     this.submitted.emit({ request, memberIds });
 
-    setTimeout(() => {
+    this.submitTimer = setTimeout(() => {
       this.submitting.set(false);
       this.resetForm();
     }, 500);

@@ -115,7 +115,6 @@ export class SafeMentionTextComponent {
     this.renderer.appendChild(link, linkText);
 
     // Attributi
-    this.renderer.setAttribute(link, 'href', 'javascript:void(0)');
     this.renderer.setAttribute(link, 'role', 'button');
     this.renderer.setAttribute(link, 'tabindex', '0');
 

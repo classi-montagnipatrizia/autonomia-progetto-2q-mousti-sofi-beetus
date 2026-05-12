@@ -210,7 +210,7 @@ export class SellBookModal {
     const url = this.frontPhoto();
     if (url) {
       // Cleanup Cloudinary in background (best effort)
-      this.bookService.deleteImages(url).subscribe();
+      this.bookService.deleteImages(url).subscribe({ error: () => {} });
     }
     this.frontPhoto.set(null);
     if (this.aiStatus() !== 'idle') this.aiStatus.set('idle');
@@ -219,7 +219,7 @@ export class SellBookModal {
   removeBackPhoto(): void {
     const url = this.backPhoto();
     if (url) {
-      this.bookService.deleteImages(url).subscribe();
+      this.bookService.deleteImages(url).subscribe({ error: () => {} });
     }
     this.backPhoto.set(null);
   }
@@ -269,7 +269,7 @@ export class SellBookModal {
     const front = this.frontPhoto();
     const back = this.backPhoto();
     if (front) {
-      this.bookService.deleteImages(front, back ?? undefined).subscribe();
+      this.bookService.deleteImages(front, back ?? undefined).subscribe({ error: () => {} });
     }
     this.resetForm();
     this.closed.emit();

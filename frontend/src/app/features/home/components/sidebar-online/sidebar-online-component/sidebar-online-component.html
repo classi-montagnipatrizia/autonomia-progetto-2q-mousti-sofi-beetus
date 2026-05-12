@@ -1,6 +1,6 @@
-<aside class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 space-y-6 max-h-[calc(100vh-7rem)] overflow-y-auto">
+<aside class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 max-h-[calc(100vh-7rem)] flex flex-col">
   <!-- Intestazione Sidebar -->
-  <div>
+  <div class="mb-6">
     <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Contatti</h2>
     <p class="text-xs text-gray-500 dark:text-gray-400">Vedi chi è online adesso</p>
   </div>
@@ -9,15 +9,15 @@
   @if (!isAdmin()) {
     <a
       routerLink="/messages"
-      class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 border border-primary-100 dark:border-primary-800/30 px-4 py-3 text-sm font-semibold text-primary-600 dark:text-primary-400 transition-all hover:shadow-sm active:scale-95"
+      class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 border border-primary-100 dark:border-primary-800/30 px-4 py-3 mb-6 text-sm font-semibold text-primary-600 dark:text-primary-400 transition-all hover:shadow-sm active:scale-95"
     >
       <lucide-icon [img]="MessageSquareIcon" class="w-4 h-4 transition-transform group-hover:scale-110" />
       <span>Vai ai Messaggi</span>
     </a>
   }
 
-  <!-- Lista utenti -->
-  <div class="space-y-6">
+  <!-- Lista utenti (scrollabile) -->
+  <div class="flex-1 min-h-0 overflow-y-auto overscroll-y-contain space-y-6 -mr-2 pr-2">
     <!-- Sezione ONLINE -->
     <div class="animate-fade-in animate-duration-300">
       <div class="flex items-center gap-2 px-2 mb-3">
