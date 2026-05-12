@@ -84,9 +84,8 @@ public class EmailService {
             log.info("Email reset password inviata con successo a: {} - con url:{}", recipientEmail,resetUrl);
 
         } catch (Exception e) {
-            log.error("Errore invio email a {}: {}", recipientEmail, e.getMessage(), e);
-            // Non si propaga l'errore per non bloccare il flusso
-            // L'utente vedrà comunque il messaggio di successo
+            log.error("Errore invio email reset password a {}: {}", recipientEmail, e.getMessage(), e);
+            throw new RuntimeException("Impossibile inviare l'email di reset password", e);
         }
     }
 

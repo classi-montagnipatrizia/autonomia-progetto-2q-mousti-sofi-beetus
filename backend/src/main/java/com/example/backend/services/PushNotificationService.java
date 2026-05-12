@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -137,20 +138,24 @@ public class PushNotificationService {
         }
     }
 
-    private void sendSingle(PushSubscription sub, byte[] payload) {
+    @Transactional
+    protected void sendSingle(PushSubscription sub, byte[] payload) {
         try {
             Notification notification = new Notification(sub.getEndpoint(), sub.getP256dh(), sub.getAuth(), payload);
             HttpResponse response = pushService.send(notification);
-            int statusCode = response.getStatusLine().getStatusCode();
+            try {
+                int statusCode = response.getStatusLine().getStatusCode();
 
-            if (statusCode == 410) {
-                // Il browser ha revocato la subscription
-                pushSubscriptionRepository.deleteByEndpoint(sub.getEndpoint());
-                log.info("Push subscription scaduta rimossa (410): {}", sub.getEndpoint());
-            } else if (statusCode >= 400) {
-                log.warn("Errore invio push (HTTP {}): {}", statusCode, sub.getEndpoint());
-            } else {
-                log.debug("Push inviata con successo a utente {}", sub.getUser().getId());
+                if (statusCode == 410) {
+                    pushSubscriptionRepository.deleteByEndpoint(sub.getEndpoint());
+                    log.info("Push subscription scaduta rimossa (410): {}", sub.getEndpoint());
+                } else if (statusCode >= 400) {
+                    log.warn("Errore invio push (HTTP {}): {}", statusCode, sub.getEndpoint());
+                } else {
+                    log.debug("Push inviata con successo a utente {}", sub.getUser().getId());
+                }
+            } finally {
+                EntityUtils.consumeQuietly(response.getEntity());
             }
         } catch (Exception e) {
             log.error("Eccezione invio push a {}: {}", sub.getEndpoint(), e.getMessage());

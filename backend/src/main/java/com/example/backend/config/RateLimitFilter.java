@@ -191,15 +191,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
      * @return IP del client
      */
     private String getClientIP(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // Se dietro proxy, prendi il primo IP
-            return xForwardedFor.split(",")[0].trim();
+        // CF-Connecting-IP è impostato da Cloudflare e non spoofabile dal client
+        String cfIp = request.getHeader("CF-Connecting-IP");
+        if (cfIp != null && !cfIp.isEmpty()) {
+            return cfIp.trim();
         }
 
         String xRealIP = request.getHeader("X-Real-IP");
         if (xRealIP != null && !xRealIP.isEmpty()) {
-            return xRealIP;
+            return xRealIP.trim();
         }
 
         return request.getRemoteAddr();

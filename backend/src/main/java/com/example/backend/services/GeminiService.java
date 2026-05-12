@@ -8,6 +8,7 @@ import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -30,7 +31,9 @@ public class GeminiService {
     private final ObjectMapper objectMapper;
 
     private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
+            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
+
+    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 
     /**
      * Analizza le foto di un libro scolastico con Gemini Vision e restituisce
@@ -63,7 +66,7 @@ public class GeminiService {
 
     @SuppressWarnings("unchecked")
     private String callGemini(List<Map<String, Object>> parts, boolean jsonMode) {
-        String url = String.format(GEMINI_URL, model, apiKey);
+        String url = String.format(GEMINI_URL, model);
 
         Map<String, Object> content = Map.of("parts", parts);
 
@@ -76,8 +79,13 @@ public class GeminiService {
             ));
         }
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("x-goog-api-key", apiKey);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
         try {
-            Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
 
             if (response == null) {
                 throw new InvalidInputException("Risposta vuota dall'AI");
@@ -106,7 +114,13 @@ public class GeminiService {
 
     private byte[] downloadImage(String imageUrl) {
         try {
-            return restTemplate.getForObject(imageUrl, byte[].class);
+            byte[] data = restTemplate.getForObject(imageUrl, byte[].class);
+            if (data != null && data.length > MAX_IMAGE_SIZE) {
+                throw new InvalidInputException("L'immagine supera il limite di 10 MB");
+            }
+            return data;
+        } catch (InvalidInputException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Impossibile scaricare immagine da URL: {}", imageUrl);
             throw new InvalidInputException("Impossibile accedere all'immagine: " + imageUrl);

@@ -2,6 +2,7 @@ package com.example.backend.services;
 
 import com.example.backend.events.VerificationEmailEvent;
 import com.example.backend.events.WelcomeEmailEvent;
+import com.example.backend.exception.InvalidInputException;
 import com.example.backend.exception.InvalidTokenException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.models.EmailVerificationToken;
@@ -108,7 +109,7 @@ public class EmailVerificationService {
         // Verifica che l'utente non sia già attivo
         if (user.getIsActive().booleanValue()) {
             log.warn("Tentativo di re-invio per utente già attivo: {}", email);
-            throw new IllegalStateException("Questo account è già verificato");
+            throw new InvalidInputException("Questo account è già verificato");
         }
 
         // Verifica rate limiting (max 3 richieste nell'ultima ora)
@@ -118,7 +119,7 @@ public class EmailVerificationService {
 
         if (recentAttempts >= MAX_RESEND_ATTEMPTS_PER_HOUR) {
             log.warn("Troppi tentativi di re-invio per: {}", email);
-            throw new IllegalStateException("Hai richiesto troppe email di verifica. Riprova più tardi.");
+            throw new InvalidInputException("Hai richiesto troppe email di verifica. Riprova più tardi.");
         }
 
         // Crea nuovo token (duplicato per evitare warning transactional)
