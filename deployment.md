@@ -253,3 +253,9 @@ docker compose exec postgres psql -U postgres beetUs_db
 | Tunnel non si connette | nginx non risponde | `docker compose ps` → `docker compose logs nginx` |
 | Errori CORS nel browser | CORS_ALLOWED_ORIGINS errato | Controlla `.env`, riavvia backend |
 | WebSocket non si connette | `wsUrl` sbagliato | Verifica `environment.ts`: `https://api.beetus.me/ws` |
+
+ cd /opt/beetus
+  docker compose ps
+  docker compose logs backend --tail=100
+# Se è crashato, riavvialo:
+docker compose --env-file ./backend/.env up -d backend
