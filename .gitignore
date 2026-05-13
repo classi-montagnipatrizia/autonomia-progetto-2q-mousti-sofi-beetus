@@ -31,3 +31,5 @@ fly.toml.local
 CLAUDE.md
 refacto.md
 deployment.md
+
+app.md
