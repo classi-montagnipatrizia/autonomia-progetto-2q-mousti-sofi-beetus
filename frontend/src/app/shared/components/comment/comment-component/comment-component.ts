@@ -1,12 +1,13 @@
 
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Ellipsis, Pencil, Trash2, Reply, ChevronDown, ChevronUp } from 'lucide-angular';
+import { LucideAngularModule, Ellipsis, Pencil, Trash2, Reply, ChevronDown, ChevronUp, Flag } from 'lucide-angular';
 import { map } from 'rxjs/operators';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
 import { DropdownComponent } from '../../../ui/dropdown/dropdown-component/dropdown-component';
 import { TimeAgoComponent } from '../../time-ago/time-ago-component/time-ago-component';
 import { SafeMentionTextComponent } from '../../safe-mention-text/safe-mention-text.component';
+import { ReportModalComponent } from '../../report-modal/report-modal';
 import { CommentService } from '../../../../core/api/comment-service';
 import { AdminService } from '../../../../core/api/admin-service';
 import { DialogService } from '../../../../core/services/dialog-service';
@@ -16,7 +17,7 @@ import { CommentResponseDTO } from '../../../../models';
 
 @Component({
   selector: 'app-comment',
-  imports: [LucideAngularModule, AvatarComponent, DropdownComponent, TimeAgoComponent, SafeMentionTextComponent],
+  imports: [LucideAngularModule, AvatarComponent, DropdownComponent, TimeAgoComponent, SafeMentionTextComponent, ReportModalComponent],
   templateUrl: './comment-component.html',
   styleUrl: './comment-component.scss',
 })
@@ -35,6 +36,7 @@ export class CommentComponent {
   readonly ReplyIcon = Reply;
   readonly ChevronDownIcon = ChevronDown;
   readonly ChevronUpIcon = ChevronUp;
+  readonly FlagIcon = Flag;
 
   // ========== INPUTS ==========
 
@@ -76,6 +78,7 @@ export class CommentComponent {
   readonly showReplies = signal<boolean>(true);
   readonly isEditing = signal<boolean>(false);
   readonly editContent = signal<string>('');
+  readonly isReportModalOpen = signal<boolean>(false);
 
   // ========== COMPUTED ==========
 
@@ -195,6 +198,10 @@ export class CommentComponent {
         this.toastService.error('Errore nell\'eliminazione');
       },
     });
+  }
+
+  openReport(): void {
+    this.isReportModalOpen.set(true);
   }
 
   /**

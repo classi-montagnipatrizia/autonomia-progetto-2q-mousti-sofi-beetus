@@ -11,6 +11,7 @@ import {
   BookOpen,
   MessageSquare,
   Users,
+  Flag,
   LucideIconData,
 } from 'lucide-angular';
 import { AvatarComponent } from '../../../ui/avatar/avatar-component/avatar-component';
@@ -36,6 +37,7 @@ export class NotificationItemComponent {
   readonly BookOpenIcon = BookOpen;
   readonly MessageSquareIcon = MessageSquare;
   readonly UsersIcon = Users;
+  readonly FlagIcon = Flag;
 
   /**
    * ID della notifica
@@ -110,6 +112,7 @@ export class NotificationItemComponent {
       [NotificationType.BOOK_MESSAGE]: this.MessageSquareIcon,
       [NotificationType.GROUP_MESSAGE]: this.UsersIcon,
       [NotificationType.GROUP_INVITE]: this.UsersIcon,
+      [NotificationType.SEGNALAZIONE]: this.FlagIcon,
     };
     return iconMap[this.tipo()];
   });
@@ -127,6 +130,7 @@ export class NotificationItemComponent {
       [NotificationType.BOOK_MESSAGE]: 'text-teal-500',
       [NotificationType.GROUP_MESSAGE]: 'text-indigo-500',
       [NotificationType.GROUP_INVITE]: 'text-indigo-500',
+      [NotificationType.SEGNALAZIONE]: 'text-orange-500',
     };
     return colorMap[this.tipo()];
   });

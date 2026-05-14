@@ -81,6 +81,16 @@
             <lucide-icon [img]="EyeOffIcon" [size]="16"></lucide-icon>
             Nascondi
           </button>
+          @if (!post().autore.isAdmin) {
+            <button
+              type="button"
+              class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors cursor-pointer"
+              (click)="openReport($event)"
+            >
+              <lucide-icon [img]="FlagIcon" [size]="16"></lucide-icon>
+              Segnala
+            </button>
+          }
 
           <!-- Admin delete option -->
           @if (isAdmin()) {
@@ -175,11 +185,12 @@
           [likesCount]="post().likesCount"
           [commentsCount]="effectiveCommentsCount()"
           [hasLiked]="post().hasLiked"
+          [showComments]="!post().autore.isAdmin"
           (commentsCountChanged)="onCommentsCountChanged($event)"
         />
 
         <!-- Preview commenti -->
-        @if (effectiveCommentsCount() > 0) {
+        @if (!post().autore.isAdmin && effectiveCommentsCount() > 0) {
           <button
             type="button"
             class="text-[13px] text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 font-medium transition-colors cursor-pointer hover:underline underline-offset-2 decoration-primary-500/30"
@@ -196,6 +207,14 @@
     </footer>
   }
 </article>
+
+<!-- Report Modal -->
+<app-report-modal
+  [isOpen]="isReportModalOpen()"
+  targetType="POST"
+  [targetId]="post().id"
+  (closed)="isReportModalOpen.set(false)"
+/>
 
 <!-- Image Preview Modal -->
 @if (isImagePreviewOpen() && post().imageUrl) {

@@ -250,15 +250,21 @@
         <!-- Sezione commenti -->
         <section id="comments-section" class="pb-20 sm:pb-4 rounded-b-none sm:rounded-b-2xl bg-white/40 dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
           <!-- Form nuovo commento -->
-          <div id="comment-form" class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/40">
-            <app-comment-form-component
-              #commentForm
-              [postId]="postData.id"
-              [replyTo]="replyingTo()"
-              (created)="onCommentCreated($event)"
-              (cancelReply)="onCancelReply()"
-            />
-          </div>
+          @if (!postData.autore.isAdmin) {
+            <div id="comment-form" class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/40">
+              <app-comment-form-component
+                #commentForm
+                [postId]="postData.id"
+                [replyTo]="replyingTo()"
+                (created)="onCommentCreated($event)"
+                (cancelReply)="onCancelReply()"
+              />
+            </div>
+          } @else {
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 text-center text-sm text-gray-400 dark:text-gray-500">
+              I commenti sono disabilitati su questo post
+            </div>
+          }
 
           <!-- Lista commenti -->
           @if (comments().length > 0) {

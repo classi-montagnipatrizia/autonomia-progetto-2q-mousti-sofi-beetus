@@ -11,6 +11,15 @@ export enum NotificationType {
   BOOK_MESSAGE = 'BOOK_MESSAGE',   // Nuovo messaggio nella chat libreria
   GROUP_MESSAGE = 'GROUP_MESSAGE', // Nuovo messaggio in un gruppo
   GROUP_INVITE = 'GROUP_INVITE',   // Aggiunto a un gruppo
+  SEGNALAZIONE = 'SEGNALAZIONE',  // Nuova segnalazione (admin only)
+}
+
+export enum ReportReason {
+  SPAM = 'SPAM',
+  CONTENUTO_INAPPROPRIATO = 'CONTENUTO_INAPPROPRIATO',
+  BULLISMO = 'BULLISMO',
+  INFORMAZIONI_FALSE = 'INFORMAZIONI_FALSE',
+  ALTRO = 'ALTRO',
 }
 
 export enum BookCondition {
@@ -460,4 +469,29 @@ export interface CountResponse {
 
 export interface MessageResponse {
   message: string;
+}
+
+// ============================================================================
+// SEGNALAZIONI
+// ============================================================================
+
+export interface CreaSegnazioneDTO {
+  targetType: 'POST' | 'COMMENT';
+  targetId: number;
+  reason: ReportReason;
+  customReason?: string;
+}
+
+export interface SegnazioneDTO {
+  id: number;
+  reporter: UserSummaryDTO;
+  targetType: 'POST' | 'COMMENT';
+  targetId: number;
+  postId: number | null;
+  reason: ReportReason;
+  customReason: string | null;
+  status: 'PENDING' | 'RESOLVED';
+  resolvedBy: UserSummaryDTO | null;
+  resolvedAt: string | null;
+  createdAt: string;
 }

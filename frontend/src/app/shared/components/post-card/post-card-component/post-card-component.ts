@@ -20,6 +20,7 @@ import { DropdownComponent } from '../../../ui/dropdown/dropdown-component/dropd
 import { PostActionsComponent } from '../../post-actions/post-actions-component/post-actions-component';
 import { TimeAgoComponent } from '../../time-ago/time-ago-component/time-ago-component';
 import { SafeMentionTextComponent } from '../../safe-mention-text/safe-mention-text.component';
+import { ReportModalComponent } from '../../report-modal/report-modal';
 import { DialogService } from '../../../../core/services/dialog-service';
 import { ToastService } from '../../../../core/services/toast-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
@@ -35,7 +36,8 @@ import { AdminService } from '../../../../core/api/admin-service';
     DropdownComponent,
     PostActionsComponent,
     TimeAgoComponent,
-    SafeMentionTextComponent
+    SafeMentionTextComponent,
+    ReportModalComponent,
 ],
   templateUrl: './post-card-component.html',
   styleUrl: './post-card-component.scss',
@@ -101,6 +103,11 @@ export class PostCardComponent {
    * Stato image preview
    */
   readonly isImagePreviewOpen = signal<boolean>(false);
+
+  /**
+   * Stato report modal
+   */
+  readonly isReportModalOpen = signal<boolean>(false);
 
   /**
    * Contatore commenti locale (aggiornato via WebSocket)
@@ -257,6 +264,11 @@ export class PostCardComponent {
         this.toastService.error('Errore nel nascondere il post');
       },
     });
+  }
+
+  openReport(event: Event): void {
+    event.stopPropagation();
+    this.isReportModalOpen.set(true);
   }
 
   /**

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { PageResponse } from '../../models';
+import { PageResponse, SegnazioneDTO } from '../../models';
 @Injectable({
   providedIn: 'root',
 })
@@ -385,6 +385,20 @@ export class AdminService {
     return this.http.get<UserTokensResponse>(`${this.baseUrl}/rate-limit/tokens/user/${username}`, {
       params,
     });
+  }
+
+  // ============================================================================
+  // SEGNALAZIONI
+  // ============================================================================
+
+  getSegnalazioni(status?: string, page = 0, size = 20): Observable<PageResponse<SegnazioneDTO>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (status) params = params.set('status', status);
+    return this.http.get<PageResponse<SegnazioneDTO>>(`${environment.apiUrl}/reports`, { params });
+  }
+
+  risolviSegnalazione(id: number): Observable<SegnazioneDTO> {
+    return this.http.patch<SegnazioneDTO>(`${environment.apiUrl}/reports/${id}/risolvi`, {});
   }
 }
 

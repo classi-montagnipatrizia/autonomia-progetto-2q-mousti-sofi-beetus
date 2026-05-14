@@ -235,6 +235,7 @@ export class NotificationsListComponent implements OnInit {
       [NotificationType.BOOK_MESSAGE]: '📖',
       [NotificationType.GROUP_MESSAGE]: '👥',
       [NotificationType.GROUP_INVITE]: '👥',
+      [NotificationType.SEGNALAZIONE]: '🚩',
     };
     return iconMap[tipo] || '🔔';
   }

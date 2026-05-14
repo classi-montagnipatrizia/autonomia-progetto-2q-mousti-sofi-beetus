@@ -19,6 +19,7 @@ import {
   ScrollText,
   BookOpen,
   UsersRound,
+  Flag,
 } from 'lucide-angular';
 import { finalize } from 'rxjs';
 
@@ -139,6 +140,7 @@ export class DashboardComponent implements OnInit {
   readonly quickActions = [
     { label: 'Gestione utenti', route: '/admin/users', icon: Users, description: 'Gestisci utenti, ruoli e permessi' },
     { label: 'Moderazione', route: '/admin/moderation', icon: Shield, description: 'Modera post e commenti' },
+    { label: 'Segnalazioni', route: '/admin/reports', icon: Flag, description: 'Gestisci le segnalazioni degli utenti' },
     { label: 'Audit Log', route: '/admin/audit-log', icon: ScrollText, description: 'Visualizza log delle azioni admin' },
     { label: 'Rate Limit', route: '/admin/rate-limit', icon: Gauge, description: 'Gestisci limiti di utilizzo' },
     { label: 'Manutenzione', route: '/admin/system', icon: Database, description: 'Pulizia e manutenzione sistema' },

@@ -61,6 +61,12 @@ export const adminRoutes: Routes = [
           ),
         title: 'Manutenzione Sistema - beetUs',
       },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./segnalazioni/segnalazioni').then((m) => m.SegnalazioniComponent),
+        title: 'Segnalazioni - beetUs',
+      },
     ],
   },
 ];

@@ -1,0 +1,151 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border-b border-white/20 dark:border-gray-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="flex items-center gap-3 h-16">
+        <button type="button" (click)="goBack()"
+          class="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 active:scale-[0.96] text-gray-500 dark:text-gray-400 transition-all"
+          aria-label="Torna indietro">
+          <lucide-icon [img]="ArrowLeftIcon" [size]="24" />
+        </button>
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="FlagIcon" [size]="24" class="text-orange-500" />
+          <h1 class="text-xl font-bold">Segnalazioni</h1>
+        </div>
+        @if (totalElements() > 0) {
+          <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ totalElements() }} totali</span>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6 space-y-4">
+    <!-- Filtri -->
+    <div class="flex gap-2">
+      @for (f of [['PENDING', 'In attesa'], ['RESOLVED', 'Risolte'], ['ALL', 'Tutte']]; track f[0]) {
+        <button type="button"
+          class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+          [class.bg-primary-500]="statusFilter() === f[0]"
+          [class.text-white]="statusFilter() === f[0]"
+          [class.bg-white]="statusFilter() !== f[0]"
+          [class.dark:bg-gray-800]="statusFilter() !== f[0]"
+          [class.text-gray-700]="statusFilter() !== f[0]"
+          [class.dark:text-gray-300]="statusFilter() !== f[0]"
+          [class.border]="statusFilter() !== f[0]"
+          [class.border-gray-200]="statusFilter() !== f[0]"
+          [class.dark:border-gray-700]="statusFilter() !== f[0]"
+          (click)="setFilter(f[0])">
+          {{ f[1] }}
+        </button>
+      }
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex items-center justify-center py-16">
+        <lucide-icon [img]="LoaderIcon" [size]="32" class="animate-spin text-primary-500" />
+      </div>
+    }
+
+    <!-- Error -->
+    @if (hasError() && !isLoading()) {
+      <div class="text-center py-16 text-red-500">
+        <lucide-icon [img]="AlertCircleIcon" [size]="40" class="mx-auto mb-3" />
+        <p>Errore nel caricamento</p>
+      </div>
+    }
+
+    <!-- Lista -->
+    @if (!isLoading() && !hasError()) {
+      @if (segnalazioni().length === 0) {
+        <div class="text-center py-16 text-gray-400 dark:text-gray-500">
+          <lucide-icon [img]="FlagIcon" [size]="40" class="mx-auto mb-3 opacity-40" />
+          <p class="font-medium">Nessuna segnalazione</p>
+        </div>
+      }
+
+      <div class="space-y-3">
+        @for (s of segnalazioni(); track s.id) {
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 space-y-3">
+            <!-- Header segnalazione -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <app-avatar
+                  [src]="s.reporter.profilePictureUrl"
+                  [name]="s.reporter.nomeCompleto"
+                  size="sm"
+                />
+                <div class="min-w-0">
+                  <p class="font-semibold text-sm truncate">{{ s.reporter.nomeCompleto }}</p>
+                  <app-time-ago [date]="s.createdAt" class="text-xs text-gray-400" />
+                </div>
+              </div>
+              <span class="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                [class.bg-yellow-100]="s.status === 'PENDING'"
+                [class.text-yellow-700]="s.status === 'PENDING'"
+                [class.bg-green-100]="s.status === 'RESOLVED'"
+                [class.text-green-700]="s.status === 'RESOLVED'">
+                {{ s.status === 'PENDING' ? 'In attesa' : 'Risolta' }}
+              </span>
+            </div>
+
+            <!-- Dettagli -->
+            <div class="text-sm space-y-1">
+              <p>
+                <span class="text-gray-500 dark:text-gray-400">Contenuto: </span>
+                <button type="button" class="font-medium hover:underline text-primary-600 dark:text-primary-400"
+                  [class.cursor-not-allowed]="s.targetType === 'COMMENT' && s.postId == null"
+                  [disabled]="s.targetType === 'COMMENT' && s.postId == null"
+                  (click)="navigateTo(s)">
+                  {{ s.targetType === 'POST' ? 'Post' : 'Commento' }} #{{ s.targetId }}
+                </button>
+              </p>
+              <p>
+                <span class="text-gray-500 dark:text-gray-400">Motivo: </span>
+                <span class="font-medium">{{ getReasonLabel(s.reason) }}</span>
+              </p>
+              @if (s.customReason) {
+                <p class="italic text-gray-600 dark:text-gray-300">"{{ s.customReason }}"</p>
+              }
+              @if (s.status === 'RESOLVED' && s.resolvedBy) {
+                <p class="text-xs text-gray-400">
+                  Risolta da {{ s.resolvedBy.nomeCompleto }}
+                </p>
+              }
+            </div>
+
+            <!-- Azione -->
+            @if (s.status === 'PENDING') {
+              <div class="flex justify-end">
+                <button type="button"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50"
+                  [disabled]="processingId() === s.id"
+                  (click)="risolvi(s)">
+                  <lucide-icon [img]="CheckIcon" [size]="14" />
+                  Segna come risolta
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Paginazione -->
+      @if (totalPages() > 1) {
+        <div class="flex items-center justify-center gap-4 pt-4">
+          <button type="button"
+            class="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            [disabled]="isFirstPage()" (click)="previousPage()">
+            <lucide-icon [img]="ChevronLeftIcon" [size]="20" />
+          </button>
+          <span class="text-sm text-gray-500">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
+          <button type="button"
+            class="p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            [disabled]="isLastPage()" (click)="nextPage()">
+            <lucide-icon [img]="ChevronRightIcon" [size]="20" />
+          </button>
+        </div>
+      }
+    }
+  </main>
+</div>
