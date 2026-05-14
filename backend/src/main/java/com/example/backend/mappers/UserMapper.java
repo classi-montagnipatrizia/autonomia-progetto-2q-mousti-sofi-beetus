@@ -68,6 +68,7 @@ public class UserMapper {
                 .nomeCompleto(user.getFullName())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .isOnline(isUserOnline(user))
+                .isAdmin(user.getIsAdmin())
                 .classroom(user.getClassroom())
                 .build();
     }
@@ -85,6 +86,7 @@ public class UserMapper {
                 .nomeCompleto(user.getFullName())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .isOnline(onlineUserIds.contains(user.getId()))
+                .isAdmin(user.getIsAdmin())
                 .classroom(user.getClassroom())
                 .build();
     }

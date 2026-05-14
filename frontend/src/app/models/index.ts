@@ -48,6 +48,7 @@ export interface UserSummaryDTO {
   nomeCompleto: string;
   profilePictureUrl: string | null;
   isOnline: boolean;
+  isAdmin: boolean;
   classroom: string | null;
 }
 

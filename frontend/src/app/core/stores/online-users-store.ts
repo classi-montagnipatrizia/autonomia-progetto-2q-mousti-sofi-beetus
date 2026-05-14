@@ -58,6 +58,7 @@ export class OnlineUsersStore {
             nomeCompleto: event.nomeCompleto,
             profilePictureUrl: event.profilePictureUrl,
             isOnline: true,
+            isAdmin: false,
             classroom: event.classroom ?? null,
           };
           this.markUserOnline(userSummary);
