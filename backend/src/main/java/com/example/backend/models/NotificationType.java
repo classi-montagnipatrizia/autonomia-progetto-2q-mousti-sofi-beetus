@@ -8,5 +8,6 @@ public enum NotificationType {
     NEW_POST,       // Nuovo post pubblicato
     BOOK_MESSAGE,   // Nuovo messaggio nella chat libreria
     GROUP_MESSAGE,  // Nuovo messaggio in un gruppo
-    GROUP_INVITE    // Sei stato aggiunto a un gruppo
+    GROUP_INVITE,   // Sei stato aggiunto a un gruppo
+    SEGNALAZIONE    // Nuova segnalazione ricevuta (admin only)
 }

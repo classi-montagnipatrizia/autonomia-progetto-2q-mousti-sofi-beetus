@@ -37,7 +37,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             SELECT p FROM Post p
             JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
-            AND p.user.classroom = :classroom
+            AND (p.user.classroom = :classroom OR p.user.isAdmin = true)
             AND NOT EXISTS (
                 SELECT hp FROM HiddenPost hp
                 WHERE hp.post.id = p.id AND hp.user.id = :userId
@@ -107,7 +107,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             SELECT p FROM Post p
             JOIN FETCH p.user
             WHERE p.isDeletedByAuthor = false
-            AND p.user.classroom = :classroom
+            AND (p.user.classroom = :classroom OR p.user.isAdmin = true)
             AND NOT EXISTS (
                 SELECT hp FROM HiddenPost hp
                 WHERE hp.post.id = p.id AND hp.user.id = :userId

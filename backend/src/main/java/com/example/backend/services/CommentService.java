@@ -89,6 +89,10 @@ public class CommentService {
             throw new ResourceNotFoundException(ENTITY_POST, FIELD_ID, postId);
         }
 
+        if (Boolean.TRUE.equals(post.getUser().getIsAdmin())) {
+            throw new InvalidInputException("Non è possibile commentare i post dell'amministratore");
+        }
+
         User autore = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ENTITY_USER, FIELD_ID, userId));
 

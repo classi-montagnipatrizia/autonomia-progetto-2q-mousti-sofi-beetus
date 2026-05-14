@@ -24,6 +24,9 @@ public enum AzioneAdmin {
     // Gestione gruppi
     ELIMINA_GRUPPO,
 
+    // Segnalazioni
+    RISOLVI_SEGNALAZIONE,
+
     // Sistema
     PULIZIA_DATABASE,
     RESET_PASSWORD_UTENTE,

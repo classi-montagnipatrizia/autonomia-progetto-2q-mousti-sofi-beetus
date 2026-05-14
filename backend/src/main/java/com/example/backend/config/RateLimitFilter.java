@@ -81,6 +81,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         // Push notifications - subscribe/unsubscribe (operazione infrequente)
         ENDPOINT_LIMITS.add(Map.entry("/api/push", RateLimitType.POST_CREATION));
+
+        // Segnalazioni - prevenzione abuse
+        ENDPOINT_LIMITS.add(Map.entry("/api/reports", RateLimitType.POST_CREATION));
     }
 
     @Override

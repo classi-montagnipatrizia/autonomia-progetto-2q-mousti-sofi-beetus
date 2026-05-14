@@ -824,6 +824,33 @@ public class NotificationService {
      * @param content    Testo della notifica
      * @param actionUrl  URL della notifica
      */
+    /**
+     * Invia una notifica WebSocket + push all'admin quando arriva una nuova segnalazione.
+     * Best-effort: non lancia eccezioni.
+     */
+    @Transactional
+    public void notificaAdminNuovaSegnalazione(User reporter, String targetType, Long targetId, Long reportId) {
+        userRepository.findByIsAdminTrue().ifPresent(admin -> {
+            String content = String.format("%s ha segnalato un contenuto (%s #%d)",
+                    reporter.getFullName(), targetType.toLowerCase(), targetId);
+            String actionUrl = "/admin/reports";
+
+            Notification n = Notification.builder()
+                    .user(admin)
+                    .type(NotificationType.SEGNALAZIONE)
+                    .triggeredByUser(reporter)
+                    .content(content)
+                    .actionUrl(actionUrl)
+                    .isRead(false)
+                    .build();
+
+            notificationRepository.save(n);
+            publishNotificationEvent(admin.getUsername(), n);
+            pushNotificationService.sendToUser(admin.getId(), "beetUs — Nuova segnalazione", content, actionUrl);
+            log.debug("Notifica segnalazione inviata all'admin - report #{}", reportId);
+        });
+    }
+
     private void inviaNotificaAdmin(Set<Long> excludeIds, NotificationType type,
                                     User triggeredBy, Post post, Comment comment,
                                     String content, String actionUrl) {
@@ -860,8 +887,9 @@ public class NotificationService {
             case COMMENT -> postAuthor != null
                             ? String.format("%s ha commentato il post di %s", trigger, postAuthor)
                             : String.format("%s ha aggiunto un commento", trigger);
-            case NEW_POST -> String.format("%s ha pubblicato un nuovo post", trigger);
-            default      -> String.format("%s ha eseguito un'azione", trigger);
+            case NEW_POST    -> String.format("%s ha pubblicato un nuovo post", trigger);
+            case SEGNALAZIONE -> String.format("%s ha inviato una segnalazione", trigger);
+            default          -> String.format("%s ha eseguito un'azione", trigger);
         };
     }
 
