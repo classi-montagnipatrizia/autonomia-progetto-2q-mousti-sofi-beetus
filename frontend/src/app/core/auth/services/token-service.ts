@@ -37,16 +37,15 @@ export class TokenService {
    * Salva i dati utente in localStorage (per il ripristino al reload)
    */
   saveUserData(user: UserResponseDTO): void {
-    // Non persistere l'email: l'autenticazione è nel JWT, non serve in session storage
     const { email: _email, ...safeData } = user;
-    sessionStorage.setItem(this.USER_DATA_KEY, JSON.stringify(safeData));
+    localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(safeData));
   }
 
   /**
    * Recupera i dati utente salvati in localStorage
    */
   getSavedUserData(): UserResponseDTO | null {
-    const data = sessionStorage.getItem(this.USER_DATA_KEY);
+    const data = localStorage.getItem(this.USER_DATA_KEY);
     if (!data) return null;
     try {
       return JSON.parse(data) as UserResponseDTO;
@@ -61,7 +60,7 @@ export class TokenService {
   clearTokens(): void {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    sessionStorage.removeItem(this.USER_DATA_KEY);
+    localStorage.removeItem(this.USER_DATA_KEY);
   }
 
   /**
