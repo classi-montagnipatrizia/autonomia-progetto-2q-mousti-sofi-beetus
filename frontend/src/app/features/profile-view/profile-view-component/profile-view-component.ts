@@ -1,9 +1,9 @@
 import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { LucideAngularModule, Settings, ImageIcon, ArrowLeft, X } from 'lucide-angular';
-import { forkJoin, finalize } from 'rxjs';
+import { forkJoin, finalize, filter } from 'rxjs';
 
 import { UserService } from '../../../core/api/user-service';
 import { PostService } from '../../../core/api/post-service';
@@ -24,6 +24,8 @@ import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/s
 import { LoggerService } from '../../../core/services/logger.service';
 
 type ProfileTab = 'posts' | 'media';
+
+const PROFILE_SCROLL_KEY = 'profileScrollPostId';
 
 @Component({
   selector: 'app-profile-component',
@@ -113,6 +115,7 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.subscribeToPostUpdates();
+    this.saveScrollBeforePostNavigation();
 
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const userId = params.get('id');
@@ -159,6 +162,19 @@ export class ProfileComponent implements OnInit {
           posts.map((p) => (p.id === update.postId ? { ...p, likesCount: update.likesCount } : p)),
         );
       });
+  }
+
+  private saveScrollBeforePostNavigation(): void {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationStart),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(e => {
+      const url = (e as NavigationStart).url;
+      if (url.startsWith('/post/')) {
+        const profileUserId = this.route.snapshot.params['id'];
+        sessionStorage.setItem(`${PROFILE_SCROLL_KEY}_${profileUserId}`, url.split('/')[2]);
+      }
+    });
   }
 
   private loadProfile(userId: number): void {
@@ -208,6 +224,14 @@ export class ProfileComponent implements OnInit {
         next: (response: PageResponse<PostResponseDTO>) => {
           if (reset) {
             this.posts.set(response.content);
+            const key = `${PROFILE_SCROLL_KEY}_${userId}`;
+            const savedPostId = sessionStorage.getItem(key);
+            if (savedPostId) {
+              sessionStorage.removeItem(key);
+              setTimeout(() => {
+                document.getElementById('post-' + savedPostId)?.scrollIntoView({ block: 'start' });
+              }, 100);
+            }
           } else {
             this.posts.update((current) => [...current, ...response.content]);
           }

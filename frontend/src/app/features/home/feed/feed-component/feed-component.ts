@@ -16,7 +16,7 @@ import { AuthStore } from '../../../../core/stores/auth-store';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { Router, NavigationStart } from '@angular/router';
 
-const FEED_SCROLL_KEY = 'feedScrollY';
+const FEED_SCROLL_KEY = 'feedScrollPostId';
 
 @Component({
   selector: 'app-feed-component',
@@ -75,8 +75,9 @@ export class FeedComponent implements OnInit {
       filter(e => e instanceof NavigationStart),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(e => {
-      if ((e as NavigationStart).url.startsWith('/post/')) {
-        sessionStorage.setItem(FEED_SCROLL_KEY, window.scrollY.toString());
+      const url = (e as NavigationStart).url;
+      if (url.startsWith('/post/')) {
+        sessionStorage.setItem(FEED_SCROLL_KEY, url.split('/')[2]);
       }
     });
   }
@@ -160,10 +161,12 @@ export class FeedComponent implements OnInit {
           this.currentPage = 0;
           this.isLoading.set(false);
 
-          const savedY = sessionStorage.getItem(FEED_SCROLL_KEY);
-          if (savedY) {
+          const savedPostId = sessionStorage.getItem(FEED_SCROLL_KEY);
+          if (savedPostId) {
             sessionStorage.removeItem(FEED_SCROLL_KEY);
-            setTimeout(() => window.scrollTo(0, parseInt(savedY, 10)), 50);
+            setTimeout(() => {
+              document.getElementById('post-' + savedPostId)?.scrollIntoView({ block: 'start' });
+            }, 100);
           }
         },
         error: (err) => {

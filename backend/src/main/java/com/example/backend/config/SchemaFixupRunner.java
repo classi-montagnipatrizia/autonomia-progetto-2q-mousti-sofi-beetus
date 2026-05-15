@@ -29,6 +29,7 @@ public class SchemaFixupRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         dropConstraintIfExists("notifications", "notifications_type_check");
+        dropConstraintIfExists("admin_audit_logs", "admin_audit_logs_azione_check");
     }
 
     private void dropConstraintIfExists(String table, String constraint) {

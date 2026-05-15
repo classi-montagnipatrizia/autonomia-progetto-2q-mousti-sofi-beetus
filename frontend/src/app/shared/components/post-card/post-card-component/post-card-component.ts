@@ -1,4 +1,4 @@
-import { Component, input, output, computed, inject, signal } from '@angular/core';
+import { Component, input, output, computed, inject, signal, viewChild } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { Router } from '@angular/router';
@@ -44,6 +44,7 @@ import { AdminService } from '../../../../core/api/admin-service';
 })
 export class PostCardComponent {
   private readonly router = inject(Router);
+  private readonly dropdown = viewChild(DropdownComponent);
   private readonly postService = inject(PostService);
   private readonly adminService = inject(AdminService);
   private readonly dialogService = inject(DialogService);
@@ -270,6 +271,7 @@ export class PostCardComponent {
    */
   openImagePreview(event: Event): void {
     event.stopPropagation();
+    this.dropdown()?.close();
     this.isImagePreviewOpen.set(true);
   }
 

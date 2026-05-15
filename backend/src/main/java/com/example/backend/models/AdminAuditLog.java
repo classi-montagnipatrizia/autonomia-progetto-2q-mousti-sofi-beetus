@@ -37,7 +37,7 @@ public class AdminAuditLog {
     private User admin;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     private AzioneAdmin azione;
 
     @Column(columnDefinition = "TEXT")
