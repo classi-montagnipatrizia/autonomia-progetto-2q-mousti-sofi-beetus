@@ -20,6 +20,7 @@ import { AiChatbotStore } from '../../stores/ai-chatbot-store';
 import { WebsocketService } from '../../services/websocket-service';
 import { LoggerService } from '../../services/logger.service';
 import { PushNotificationService } from '../../services/push-notification-service';
+import { UserService } from '../../api/user-service';
 
 @Injectable({
   providedIn: 'root',
@@ -33,6 +34,7 @@ export class AuthService {
   private readonly websocketService = inject(WebsocketService);
   private readonly logger = inject(LoggerService);
   private readonly pushNotificationService = inject(PushNotificationService);
+  private readonly userService = inject(UserService);
 
   private readonly API_URL = `${environment.apiUrl}/auth`;
 
@@ -222,6 +224,9 @@ export class AuthService {
     if (accessToken && refreshToken) {
       // Decodifica il token per ottenere le info utente
       const userFromToken = this.tokenService.getUserFromToken();
+      // Catturato PRIMA di setUser: l'effect dell'AuthStore scriverà a localStorage,
+      // così sappiamo se i dati provengono da localStorage o dal fallback minimo del JWT.
+      const hadSavedUserData = !!this.tokenService.getSavedUserData();
 
       if (userFromToken) {
         // Token valido, ripristina la sessione
@@ -229,6 +234,11 @@ export class AuthService {
         this.websocketService.connect();
         // Sincronizza subscription push se Chrome l'ha rinnovata (silenziosamente)
         this.pushNotificationService.syncSubscriptionIfChanged().subscribe({ error: () => {} });
+        // Se siamo entrati col fallback minimo (no localStorage), l'utente in store
+        // non ha profilePictureUrl/bio/email. Rinfresca i dati completi dall'API.
+        if (!hadSavedUserData) {
+          this.refreshCurrentUserProfile(userFromToken.id);
+        }
       } else {
         // Access token scaduto, tenta il refresh automatico
         try {
@@ -237,9 +247,13 @@ export class AuthService {
 
           const newUserFromToken = this.tokenService.getUserFromToken();
           if (newUserFromToken) {
+            const hadSaved = !!this.tokenService.getSavedUserData();
             this.authStore.setUser(newUserFromToken);
             this.websocketService.connect();
             this.pushNotificationService.syncSubscriptionIfChanged().subscribe({ error: () => {} });
+            if (!hadSaved) {
+              this.refreshCurrentUserProfile(newUserFromToken.id);
+            }
             this.logger.info('Sessione ripristinata con successo dopo refresh token');
           } else {
             this.handleLogoutSuccess();
@@ -265,6 +279,19 @@ export class AuthService {
         }
       }
     }
+  }
+
+  /**
+   * Rinfresca i dati completi dell'utente corrente quando il bootstrap
+   * è entrato col fallback minimo dal JWT (no localStorage.user_data).
+   * Fire-and-forget: se la chiamata fallisce, l'utente vede comunque i dati base
+   * e la prossima navigazione probabilmente popolerà cache.
+   */
+  private refreshCurrentUserProfile(userId: number): void {
+    this.userService.getUserProfile(userId).subscribe({
+      next: (user) => this.authStore.updateUser(user),
+      error: (err) => this.logger.warn('Refresh profilo utente fallito', err),
+    });
   }
 
   /**

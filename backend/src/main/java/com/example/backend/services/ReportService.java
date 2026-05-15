@@ -41,6 +41,12 @@ public class ReportService {
     public SegnazioneResponseDTO segnala(User reporter, CreaSegnazioneRequestDTO dto) {
         if (reporter == null) return null;
 
+        // Gli amministratori non possono creare segnalazioni: sono i destinatari della moderazione,
+        // non ha senso che si auto-segnalino contenuti. Coerente con UI che nasconde il bottone.
+        if (Boolean.TRUE.equals(reporter.getIsAdmin())) {
+            throw new InvalidInputException("Gli amministratori non possono segnalare contenuti");
+        }
+
         // Verifica doppia segnalazione
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 reporter.getId(), dto.getTargetType(), dto.getTargetId())) {

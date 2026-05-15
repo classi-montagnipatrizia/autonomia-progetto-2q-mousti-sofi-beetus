@@ -81,7 +81,7 @@
             <lucide-icon [img]="EyeOffIcon" [size]="16"></lucide-icon>
             Nascondi
           </button>
-          @if (!post().autore.isAdmin) {
+          @if (!post().autore.isAdmin && !isAdmin()) {
             <button
               type="button"
               class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors cursor-pointer"

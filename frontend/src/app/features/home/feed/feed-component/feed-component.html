@@ -14,10 +14,8 @@
         }
       </div>
 
-      <!-- Form creazione post (solo studenti) -->
-      @if (!isAdmin()) {
-        <app-create-post-component (postCreated)="onPostCreated($event)" />
-      }
+      <!-- Form creazione post: anche l'admin pubblica per comunicazioni globali -->
+      <app-create-post-component (postCreated)="onPostCreated($event)" />
 
       <!-- Stato di caricamento iniziale -->
       @if (isLoading()) {
