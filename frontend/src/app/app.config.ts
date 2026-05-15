@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' })),
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'enabled' })),
     // Configurazione HTTP client con interceptors
     // 1. authInterceptor viene eseguito PER PRIMO (aggiunge il token)
     // 2. errorInterceptor viene eseguito PER SECONDO (gestisce errori e refresh)

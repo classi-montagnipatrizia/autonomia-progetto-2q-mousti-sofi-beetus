@@ -210,7 +210,7 @@ export class ProfileComponent implements OnInit {
             this.postsTotalPages.set(snapshot.totalPages);
             afterNextRender(() => {
               const el = document.getElementById('post-' + snapshot.scrollPostId);
-              if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY);
+              if (el) window.scrollTo(0, el.getBoundingClientRect().top);
             }, { injector: this.injector });
           } else {
             this.loadPosts(userId, true);

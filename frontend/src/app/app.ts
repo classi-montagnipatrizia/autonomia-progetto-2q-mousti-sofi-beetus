@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { SwUpdate } from '@angular/service-worker';
 import { DialogComponent } from './shared/ui/dialog/dialog-component/dialog-component';
@@ -21,10 +21,18 @@ export class App implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly swUpdate = inject(SwUpdate);
   private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
 
   async ngOnInit(): Promise<void> {
     await this.authService.initAuth();
     this.checkForUpdates();
+    this.scrollToTopOnNavigation();
+  }
+
+  private scrollToTopOnNavigation(): void {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => window.scrollTo(0, 0));
   }
 
   private checkForUpdates(): void {
