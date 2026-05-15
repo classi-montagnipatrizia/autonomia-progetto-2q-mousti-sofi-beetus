@@ -22,7 +22,9 @@ public class Notification extends BaseEntity {
     private User user;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    // columnDefinition esplicito: evita che Hibernate generi un CHECK constraint statico
+    // sui valori dell'enum, che diventerebbe stale ogni volta che NotificationType viene esteso.
+    @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     private NotificationType type;
     
     @ManyToOne(fetch = FetchType.LAZY)
