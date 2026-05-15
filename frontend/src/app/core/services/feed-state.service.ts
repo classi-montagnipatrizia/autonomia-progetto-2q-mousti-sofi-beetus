@@ -5,15 +5,15 @@ interface FeedSnapshot {
   posts: PostResponseDTO[];
   page: number;
   hasMore: boolean;
-  scrollPostId: string;
+  scrollY: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class FeedStateService {
   private snapshot: FeedSnapshot | null = null;
 
-  save(posts: PostResponseDTO[], page: number, hasMore: boolean, scrollPostId: string): void {
-    this.snapshot = { posts, page, hasMore, scrollPostId };
+  save(posts: PostResponseDTO[], page: number, hasMore: boolean, scrollY: number): void {
+    this.snapshot = { posts, page, hasMore, scrollY };
   }
 
   consume(): FeedSnapshot | null {

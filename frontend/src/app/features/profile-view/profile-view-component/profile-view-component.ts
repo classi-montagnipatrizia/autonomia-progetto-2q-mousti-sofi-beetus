@@ -178,7 +178,7 @@ export class ProfileComponent implements OnInit {
           this.posts(),
           this.postsPage(),
           this.postsTotalPages(),
-          url.split('/')[2]
+          window.scrollY
         );
       }
     });
@@ -209,14 +209,7 @@ export class ProfileComponent implements OnInit {
             this.postsPage.set(snapshot.page);
             this.postsTotalPages.set(snapshot.totalPages);
             afterNextRender(() => {
-              const el = document.getElementById('post-' + snapshot.scrollPostId);
-              if (!el) return;
-              try {
-                el.scrollIntoView({ block: 'start' });
-              } catch {
-                const navbarHeight = window.innerWidth >= 768 ? 64 : 56;
-                window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navbarHeight });
-              }
+              window.scrollTo(0, snapshot.scrollY);
             }, { injector: this.injector });
           } else {
             this.loadPosts(userId, true);

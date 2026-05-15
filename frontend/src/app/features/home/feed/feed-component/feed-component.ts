@@ -73,14 +73,7 @@ export class FeedComponent implements OnInit {
       this.currentPage = snapshot.page;
       this.isLoading.set(false);
       afterNextRender(() => {
-        const el = document.getElementById('post-' + snapshot.scrollPostId);
-        if (!el) return;
-        try {
-          el.scrollIntoView({ block: 'start' });
-        } catch {
-          const navbarHeight = window.innerWidth >= 768 ? 64 : 56;
-          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navbarHeight });
-        }
+        window.scrollTo(0, snapshot.scrollY);
       }, { injector: this.injector });
     } else {
       this.loadPosts();
@@ -96,7 +89,7 @@ export class FeedComponent implements OnInit {
     ).subscribe(e => {
       const url = (e as NavigationStart).url;
       if (url.startsWith('/post/')) {
-        this.feedState.save(this.posts(), this.currentPage, this.hasMore(), url.split('/')[2]);
+        this.feedState.save(this.posts(), this.currentPage, this.hasMore(), window.scrollY);
       }
     });
   }
