@@ -5,6 +5,7 @@ import com.example.backend.events.NotificationCreatedEvent;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mappers.NotificationMapper;
+import com.example.backend.mappers.UserMapper;
 import com.example.backend.models.*;
 import com.example.backend.repositories.*;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class NotificationService {
     private final BookRepository bookRepository;
     private final HiddenPostRepository hiddenPostRepository;
     private final NotificationMapper notificationMapper;
+    private final UserMapper userMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final PushNotificationService pushNotificationService;
 
@@ -465,7 +467,12 @@ public class NotificationService {
         Page<Notification> notifications = notificationRepository
                 .findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        return notifications.map(notificationMapper::toNotificaResponseDTO);
+        if (notifications.isEmpty()) {
+            return notifications.map(n -> null);
+        }
+        // Una sola query per onlineUserIds invece di N (una per notifica).
+        Set<Long> onlineUserIds = userMapper.getOnlineUserIds();
+        return notifications.map(n -> notificationMapper.toNotificaResponseDTO(n, onlineUserIds));
     }
 
     /**
@@ -483,9 +490,7 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository
                 .findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
 
-        return notifications.stream()
-                .map(notificationMapper::toNotificaResponseDTO)
-                .toList();
+        return notificationMapper.toNotificaResponseDTOList(notifications);
     }
 
     /**
@@ -506,9 +511,7 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository
                 .findRecentNotifications(userId, pageable);
 
-        return notifications.stream()
-                .map(notificationMapper::toNotificaResponseDTO)
-                .toList();
+        return notificationMapper.toNotificaResponseDTOList(notifications);
     }
 
     /**
@@ -830,11 +833,14 @@ public class NotificationService {
      */
     @Transactional
     public void notificaAdminNuovaSegnalazione(User reporter, String targetType, Long targetId, Long reportId) {
-        userRepository.findByIsAdminTrue().ifPresent(admin -> {
-            String content = String.format("%s ha segnalato un contenuto (%s #%d)",
-                    reporter.getFullName(), targetType.toLowerCase(), targetId);
-            String actionUrl = "/admin/reports";
+        List<User> admins = userRepository.findAllByIsAdminTrueAndIsActiveTrue();
+        if (admins.isEmpty()) return;
 
+        String content = String.format("%s ha segnalato un contenuto (%s #%d)",
+                reporter.getFullName(), targetType.toLowerCase(), targetId);
+        String actionUrl = "/admin/reports";
+
+        for (User admin : admins) {
             Notification n = Notification.builder()
                     .user(admin)
                     .type(NotificationType.SEGNALAZIONE)
@@ -847,17 +853,20 @@ public class NotificationService {
             notificationRepository.save(n);
             publishNotificationEvent(admin.getUsername(), n);
             pushNotificationService.sendToUser(admin.getId(), "beetUs — Nuova segnalazione", content, actionUrl);
-            log.debug("Notifica segnalazione inviata all'admin - report #{}", reportId);
-        });
+        }
+        log.debug("Notifica segnalazione inviata a {} admin - report #{}", admins.size(), reportId);
     }
 
     private void inviaNotificaAdmin(Set<Long> excludeIds, NotificationType type,
                                     User triggeredBy, Post post, Comment comment,
                                     String content, String actionUrl) {
-        userRepository.findByIsAdminTrue().ifPresent(admin -> {
-            if (excludeIds.contains(admin.getId())) return;
+        List<User> admins = userRepository.findAllByIsAdminTrueAndIsActiveTrue();
+        if (admins.isEmpty()) return;
 
-            String adminContent = buildAdminNotificationContent(type, triggeredBy, post);
+        String adminContent = buildAdminNotificationContent(type, triggeredBy, post);
+
+        for (User admin : admins) {
+            if (excludeIds.contains(admin.getId())) continue;
 
             Notification n = Notification.builder()
                     .user(admin)
@@ -873,8 +882,10 @@ public class NotificationService {
             notificationRepository.save(n);
             publishNotificationEvent(admin.getUsername(), n);
             pushNotificationService.sendToUser(admin.getId(), "beetUs", adminContent, actionUrl);
-            log.debug("Notifica admin inviata - Tipo: {}, URL: {}", type, actionUrl);
-        });
+        }
+        log.debug("Notifica admin inviata a {} destinatari - Tipo: {}, URL: {}",
+                admins.size() - (int) admins.stream().filter(a -> excludeIds.contains(a.getId())).count(),
+                type, actionUrl);
     }
 
     private String buildAdminNotificationContent(NotificationType type, User triggeredBy, Post post) {

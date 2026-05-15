@@ -378,9 +378,7 @@ public class CommentService {
             rootComment.getChildComments().addAll(children);
         });
 
-        return rootComments.stream()
-                .map(commentMapper::toCommentoResponseDTO)
-                .toList();
+        return commentMapper.toCommentoResponseDTOList(rootComments);
     }
 
     /**

@@ -12,15 +12,7 @@ export const POLLING_INTERVALS = {
   /** Polling messaggi chat (backup — WebSocket gestisce il real-time) */
   MESSAGES: 15000,
   /** Polling conversazioni */
-  CONVERSATIONS: 30000,
-  /** Polling typing indicator */
-  TYPING: 2000,
-  /** Polling notifiche */
-  NOTIFICATIONS: 5000,
-  /** Polling feed */
-  FEED: 10000,
-  /** Polling utenti online */
-  ONLINE_USERS: 5000
+  CONVERSATIONS: 30000
 } as const;
 
 /**

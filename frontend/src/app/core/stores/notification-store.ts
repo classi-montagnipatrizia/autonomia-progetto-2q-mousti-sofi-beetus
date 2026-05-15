@@ -279,6 +279,12 @@ export class NotificationStore {
    * @param notification notifica ricevuta in real-time
    */
   private handleNewNotification(notification: NotificationResponseDTO): void {
+    // Evita duplicati: se la notifica è già nella lista (es. arrivata via API prima del WS)
+    // non duplicare e non incrementare il counter
+    if (this._notifications().some(n => n.id === notification.id)) {
+      return;
+    }
+
     // Aggiunge la notifica all'inizio della lista (più recente)
     this._notifications.update(current => [notification, ...current]);
 

@@ -99,8 +99,8 @@ public class PushNotificationService {
             return; // VAPID non configurato
         }
 
-        User user = userRepository.getReferenceById(userId);
-        List<PushSubscription> subscriptions = pushSubscriptionRepository.findByUser(user);
+        // Una sola query per userId, senza caricare User (non serve qui)
+        List<PushSubscription> subscriptions = pushSubscriptionRepository.findByUserId(userId);
 
         if (subscriptions.isEmpty()) {
             return;
@@ -138,8 +138,12 @@ public class PushNotificationService {
         }
     }
 
-    @Transactional
-    protected void sendSingle(PushSubscription sub, byte[] payload) {
+    /**
+     * Nota: NON annotare {@code @Transactional}: questo metodo è invocato dall'interno della classe
+     * (this.sendSingle), quindi il proxy Spring viene bypassato e l'annotazione sarebbe inefficace.
+     * La transazione per {@code deleteByEndpoint} è gestita direttamente dal repository.
+     */
+    private void sendSingle(PushSubscription sub, byte[] payload) {
         try {
             Notification notification = new Notification(sub.getEndpoint(), sub.getP256dh(), sub.getAuth(), payload);
             HttpResponse response = pushService.send(notification);
@@ -152,7 +156,7 @@ public class PushNotificationService {
                 } else if (statusCode >= 400) {
                     log.warn("Errore invio push (HTTP {}): {}", statusCode, sub.getEndpoint());
                 } else {
-                    log.debug("Push inviata con successo a utente {}", sub.getUser().getId());
+                    log.debug("Push inviata con successo: {}", sub.getEndpoint());
                 }
             } finally {
                 EntityUtils.consumeQuietly(response.getEntity());

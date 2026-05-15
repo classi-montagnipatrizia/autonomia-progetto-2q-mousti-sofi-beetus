@@ -128,7 +128,7 @@ public class MentionService {
                 // Crea la menzione
                 Mention mention = Mention.builder()
                         .mentionedUser(mentionedUser)
-                        .mentioningUser(userRepository.getReferenceById( authorId))
+                        .mentioningUser(userRepository.getReferenceById(authorId))
                         .mentionableType(MentionableType.POST)
                         .mentionableId(postId)
                         .build();
@@ -318,7 +318,7 @@ public class MentionService {
      */
     @Transactional(readOnly = true)
     public long contaMenzioni(Long userId) {
-        return mentionRepository.findByMentionedUserIdOrderByCreatedAtDesc(userId).size();
+        return mentionRepository.countByMentionedUserId(userId);
     }
 
     /**

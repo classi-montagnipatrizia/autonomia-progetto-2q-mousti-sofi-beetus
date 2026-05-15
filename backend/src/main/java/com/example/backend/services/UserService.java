@@ -460,7 +460,7 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public UserResponseDTO ottieniAdmin() {
-        User admin = userRepository.findByIsAdminTrue()
+        User admin = userRepository.findFirstByIsAdminTrueOrderByIdAsc()
                 .orElseThrow(() -> new ResourceNotFoundException("Admin non trovato"));
 
         return userMapper.toUtenteResponseDTO(admin);

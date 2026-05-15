@@ -9,6 +9,7 @@ import { UserService } from '../../../core/api/user-service';
 import { PostService } from '../../../core/api/post-service';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { OnlineUsersStore } from '../../../core/stores/online-users-store';
+import { WebsocketService } from '../../../core/services/websocket-service';
 import {
   UserResponseDTO,
   UserStats,
@@ -44,6 +45,7 @@ export class ProfileComponent implements OnInit {
   private readonly postService = inject(PostService);
   private readonly authStore = inject(AuthStore);
   private readonly onlineUsersStore = inject(OnlineUsersStore);
+  private readonly websocketService = inject(WebsocketService);
   private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -110,6 +112,8 @@ export class ProfileComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.subscribeToPostUpdates();
+
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const userId = params.get('id');
       if (userId) {
@@ -133,6 +137,28 @@ export class ProfileComponent implements OnInit {
         }
       }
     });
+  }
+
+  /**
+   * Aggiorna i post visualizzati quando arrivano eventi WS centralizzati.
+   * Spostato qui (dal PostActionsComponent) per evitare N sub identiche, una per post.
+   */
+  private subscribeToPostUpdates(): void {
+    this.websocketService.commentsCount$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        this.posts.update((posts) =>
+          posts.map((p) => (p.id === update.postId ? { ...p, commentsCount: update.commentsCount } : p)),
+        );
+      });
+
+    this.websocketService.postLiked$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        this.posts.update((posts) =>
+          posts.map((p) => (p.id === update.postId ? { ...p, likesCount: update.likesCount } : p)),
+        );
+      });
   }
 
   private loadProfile(userId: number): void {

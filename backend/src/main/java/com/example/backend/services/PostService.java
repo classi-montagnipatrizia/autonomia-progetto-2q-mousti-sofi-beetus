@@ -19,6 +19,7 @@ import com.example.backend.models.MentionableType;
 import com.example.backend.models.Post;
 import com.example.backend.models.User;
 import com.example.backend.repositories.HiddenPostRepository;
+import com.example.backend.repositories.LikeRepository;
 import com.example.backend.repositories.PostRepository;
 import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -44,6 +47,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final HiddenPostRepository hiddenPostRepository;
+    private final LikeRepository likeRepository;
     private final PostMapper postMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final ImageService imageService;
@@ -317,11 +321,20 @@ public class PostService {
             log.debug("Feed caricato (senza filtro classe): {} post trovati per utente ID: {}", posts.getTotalElements(), userId);
         }
 
-        // Ottimizzazione: carica tutti gli utenti online in una singola query
+        // Ottimizzazione: carica tutti gli utenti online + i postId likati in due query batch.
+        // Senza questo, isLikedByUser triggera il lazy-load della collection likes di ogni post.
         Set<Long> onlineUserIds = postMapper.getOnlineUserIds();
+        Set<Long> likedPostIds = caricaLikedPostIds(posts.getContent(), userId);
 
-        // Converte ogni post in DTO usando il set precaricato
-        return posts.map(post -> postMapper.toPostResponseDTO(post, userId, onlineUserIds));
+        return posts.map(post -> postMapper.toPostResponseDTO(post, onlineUserIds, likedPostIds));
+    }
+
+    private Set<Long> caricaLikedPostIds(List<Post> posts, Long userId) {
+        if (posts.isEmpty() || userId == null) {
+            return Set.of();
+        }
+        List<Long> ids = posts.stream().map(Post::getId).toList();
+        return new HashSet<>(likeRepository.findLikedPostIdsByUserAndPostIds(userId, ids));
     }
 
     /**
@@ -365,7 +378,9 @@ public class PostService {
             log.debug("Ricerca completata (senza filtro classe): {} risultati per termine '{}'", posts.getTotalElements(), searchTerm);
         }
 
-        return posts.map(post -> postMapper.toPostResponseDTO(post, userId));
+        Set<Long> onlineUserIds = postMapper.getOnlineUserIds();
+        Set<Long> likedPostIds = caricaLikedPostIds(posts.getContent(), userId);
+        return posts.map(post -> postMapper.toPostResponseDTO(post, onlineUserIds, likedPostIds));
     }
 
     /**
@@ -395,7 +410,9 @@ public class PostService {
 
         log.debug("Trovati {} post per utente ID: {}", posts.getTotalElements(), authorId);
 
-        return posts.map(post -> postMapper.toPostResponseDTO(post, currentUserId));
+        Set<Long> onlineUserIds = postMapper.getOnlineUserIds();
+        Set<Long> likedPostIds = caricaLikedPostIds(posts.getContent(), currentUserId);
+        return posts.map(post -> postMapper.toPostResponseDTO(post, onlineUserIds, likedPostIds));
     }
 
     /**

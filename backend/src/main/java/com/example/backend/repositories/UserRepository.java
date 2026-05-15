@@ -35,8 +35,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByIsAdminTrue();
 
-    // Trova l'admin
-    Optional<User> findByIsAdminTrue();
+    // Trova il primo admin (deterministico per ID).
+    // Usato dove il chiamante si aspetta un singolo admin (es. profilo admin esposto via API).
+    Optional<User> findFirstByIsAdminTrueOrderByIdAsc();
+
+    // Trova tutti gli admin attivi: usato per il fan-out delle notifiche moderatore.
+    List<User> findAllByIsAdminTrueAndIsActiveTrue();
+
+    // Solo gli ID degli admin attivi: utile per filtri in-memory senza caricare l'entità.
+    @Query("SELECT u.id FROM User u WHERE u.isAdmin = true AND u.isActive = true")
+    List<Long> findActiveAdminIds();
 
     // Trova utenti attivi
     List<User> findByIsActiveTrue();

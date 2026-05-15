@@ -18,6 +18,9 @@ public interface MentionRepository extends JpaRepository<Mention, Long> {
     // Menzioni per un utente
     List<Mention> findByMentionedUserIdOrderByCreatedAtDesc(Long userId);
 
+    // Conteggio ottimizzato: evita di caricare tutte le menzioni in memoria
+    long countByMentionedUserId(Long userId);
+
     // Menzioni in un post
     List<Mention> findByMentionableTypeAndMentionableId(MentionableType type, Long id);
 

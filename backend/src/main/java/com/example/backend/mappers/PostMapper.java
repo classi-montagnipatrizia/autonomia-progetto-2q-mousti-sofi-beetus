@@ -52,6 +52,26 @@ public class PostMapper {
                 .build();
     }
 
+    /**
+     * Overload batch-friendly: usa likedPostIds precaricato per evitare il lazy-load
+     * della collection {@code likes} di ciascun post. Da preferire per feed/ricerca/profilo.
+     */
+    public PostResponseDTO toPostResponseDTO(Post post, Set<Long> onlineUserIds, Set<Long> likedPostIds) {
+        if (post == null) return null;
+
+        return PostResponseDTO.builder()
+                .id(post.getId())
+                .autore(userMapper.toUtenteSummaryDTO(post.getUser(), onlineUserIds))
+                .contenuto(post.getContent())
+                .imageUrl(post.getImageUrl())
+                .likesCount(post.getLikesCount())
+                .commentsCount(post.getCommentsCount())
+                .hasLiked(likedPostIds != null && likedPostIds.contains(post.getId()))
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .build();
+    }
+
     public PostDettaglioResponseDTO toPostDettaglioResponseDTO(Post post, Long currentUserId) {
         if (post == null) return null;
 

@@ -22,7 +22,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!userRepository.findByIsAdminTrue().isEmpty()) {
+        if (userRepository.countByIsAdminTrue() > 0) {
             log.info("Admin già presente, nessun inserimento eseguito.");
             return;
         }

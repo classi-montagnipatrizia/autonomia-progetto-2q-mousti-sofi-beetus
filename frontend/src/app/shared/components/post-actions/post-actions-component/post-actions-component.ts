@@ -1,18 +1,20 @@
-import { Component, input, output, signal, computed, inject, effect, OnInit, OnDestroy } from '@angular/core';
+import { Component, input, output, signal, computed, inject, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Heart, MessageCircle } from 'lucide-angular';
-import { Subscription } from 'rxjs';
 
 import { LikeService } from '../../../../core/api/like-service';
 import { ToastService } from '../../../../core/services/toast-service';
-import { WebsocketService } from '../../../../core/services/websocket-service';
 import { DebounceClick } from '../../../directives/debounce-click';
 
 /**
  * Componente per visualizzare e gestire le azioni sui post
  * (like, commenti)
  *
- * Può essere riutilizzato in post-card e post-detail
+ * Può essere riutilizzato in post-card e post-detail.
+ *
+ * Nota: il contatore commenti viene aggiornato dal parent (feed/profile/search)
+ * tramite l'input {@code commentsCount}. La sottoscrizione WebSocket
+ * {@code commentsCount$} è centralizzata lì per evitare N sub identiche (una per post).
  */
 @Component({
   selector: 'app-post-actions',
@@ -20,13 +22,10 @@ import { DebounceClick } from '../../../directives/debounce-click';
   templateUrl: './post-actions-component.html',
   styleUrl: './post-actions-component.scss',
 })
-export class PostActionsComponent implements OnInit, OnDestroy {
+export class PostActionsComponent {
   private readonly router = inject(Router);
   private readonly likeService = inject(LikeService);
   private readonly toastService = inject(ToastService);
-  private readonly websocketService = inject(WebsocketService);
-
-  private commentsCountSubscription?: Subscription;
 
   // Icone Lucide
   readonly HeartIcon = Heart;
@@ -72,19 +71,10 @@ export class PostActionsComponent implements OnInit, OnDestroy {
    */
   readonly likeToggled = output<{ liked: boolean; likesCount: number }>();
 
-  /**
-   * Emesso quando il conteggio commenti cambia via WebSocket
-   */
-  readonly commentsCountChanged = output<number>();
-
-
   // Stato locale per like (optimistic update)
   readonly localHasLiked = signal<boolean | null>(null);
   readonly localLikesCount = signal<number | null>(null);
   readonly isLikeLoading = signal(false);
-
-  // Stato locale per commenti (aggiornato via WebSocket)
-  readonly localCommentsCount = signal<number | null>(null);
 
   constructor() {
     // Sincronizza il conteggio like quando cambia dall'esterno (es. WebSocket update)
@@ -120,29 +110,10 @@ export class PostActionsComponent implements OnInit, OnDestroy {
   });
 
   /**
-   * Conteggio commenti effettivo (locale o dal parent)
+   * Conteggio commenti effettivo: legge direttamente dall'input controllato dal parent.
+   * Manteniamo il computed (anche se diventa un pass-through) per non rompere il template.
    */
-  readonly effectiveCommentsCount = computed(() => {
-    const local = this.localCommentsCount();
-    return local ?? this.commentsCount();
-  });
-
-
-  ngOnInit(): void {
-    // Sottoscrizione agli aggiornamenti del conteggio commenti via WebSocket
-    this.commentsCountSubscription = this.websocketService.commentsCount$.subscribe(
-      (update) => {
-        if (update.postId === this.postId()) {
-          this.localCommentsCount.set(update.commentsCount);
-          this.commentsCountChanged.emit(update.commentsCount);
-        }
-      }
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.commentsCountSubscription?.unsubscribe();
-  }
+  readonly effectiveCommentsCount = computed(() => this.commentsCount());
 
   /**
    * Toggle like con optimistic update

@@ -67,6 +67,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   private currentOtherUserId: number | null = null;
   private lastTypingSent = 0;
   private highlightTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  // Set di tutti i setTimeout pendenti di scrollToMessage (retry recursivi):
+  // clearati in ngOnDestroy per evitare lavoro su componente già distrutto.
+  private readonly scrollTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
   // Usa costanti centralizzate da app.config.ts
   private readonly MESSAGE_POLLING_INTERVAL = POLLING_INTERVALS.MESSAGES;
@@ -216,6 +219,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.highlightTimeoutId !== null) {
       clearTimeout(this.highlightTimeoutId);
     }
+    this.clearScrollTimeouts();
+  }
+
+  private clearScrollTimeouts(): void {
+    this.scrollTimeoutIds.forEach((id) => clearTimeout(id));
+    this.scrollTimeoutIds.clear();
   }
 
   /**
@@ -252,6 +261,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     // Ferma polling della conversazione precedente
     this.stopPolling();
+    // Cancella retry di scroll pendenti: il messaggio target appartiene alla chat vecchia
+    this.clearScrollTimeouts();
 
     // Reset stato
     this.currentOtherUserId = userId;
@@ -367,7 +378,13 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.scrollToBottom();
     }
 
-    if (messages.length > 0) {
+    // Chiama markAsRead solo se esiste almeno un messaggio non letto dell'altro utente.
+    // Senza questo check, il PATCH veniva chiamato ad ogni polling (ogni 15s) anche senza novità.
+    const currentUserIdValue = this.currentUserId();
+    const hasUnread = merged.some(
+      m => m.mittente.id !== currentUserIdValue && !m.isRead && !m.isDeletedBySender,
+    );
+    if (hasUnread) {
       this.messageService.markConversationAsRead(userId).subscribe();
     }
   }
@@ -479,8 +496,11 @@ export class ChatComponent implements OnInit, OnDestroy {
    * Scrolla a un messaggio specifico e lo centra nella vista
    */
   private scrollToMessage(messageId: number, instant = false, retryCount = 0): void {
-    // Aspetta che il DOM sia completamente renderizzato
-    setTimeout(() => {
+    // Aspetta che il DOM sia completamente renderizzato.
+    // Il timeoutId viene tracciato in scrollTimeoutIds e clearato in ngOnDestroy
+    // così se l'utente cambia conversazione durante un retry il loop non prosegue.
+    const outerId = setTimeout(() => {
+      this.scrollTimeoutIds.delete(outerId);
       const container = this.messagesContainer();
       const element = document.getElementById(`message-${messageId}`);
 
@@ -493,7 +513,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       // Se il container non è ancora pronto, riprova (max retry limit)
       if (containerEl.clientHeight === 0) {
         if (retryCount < this.MAX_SCROLL_RETRIES) {
-          setTimeout(() => this.scrollToMessage(messageId, instant, retryCount + 1), this.SCROLL_RETRY_DELAY);
+          const retryId = setTimeout(() => {
+            this.scrollTimeoutIds.delete(retryId);
+            this.scrollToMessage(messageId, instant, retryCount + 1);
+          }, this.SCROLL_RETRY_DELAY);
+          this.scrollTimeoutIds.add(retryId);
         }
         return;
       }
@@ -521,6 +545,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         behavior: instant ? 'instant' : 'smooth'
       });
     }, instant ? 0 : this.SCROLL_DELAY);
+    this.scrollTimeoutIds.add(outerId);
   }
 
   getContentSegments(message: MessageResponseDTO): readonly HighlightSegment[] {

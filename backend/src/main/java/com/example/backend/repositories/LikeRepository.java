@@ -85,4 +85,12 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Modifying
     @Query("DELETE FROM Like l WHERE l.post.id = :postId")
     int deleteAllByPostId(@Param("postId") Long postId);
+
+    /**
+     * Restituisce, tra i postIds dati, quelli a cui l'utente ha messo like.
+     * Una singola query batch — evita il lazy-load della collection likes per ogni post nel feed.
+     */
+    @Query("SELECT l.post.id FROM Like l WHERE l.user.id = :userId AND l.post.id IN :postIds")
+    List<Long> findLikedPostIdsByUserAndPostIds(@Param("userId") Long userId,
+                                                 @Param("postIds") java.util.Collection<Long> postIds);
 }
