@@ -209,7 +209,14 @@ export class ProfileComponent implements OnInit {
             this.postsPage.set(snapshot.page);
             this.postsTotalPages.set(snapshot.totalPages);
             afterNextRender(() => {
-              document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
+              const el = document.getElementById('post-' + snapshot.scrollPostId);
+              if (!el) return;
+              try {
+                el.scrollIntoView({ block: 'start' });
+              } catch {
+                const navbarHeight = window.innerWidth >= 768 ? 64 : 56;
+                window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navbarHeight });
+              }
             }, { injector: this.injector });
           } else {
             this.loadPosts(userId, true);
