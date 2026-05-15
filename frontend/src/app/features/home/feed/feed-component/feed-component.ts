@@ -14,9 +14,8 @@ import { WebsocketService, PostLikeUpdate, CommentsCountUpdate } from '../../../
 import { AuthService } from '../../../../core/auth/services/auth-service';
 import { AuthStore } from '../../../../core/stores/auth-store';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { FeedStateService } from '../../../../core/services/feed-state.service';
 import { Router, NavigationStart } from '@angular/router';
-
-const FEED_SCROLL_KEY = 'feedScrollPostId';
 
 @Component({
   selector: 'app-feed-component',
@@ -37,6 +36,7 @@ export class FeedComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
+  private readonly feedState = inject(FeedStateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
@@ -65,7 +65,18 @@ export class FeedComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadPosts();
+    const snapshot = this.feedState.consume();
+    if (snapshot) {
+      this.posts.set(snapshot.posts);
+      this.hasMore.set(snapshot.hasMore);
+      this.currentPage = snapshot.page;
+      this.isLoading.set(false);
+      setTimeout(() => {
+        document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
+      }, 50);
+    } else {
+      this.loadPosts();
+    }
     this.subscribeToWebSocketEvents();
     this.saveScrollBeforePostNavigation();
   }
@@ -77,7 +88,7 @@ export class FeedComponent implements OnInit {
     ).subscribe(e => {
       const url = (e as NavigationStart).url;
       if (url.startsWith('/post/')) {
-        sessionStorage.setItem(FEED_SCROLL_KEY, url.split('/')[2]);
+        this.feedState.save(this.posts(), this.currentPage, this.hasMore(), url.split('/')[2]);
       }
     });
   }
@@ -160,14 +171,6 @@ export class FeedComponent implements OnInit {
           this.hasMore.set(!isLast);
           this.currentPage = 0;
           this.isLoading.set(false);
-
-          const savedPostId = sessionStorage.getItem(FEED_SCROLL_KEY);
-          if (savedPostId) {
-            sessionStorage.removeItem(FEED_SCROLL_KEY);
-            setTimeout(() => {
-              document.getElementById('post-' + savedPostId)?.scrollIntoView({ block: 'start' });
-            }, 100);
-          }
         },
         error: (err) => {
           this.isLoading.set(false);
