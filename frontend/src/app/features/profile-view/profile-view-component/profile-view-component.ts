@@ -7,6 +7,7 @@ import { forkJoin, finalize, filter } from 'rxjs';
 
 import { UserService } from '../../../core/api/user-service';
 import { PostService } from '../../../core/api/post-service';
+import { ProfileStateService } from '../../../core/services/profile-state.service';
 import { AuthStore } from '../../../core/stores/auth-store';
 import { OnlineUsersStore } from '../../../core/stores/online-users-store';
 import { WebsocketService } from '../../../core/services/websocket-service';
@@ -24,8 +25,6 @@ import { SpinnerComponent } from '../../../shared/ui/spinner/spinner-component/s
 import { LoggerService } from '../../../core/services/logger.service';
 
 type ProfileTab = 'posts' | 'media';
-
-const PROFILE_SCROLL_KEY = 'profileScrollPostId';
 
 @Component({
   selector: 'app-profile-component',
@@ -48,6 +47,7 @@ export class ProfileComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly onlineUsersStore = inject(OnlineUsersStore);
   private readonly websocketService = inject(WebsocketService);
+  private readonly profileState = inject(ProfileStateService);
   private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -171,8 +171,14 @@ export class ProfileComponent implements OnInit {
     ).subscribe(e => {
       const url = (e as NavigationStart).url;
       if (url.startsWith('/post/')) {
-        const profileUserId = this.route.snapshot.params['id'];
-        sessionStorage.setItem(`${PROFILE_SCROLL_KEY}_${profileUserId}`, url.split('/')[2]);
+        const profileUserId = Number(this.route.snapshot.params['id']);
+        this.profileState.save(
+          profileUserId,
+          this.posts(),
+          this.postsPage(),
+          this.postsTotalPages(),
+          url.split('/')[2]
+        );
       }
     });
   }
@@ -182,6 +188,8 @@ export class ProfileComponent implements OnInit {
     this.error.set(null);
     this.posts.set([]);
     this.postsPage.set(0);
+
+    const snapshot = this.profileState.consume(userId);
 
     forkJoin({
       user: this.userService.getUserProfile(userId),
@@ -195,7 +203,16 @@ export class ProfileComponent implements OnInit {
         next: ({ user, stats }) => {
           this.user.set(user);
           this.stats.set(stats);
-          this.loadPosts(userId, true);
+          if (snapshot) {
+            this.posts.set(snapshot.posts);
+            this.postsPage.set(snapshot.page);
+            this.postsTotalPages.set(snapshot.totalPages);
+            setTimeout(() => {
+              document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
+            }, 50);
+          } else {
+            this.loadPosts(userId, true);
+          }
         },
         error: (err) => {
           this.logger.error('Error loading profile', err);
@@ -224,14 +241,6 @@ export class ProfileComponent implements OnInit {
         next: (response: PageResponse<PostResponseDTO>) => {
           if (reset) {
             this.posts.set(response.content);
-            const key = `${PROFILE_SCROLL_KEY}_${userId}`;
-            const savedPostId = sessionStorage.getItem(key);
-            if (savedPostId) {
-              sessionStorage.removeItem(key);
-              setTimeout(() => {
-                document.getElementById('post-' + savedPostId)?.scrollIntoView({ block: 'start' });
-              }, 100);
-            }
           } else {
             this.posts.update((current) => [...current, ...response.content]);
           }
