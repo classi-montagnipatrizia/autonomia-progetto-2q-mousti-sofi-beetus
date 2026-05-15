@@ -73,8 +73,7 @@ export class FeedComponent implements OnInit {
       this.currentPage = snapshot.page;
       this.isLoading.set(false);
       afterNextRender(() => {
-        const el = document.getElementById('post-' + snapshot.scrollPostId);
-        if (el) window.scrollTo(0, el.getBoundingClientRect().top);
+        document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
       }, { injector: this.injector });
     } else {
       this.loadPosts();

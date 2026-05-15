@@ -1,6 +1,6 @@
 <article
   [id]="'post-' + post().id"
-  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md"
+  class="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md scroll-mt-14 md:scroll-mt-16"
   [class.cursor-pointer]="clickable()"
   (click)="goToPost()"
   (keyup.enter)="goToPost()"
