@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, Injector, OnInit, afterNextRender, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
@@ -48,6 +48,7 @@ export class ProfileComponent implements OnInit {
   private readonly onlineUsersStore = inject(OnlineUsersStore);
   private readonly websocketService = inject(WebsocketService);
   private readonly profileState = inject(ProfileStateService);
+  private readonly injector = inject(Injector);
   private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -207,9 +208,10 @@ export class ProfileComponent implements OnInit {
             this.posts.set(snapshot.posts);
             this.postsPage.set(snapshot.page);
             this.postsTotalPages.set(snapshot.totalPages);
-            setTimeout(() => {
-              document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
-            }, 50);
+            afterNextRender(() => {
+              const el = document.getElementById('post-' + snapshot.scrollPostId);
+              if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY);
+            }, { injector: this.injector });
           } else {
             this.loadPosts(userId, true);
           }

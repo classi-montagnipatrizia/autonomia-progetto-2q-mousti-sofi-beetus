@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, DestroyRef, inject, Injector, OnInit, afterNextRender, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 
@@ -37,6 +37,7 @@ export class FeedComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
   private readonly feedState = inject(FeedStateService);
+  private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
 
@@ -71,9 +72,10 @@ export class FeedComponent implements OnInit {
       this.hasMore.set(snapshot.hasMore);
       this.currentPage = snapshot.page;
       this.isLoading.set(false);
-      setTimeout(() => {
-        document.getElementById('post-' + snapshot.scrollPostId)?.scrollIntoView({ block: 'start' });
-      }, 50);
+      afterNextRender(() => {
+        const el = document.getElementById('post-' + snapshot.scrollPostId);
+        if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY);
+      }, { injector: this.injector });
     } else {
       this.loadPosts();
     }
