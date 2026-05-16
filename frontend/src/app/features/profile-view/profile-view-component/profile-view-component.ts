@@ -209,7 +209,11 @@ export class ProfileComponent implements OnInit {
             this.postsPage.set(snapshot.page);
             this.postsTotalPages.set(snapshot.totalPages);
             afterNextRender(() => {
-              window.scrollTo(0, snapshot.scrollY);
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  window.scrollTo(0, snapshot.scrollY);
+                });
+              });
             }, { injector: this.injector });
           } else {
             this.loadPosts(userId, true);
