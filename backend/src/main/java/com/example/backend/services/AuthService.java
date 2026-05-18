@@ -11,7 +11,6 @@ import com.example.backend.exception.InvalidTokenException;
 import com.example.backend.exception.ResourceAlreadyExistsException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mappers.UserMapper;
-import com.example.backend.models.RefreshToken;
 import com.example.backend.models.User;
 import com.example.backend.repositories.UserRepository;
 import com.example.backend.security.JwtTokenProvider;
@@ -135,13 +134,13 @@ public class AuthService {
 
         // Genera token con tutti i dati utente (incluso lastSeen aggiornato)
         String accessToken = jwtTokenProvider.generateAccessToken(user);
-        RefreshToken refreshToken = refreshTokenService.creaRefreshToken(user.getId());
+        String refreshToken = refreshTokenService.creaRefreshToken(user.getId());
 
         log.info("Login effettuato con successo per utente: {} (ID: {})", user.getUsername(), user.getId());
 
         return LoginResponseDTO.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .refreshToken(refreshToken)
                 .type(AUTHORIZATION_TYPE)
                 .user(userMapper.toUtenteResponseDTO(user))
                 .build();
@@ -162,13 +161,13 @@ public class AuthService {
                     String newAccessToken = jwtTokenProvider.generateAccessToken(user);
 
                     // Rigenera anche il refresh token per sicurezza
-                    RefreshToken newRefreshToken = refreshTokenService.creaRefreshToken(user.getId());
+                    String newRefreshToken = refreshTokenService.creaRefreshToken(user.getId());
 
                     log.info("Token rinnovati con successo per utente: {} (ID: {})", user.getUsername(), user.getId());
 
                     return RefreshTokenResponseDTO.builder()
                             .accessToken(newAccessToken)
-                            .refreshToken(newRefreshToken.getToken())
+                            .refreshToken(newRefreshToken)
                             .type(AUTHORIZATION_TYPE)
                             .build();
                 })

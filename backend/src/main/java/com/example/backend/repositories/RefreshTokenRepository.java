@@ -13,10 +13,13 @@ import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    
-    // Trova per token
-    Optional<RefreshToken> findByToken(String token);
-    
+
+    /**
+     * Lookup O(1) tramite UNIQUE INDEX su token_hash, filtrato per scadenza.
+     * Sostituisce il vecchio findAllValid() + BCrypt.matches() iterativo (O(N)).
+     */
+    Optional<RefreshToken> findByTokenHashAndExpiresAtAfter(String tokenHash, LocalDateTime now);
+
     // Elimina token di un utente
     @Modifying
     @Query("DELETE FROM RefreshToken rt WHERE rt.user.id = :userId")
@@ -31,20 +34,4 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Modifying
     @Query("DELETE FROM RefreshToken rt WHERE rt.expiresAt < :now")
     void deleteExpiredTokens(@Param("now") LocalDateTime now);
-    
-    // Verifica esistenza token valido
-    @Query("""
-        SELECT CASE WHEN COUNT(rt) > 0 THEN true ELSE false END
-        FROM RefreshToken rt
-        WHERE rt.token = :token AND rt.expiresAt > :now
-        """)
-    boolean isTokenValid(@Param("token") String token, @Param("now") LocalDateTime now);
-    
-    /**
-     * Trova tutti i refresh token non scaduti.
-     * PERFORMANCE: Ottimizzato per verificaRefreshToken, carica solo token validi.
-     * Per 17 utenti, performance accettabile. Per più utenti, considerare indice su expiresAt.
-     */
-    @Query("SELECT rt FROM RefreshToken rt WHERE rt.expiresAt > :now")
-    java.util.List<RefreshToken> findAllValid(@Param("now") LocalDateTime now);
 }

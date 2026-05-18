@@ -7,130 +7,92 @@ import com.example.backend.repositories.RefreshTokenRepository;
 import com.example.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Service per la gestione dei refresh token nel database.
+ *
+ * Storage: SHA-256 hex del token in chiaro (deterministico) con UNIQUE INDEX
+ * → lookup O(1), niente loop BCrypt su tutti i token attivi.
+ * Il token in chiaro è 256 bit random (base64url), abbastanza entropia da
+ * rendere il brute-force impossibile anche senza hash lento.
  */
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int TOKEN_BYTES = 32; // 256 bit
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Value("${jwt.refresh-token-expiration}")
     private Long refreshTokenExpiration;
 
     /**
-     * Crea un nuovo refresh token per l'utente
-     * SICUREZZA: Il token viene hashato con BCrypt prima del salvataggio
-     * NOTA: Non elimina immediatamente i vecchi token per evitare race conditions
-     * durante il refresh automatico. I token scaduti vengono puliti periodicamente.
+     * Crea un nuovo refresh token per l'utente e restituisce il valore in chiaro
+     * (l'unico momento in cui esiste). Nel DB viene salvato solo lo SHA-256.
+     * NOTA: I vecchi token vengono eliminati DOPO il salvataggio per evitare
+     * race condition con refresh paralleli.
      */
     @Transactional
-    public RefreshToken creaRefreshToken(Long userId) {
+    public String creaRefreshToken(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utente", "id", userId));
 
-        // Genera token in chiaro (da restituire al client)
-        String plainToken = UUID.randomUUID().toString();
+        String plainToken = generatePlainToken();
+        String tokenHash = sha256Hex(plainToken);
 
-        // Hash del token per storage sicuro
-        String hashedToken = passwordEncoder.encode(plainToken);
-
-        // Crea nuovo refresh token con hash
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
-                .token(hashedToken)
+                .tokenHash(tokenHash)
                 .expiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000))
                 .build();
 
         RefreshToken saved = refreshTokenRepository.save(refreshToken);
-
-        // Elimina vecchi token dell'utente DOPO aver creato il nuovo
-        // Questo evita race conditions durante il refresh automatico
         refreshTokenRepository.deleteByUserIdAndIdNot(userId, saved.getId());
 
-        // Crea una copia del token salvato per restituirlo al client
-        // con il token in chiaro invece dell'hash
-         return RefreshToken.builder()
-                .id(saved.getId())
-                .user(saved.getUser())
-                .token(plainToken)  // Token in chiaro per il client
-                .expiresAt(saved.getExpiresAt())
-                .createdAt(saved.getCreatedAt())
-                .build();
-
+        return plainToken;
     }
 
     /**
-     * Elimina i vecchi refresh token di un utente, mantenendo quello corrente
-     */
-    @Transactional
-    public void pulisciVecchiTokenUtente(Long userId, Long keepTokenId) {
-        refreshTokenRepository.deleteByUserIdAndIdNot(userId, keepTokenId);
-    }
-
-    /**
-     * Verifica e restituisce un refresh token se valido
-     * SICUREZZA: Confronta il token in chiaro con gli hash nel database
-     * PERFORMANCE: Usa query ottimizzata per caricare solo token non scaduti
+     * Verifica e restituisce il refresh token se valido (non scaduto).
+     * Lookup O(1) tramite UNIQUE INDEX su token_hash.
      */
     public Optional<RefreshToken> verificaRefreshToken(String plainToken) {
-        // Recupera solo i token non scaduti e cerca match con BCrypt
-        return refreshTokenRepository.findAllValid(LocalDateTime.now()).stream()
-                .filter(rt -> {
-                    try {
-                        // Verifica che il token sia in formato BCrypt prima del match
-                        String storedToken = rt.getToken();
-                        if (storedToken != null && storedToken.startsWith("$2")) {
-                            return passwordEncoder.matches(plainToken, storedToken);
-                        }
-                        return false;
-                    } catch (Exception e) {
-                        // Ignora token corrotti senza loggare warning
-                        return false;
-                    }
-                })
-                .findFirst();
+        if (plainToken == null || plainToken.isEmpty()) {
+            return Optional.empty();
+        }
+        return refreshTokenRepository.findByTokenHashAndExpiresAtAfter(
+                sha256Hex(plainToken), LocalDateTime.now()
+        );
     }
 
     /**
-     * Elimina un refresh token
-     * SICUREZZA: Cerca il token hashato nel database
-     * PERFORMANCE: Usa query ottimizzata per caricare solo token non scaduti
+     * Elimina un refresh token specifico (logout su un singolo device).
      */
     @Transactional
     public void eliminaRefreshToken(String plainToken) {
-        // Trova il token che matcha e lo elimina
-        refreshTokenRepository.findAllValid(LocalDateTime.now()).stream()
-                .filter(rt -> {
-                    try {
-                        // Verifica che il token sia in formato BCrypt prima del match
-                        String storedToken = rt.getToken();
-                        if (storedToken != null && storedToken.startsWith("$2")) {
-                            return passwordEncoder.matches(plainToken, storedToken);
-                        }
-                        return false;
-                    } catch (Exception e) {
-                        // Ignora token corrotti senza loggare warning
-                        return false;
-                    }
-                })
-                .findFirst()
+        if (plainToken == null || plainToken.isEmpty()) {
+            return;
+        }
+        refreshTokenRepository
+                .findByTokenHashAndExpiresAtAfter(sha256Hex(plainToken), LocalDateTime.now())
                 .ifPresent(refreshTokenRepository::delete);
     }
 
     /**
-     * Elimina tutti i refresh token di un utente
+     * Elimina tutti i refresh token di un utente (logout globale).
      */
     @Transactional
     public void eliminaRefreshTokenUtente(Long userId) {
@@ -138,10 +100,30 @@ public class RefreshTokenService {
     }
 
     /**
-     * Pulizia periodica dei token scaduti (da chiamare con @Scheduled)
+     * Pulizia periodica dei token scaduti (chiamata da ScheduledTasks).
      */
     @Transactional
     public void pulisciTokenScaduti() {
         refreshTokenRepository.deleteExpiredTokens(LocalDateTime.now());
+    }
+
+    private static String generatePlainToken() {
+        byte[] bytes = new byte[TOKEN_BYTES];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private static String sha256Hex(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 non disponibile nella JVM", e);
+        }
     }
 }
